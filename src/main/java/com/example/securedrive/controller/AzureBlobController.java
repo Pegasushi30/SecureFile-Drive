@@ -64,36 +64,31 @@ public class AzureBlobController {
         }
 
         try {
-            // Generate a unique AES key for this file (you can store this securely if needed)
-            String aesKey = AESUtil.generateAESKey();
-
-            // Encrypt file data
-            byte[] encryptedData = AESUtil.encrypt(new String(file.getBytes()), aesKey).getBytes();
-
-            // Create a unique file path
+            // Dosyayı doğrudan yükle
             String uniqueFilePath = "uploads/" + username + "/" + file.getOriginalFilename();
 
-            // Save file metadata in the database
+            // Veritabanında dosya meta verilerini kaydet
             File userFile = new File();
             userFile.setFileName(file.getOriginalFilename());
             userFile.setPath(uniqueFilePath);
             userFile.setUser(currentUser.get());
             fileService.saveFile(userFile);
 
-            // Upload the encrypted file to Azure Blob Storage
+            // Azure Blob Storage'a yükle
             Storage storage = new Storage();
             storage.setPath("uploads/" + username);
             storage.setFileName(file.getOriginalFilename());
-            storage.setInputStream(new ByteArrayInputStream(encryptedData));  // Encrypted data
+            storage.setInputStream(new ByteArrayInputStream(file.getBytes()));  // Şifrelenmemiş veri
             azureBlobStorage.write(storage);
 
             return ResponseEntity.ok("File successfully uploaded: " + file.getOriginalFilename());
         } catch (AzureBlobStorageException e) {
             return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body("Upload failed: " + e.getMessage());
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Encryption failed: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("File upload failed: " + e.getMessage());
         }
     }
+
 
     @GetMapping("/list")
     @PreAuthorize("hasAuthority('ROLE_ADMIN') or #authentication.name == principal.username")
@@ -129,28 +124,30 @@ public class AzureBlobController {
         }
 
         try {
-            // Retrieve the file from Azure Blob Storage
+            // Azure Blob Storage'dan dosyayı ham haliyle oku
             Storage storage = new Storage();
             storage.setPath("uploads/" + currentUser.get().getUsername());
             storage.setFileName(fileName);
-            byte[] encryptedFileData = azureBlobStorage.read(storage);
+            byte[] fileData = azureBlobStorage.read(storage);
 
-            // Decrypt the file data
-            String aesKey = "your-stored-aes-key";  // Retrieve the AES key for decryption (needs to be stored securely)
-            byte[] decryptedFileData = AESUtil.decrypt(new String(encryptedFileData), aesKey).getBytes();
+            if (fileData == null || fileData.length == 0) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+            }
 
-            ByteArrayResource resource = new ByteArrayResource(decryptedFileData);
-
+            ByteArrayResource resource = new ByteArrayResource(fileData);
             return ResponseEntity.ok()
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
-                    .contentLength(decryptedFileData.length)
+                    .contentLength(fileData.length)
                     .body(resource);
+
         } catch (AzureBlobStorageException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
+
+
 
 
     @DeleteMapping("/delete/{fileName}")

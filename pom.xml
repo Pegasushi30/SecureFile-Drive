@@ -71,6 +71,13 @@
 		</dependency>
 
 
+		<!-- https://mvnrepository.com/artifact/io.netty/netty-common -->
+		<dependency>
+			<groupId>io.netty</groupId>
+			<artifactId>netty-common</artifactId>
+			<version>4.1.115.Final</version>
+		</dependency>
+
 		<!-- https://mvnrepository.com/artifact/org.apache.tomcat.embed/tomcat-embed-websocket -->
 		<dependency>
 			<groupId>org.apache.tomcat.embed</groupId>

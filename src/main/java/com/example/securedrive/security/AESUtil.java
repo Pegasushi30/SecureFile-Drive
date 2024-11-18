@@ -23,7 +23,7 @@ public class AESUtil {
         SecretKeySpec secretKeySpec = new SecretKeySpec(Base64.getDecoder().decode(key), "AES");
         cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec);
         byte[] encryptedBytes = cipher.doFinal(data.getBytes());
-        return Base64.getEncoder().encodeToString(encryptedBytes);
+        return Base64.getEncoder().encodeToString(encryptedBytes); // Şifrelenmiş veriyi Base64 kodla
     }
 
     // AES-256 ile çözme işlemi
@@ -31,7 +31,7 @@ public class AESUtil {
         Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
         SecretKeySpec secretKeySpec = new SecretKeySpec(Base64.getDecoder().decode(key), "AES");
         cipher.init(Cipher.DECRYPT_MODE, secretKeySpec);
-        byte[] decryptedBytes = cipher.doFinal(Base64.getDecoder().decode(encryptedData));
+        byte[] decryptedBytes = cipher.doFinal(Base64.getDecoder().decode(encryptedData)); // Base64 çöz ve şifre çöz
         return new String(decryptedBytes);
     }
 }
