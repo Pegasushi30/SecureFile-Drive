@@ -58,36 +58,53 @@ public class AzureBlobController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You are not authorized to upload files for this user.");
         }
 
-        Optional<User> currentUser = userService.findByUsername(username);
-        if (currentUser.isEmpty()) {
+        Optional<User> currentUserOptional = userService.findByUsername(username);
+        if (currentUserOptional.isEmpty()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not found.");
         }
 
+        User currentUser = currentUserOptional.get();
+
         try {
-            // Dosyayı doğrudan yükle
+            // Kullanıcıya ait AES anahtarını alın
+            String aesKey = currentUser.getEncryptionKey();
+            if (aesKey == null || aesKey.isEmpty()) {
+                aesKey = AESUtil.generateAESKey();
+                currentUser.setEncryptionKey(aesKey);
+                userService.saveUser(currentUser);
+            }
+
+            // Dosyayı şifrele
+            byte[] encryptedData = AESUtil.encrypt(file.getBytes(), aesKey);
+
+            // Şifrelenmiş veriyi Base64 kodla
+            String base64EncodedData = Base64.getEncoder().encodeToString(encryptedData);
+
+            // Blob Storage için hazırlık
             String uniqueFilePath = "uploads/" + username + "/" + file.getOriginalFilename();
 
             // Veritabanında dosya meta verilerini kaydet
             File userFile = new File();
             userFile.setFileName(file.getOriginalFilename());
             userFile.setPath(uniqueFilePath);
-            userFile.setUser(currentUser.get());
+            userFile.setUser(currentUser);
             fileService.saveFile(userFile);
 
             // Azure Blob Storage'a yükle
             Storage storage = new Storage();
             storage.setPath("uploads/" + username);
             storage.setFileName(file.getOriginalFilename());
-            storage.setInputStream(new ByteArrayInputStream(file.getBytes()));  // Şifrelenmemiş veri
+            storage.setInputStream(new ByteArrayInputStream(base64EncodedData.getBytes())); // Base64 kodlanmış veri
             azureBlobStorage.write(storage);
 
             return ResponseEntity.ok("File successfully uploaded: " + file.getOriginalFilename());
-        } catch (AzureBlobStorageException e) {
-            return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body("Upload failed: " + e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("File upload failed: " + e.getMessage());
         }
     }
+
+
+
 
 
     @GetMapping("/list")
@@ -124,28 +141,36 @@ public class AzureBlobController {
         }
 
         try {
-            // Azure Blob Storage'dan dosyayı ham haliyle oku
+            // Kullanıcıya ait AES anahtarını alın
+            String aesKey = currentUser.get().getEncryptionKey();
+            if (aesKey == null || aesKey.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+            }
+
+            // Blob Storage'dan şifrelenmiş Base64 veriyi okuyun
             Storage storage = new Storage();
             storage.setPath("uploads/" + currentUser.get().getUsername());
             storage.setFileName(fileName);
-            byte[] fileData = azureBlobStorage.read(storage);
+            byte[] base64EncodedData = azureBlobStorage.read(storage);
 
-            if (fileData == null || fileData.length == 0) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-            }
+            // Base64 çöz
+            byte[] encryptedData = Base64.getDecoder().decode(base64EncodedData);
 
-            ByteArrayResource resource = new ByteArrayResource(fileData);
+            // Şifre çözme işlemi
+            byte[] originalData = AESUtil.decrypt(encryptedData, aesKey);
+
+            // Dosyayı geri döndür
+            ByteArrayResource resource = new ByteArrayResource(originalData);
             return ResponseEntity.ok()
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
-                    .contentLength(fileData.length)
+                    .contentLength(originalData.length)
                     .body(resource);
 
-        } catch (AzureBlobStorageException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
+
 
 
 
