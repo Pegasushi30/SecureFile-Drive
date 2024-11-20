@@ -1,6 +1,6 @@
 package com.example.securedrive.controller;
 
-import com.example.securedrive.exception.AzureBlobStorageException;
+
 import com.example.securedrive.model.File;
 import com.example.securedrive.model.FileVersion;
 import com.example.securedrive.model.Storage;
@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -25,6 +26,7 @@ import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.Objects;
 import java.util.Optional;
 
 @RestController
@@ -56,19 +58,16 @@ public class AzureBlobController {
         logger.info("Upload request received for user: {}", username);
 
         if (file.isEmpty()) {
-            logger.warn("File upload failed: File is missing or empty!");
             return ResponseEntity.badRequest().body("File is missing or empty!");
         }
 
         if (!authentication.getName().equals(username)) {
-            logger.warn("Unauthorized upload attempt by: {}", authentication.getName());
-            return ResponseEntity.status(403).body("You are not authorized to upload files for this user.");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You are not authorized to upload files for this user.");
         }
 
         Optional<User> currentUserOptional = userService.findByUsername(username);
         if (currentUserOptional.isEmpty()) {
-            logger.warn("User not found: {}", username);
-            return ResponseEntity.status(401).body("User not found.");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not found.");
         }
 
         User currentUser = currentUserOptional.get();
@@ -100,45 +99,62 @@ public class AzureBlobController {
                     : fileVersionService.generateNextVersion(userFile);
             logger.info("Version number generated: {}", versionNumber);
 
-            String newContent = new String(file.getBytes(), StandardCharsets.UTF_8);
+            // Dosya türünü kontrol et
+            String fileName = Objects.requireNonNull(file.getOriginalFilename()).toLowerCase();
+            boolean isBinary = fileName.endsWith(".jpg") || fileName.endsWith(".png") || fileName.endsWith(".mp4");
 
-            if (versionNumber.equals("v1")) {
-                // İlk sürüm: Tam şifreli dosyayı sakla
-                byte[] encryptedData = AESUtil.encrypt(newContent.getBytes(StandardCharsets.UTF_8), aesKey);
+            if (isBinary) {
+                // Binary dosyalar için: AES şifrele ve Base64 kodla
+                byte[] encryptedData = AESUtil.encrypt(file.getBytes(), aesKey);
                 String base64EncodedData = Base64.getEncoder().encodeToString(encryptedData);
-                String encryptedFileFullPath = uniqueFilePath + "/versions/" + versionNumber + "/" + file.getOriginalFilename();
-                byte[] base64EncodedDataBytes = base64EncodedData.getBytes(StandardCharsets.UTF_8);
-                azureBlobStorage.write(new Storage(encryptedFileFullPath, base64EncodedDataBytes));
-                logger.info("Encrypted file uploaded to Blob Storage at: {}", encryptedFileFullPath);
+                String versionedFilePath = uniqueFilePath + "/versions/" + versionNumber + "/" + file.getOriginalFilename();
+
+                // Base64 kodlanmış veriyi bytes[] olarak sakla
+                azureBlobStorage.write(new Storage(versionedFilePath, base64EncodedData.getBytes(StandardCharsets.UTF_8)));
+                logger.info("Binary file uploaded: {}", versionedFilePath);
 
                 // Versiyon bilgisini kaydet
                 FileVersion version = fileVersionService.createVersion(userFile, versionNumber, null);
                 fileVersionService.saveFileVersion(version);
-                logger.info("File version saved successfully for version: {}", versionNumber);
+                logger.info("Binary file version saved: {}", versionNumber);
             } else {
-                // Sonraki sürümler: Sadece delta dosyasını sakla
-                String latestContent = fileVersionService.getLatestContent(userFile, currentUser);
-                String delta = DeltaUtil.calculateDelta(latestContent, newContent);
-                logger.info("Delta calculated successfully for version: {}", versionNumber);
+                // Metin dosyalar için delta hesaplanır
+                String newContent = new String(file.getBytes(), StandardCharsets.UTF_8);
+                if (versionNumber.equals("v1")) {
+                    // İlk sürüm tam saklanır
+                    byte[] encryptedData = AESUtil.encrypt(newContent.getBytes(StandardCharsets.UTF_8), aesKey);
+                    String base64EncodedData = Base64.getEncoder().encodeToString(encryptedData);
+                    String versionedFilePath = uniqueFilePath + "/versions/" + versionNumber + "/" + file.getOriginalFilename();
+                    azureBlobStorage.write(new Storage(versionedFilePath, base64EncodedData.getBytes(StandardCharsets.UTF_8)));
+                    logger.info("Text file v1 uploaded: {}", versionedFilePath);
 
-                String deltaFullPath = uniqueFilePath + "/versions/" + versionNumber + "/delta";
-                byte[] deltaBytes = delta.getBytes(StandardCharsets.UTF_8);
-                azureBlobStorage.write(new Storage(deltaFullPath, deltaBytes));
-                logger.info("Delta file uploaded to Blob Storage at: {}", deltaFullPath);
+                    // Versiyon bilgisini kaydet
+                    FileVersion version = fileVersionService.createVersion(userFile, versionNumber, null);
+                    fileVersionService.saveFileVersion(version);
+                    logger.info("Text file version saved: {}", versionNumber);
+                } else {
+                    // Sonraki sürümler için delta hesaplanır
+                    String latestContent = fileVersionService.getLatestContent(userFile, currentUser);
+                    String delta = DeltaUtil.calculateDelta(latestContent, newContent);
+                    logger.info("Delta calculated for version: {}", versionNumber);
 
-                // Versiyon bilgisini kaydet
-                FileVersion version = fileVersionService.createVersion(userFile, versionNumber, deltaFullPath);
-                fileVersionService.saveFileVersion(version);
-                logger.info("File version saved successfully for version: {}", versionNumber);
+                    String deltaPath = uniqueFilePath + "/versions/" + versionNumber + "/delta";
+                    azureBlobStorage.write(new Storage(deltaPath, delta.getBytes(StandardCharsets.UTF_8)));
+                    logger.info("Delta file uploaded: {}", deltaPath);
+
+                    // Versiyon bilgisini kaydet
+                    FileVersion version = fileVersionService.createVersion(userFile, versionNumber, deltaPath);
+                    fileVersionService.saveFileVersion(version);
+                    logger.info("Delta version saved: {}", versionNumber);
+                }
             }
 
-            return ResponseEntity.ok("File successfully uploaded with version: " + versionNumber);
+            return ResponseEntity.ok("File uploaded successfully with version: " + versionNumber);
         } catch (Exception e) {
             logger.error("File upload failed for user: {}. Error: {}", username, e.getMessage(), e);
-            return ResponseEntity.status(500).body("File upload failed: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("File upload failed: " + e.getMessage());
         }
     }
-
 
     @GetMapping("/download/{fileName}/{versionNumber}")
     @PreAuthorize("hasRole('ROLE_ADMIN') or #authentication.name == principal.username")
@@ -161,8 +177,26 @@ public class AzureBlobController {
         }
 
         try {
-            String reconstructedContent = fileVersionService.reconstructFileContent(file, versionNumber, user);
-            byte[] originalData = reconstructedContent.getBytes(StandardCharsets.UTF_8);
+            String fileNameLower = fileName.toLowerCase();
+            boolean isBinary = fileNameLower.endsWith(".jpg") || fileNameLower.endsWith(".png") || fileNameLower.endsWith(".mp4");
+
+            byte[] originalData;
+
+            if (isBinary) {
+                // For binary files: Read the encrypted and Base64-encoded data
+                String versionedFilePath = file.getPath() + "/versions/" + versionNumber + "/" + fileName;
+                byte[] base64EncodedData = azureBlobStorage.read(new Storage(versionedFilePath, null));
+
+                // Decode from Base64
+                byte[] encryptedData = Base64.getDecoder().decode(base64EncodedData);
+
+                // Decrypt the data
+                originalData = AESUtil.decrypt(encryptedData, user.getEncryptionKey());
+            } else {
+                // For text files: Reconstruct the file using delta computation
+                String reconstructedContent = fileVersionService.reconstructFileContent(file, versionNumber, user);
+                originalData = reconstructedContent.getBytes(StandardCharsets.UTF_8);
+            }
 
             ByteArrayResource resource = new ByteArrayResource(originalData);
 
