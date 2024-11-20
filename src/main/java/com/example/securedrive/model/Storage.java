@@ -1,18 +1,30 @@
 package com.example.securedrive.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-
-import java.io.InputStream;
-
-@Setter
-@Getter
-@AllArgsConstructor
-@NoArgsConstructor
 public class Storage {
-    private String path;
-    private String fileName;
-    private InputStream inputStream;
+    private String fullPath;
+    private byte[] data;
+
+    public Storage(String fullPath, byte[] data) {
+        this.fullPath = fullPath;
+        this.data = data;
+    }
+
+    // Getter ve Setter metotları
+    public String getFullPath() {
+        return fullPath;
+    }
+
+    public void setFullPath(String fullPath) {
+        this.fullPath = fullPath;
+    }
+
+    public byte[] getData() {
+        return data;
+    }
+
+    public void setData(byte[] data) {
+        this.data = data;
+    }
 }
+
+
