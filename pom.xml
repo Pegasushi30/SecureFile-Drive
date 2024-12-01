@@ -16,7 +16,53 @@
 	<properties>
 		<java.version>17</java.version>
 	</properties>
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-dependencies</artifactId>
+				<version>3.1.6</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 	<dependencies>
+
+		<!-- https://mvnrepository.com/artifact/com.azure.spring/spring-cloud-azure-starter-active-directory -->
+		<dependency>
+			<groupId>com.azure.spring</groupId>
+			<artifactId>spring-cloud-azure-starter-active-directory</artifactId>
+			<version>5.18.0</version>
+		</dependency>
+
+		<!-- (Optional) Thymeleaf if you're using it for views -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-thymeleaf</artifactId>
+		</dependency>
+
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-oauth2-client</artifactId>
+			<exclusions>
+				<exclusion>
+					<groupId>org.springframework.security</groupId>
+					<artifactId>spring-security-oauth2-client</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+
+
+		<!-- https://mvnrepository.com/artifact/com.microsoft.azure/msal4j -->
+		<dependency>
+			<groupId>com.microsoft.azure</groupId>
+			<artifactId>msal4j</artifactId>
+			<version>1.17.2</version>
+		</dependency>
+
+
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
@@ -70,7 +116,16 @@
 			<version>12.28.0</version>
 		</dependency>
 
-
+		<dependency>
+			<groupId>org.hibernate.validator</groupId>
+			<artifactId>hibernate-validator</artifactId>
+			<version>8.0.1.Final</version>
+		</dependency>
+		<dependency>
+			<groupId>jakarta.validation</groupId>
+			<artifactId>jakarta.validation-api</artifactId>
+			<version>3.0.2</version>
+		</dependency>
 		<!-- https://mvnrepository.com/artifact/io.netty/netty-common -->
 		<dependency>
 			<groupId>io.netty</groupId>
@@ -110,14 +165,15 @@
 
 
 		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-oauth2-client</artifactId>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-oauth2-client</artifactId>
+			<version>6.1.5</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.springframework.security</groupId>
-			<artifactId>spring-security-oauth2-client</artifactId>
-			<version>6.3.0</version>  <!-- Upgrade to the latest secure version -->
+			<artifactId>spring-security-oauth2-core</artifactId>
+			<version>6.1.5</version>
 		</dependency>
 
 		<dependency>
@@ -222,7 +278,7 @@
 		<dependency>
 			<groupId>org.springframework.security</groupId>
 			<artifactId>spring-security-web</artifactId>
-			<version>6.3.4</version>
+			<version>6.1.5</version>
 		</dependency>
 		<!-- SnakeYAML for YAML support -->
 		<dependency>
@@ -235,14 +291,13 @@
 		<dependency>
 			<groupId>org.springframework.security</groupId>
 			<artifactId>spring-security-core</artifactId>
-			<version>6.3.2</version> <!-- Updated version -->
+			<version>6.1.5</version>
 		</dependency>
-
 		<!-- Spring Security Config -->
 		<dependency>
 			<groupId>org.springframework.security</groupId>
 			<artifactId>spring-security-config</artifactId>
-			<version>6.2.0</version> <!-- Updated version -->
+			<version>6.1.5</version>
 		</dependency>
 
 		<!-- Lombok -->

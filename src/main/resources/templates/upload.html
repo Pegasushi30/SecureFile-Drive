@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Dosya Yükleme</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<nav>
+    <a th:href="@{/upload}">Dosya Yükle</a>
+    <a th:href="@{/files}">Dosyalarım</a>
+    <a th:href="@{/home}">Anasayfa</a>
+</nav>
+<main>
+    <h1>Dosya Yükle</h1>
+    <form th:action="@{/files/upload}" method="post" enctype="multipart/form-data">
+        <label for="file">Yüklemek için bir dosya seçin:</label>
+        <input id="file" type="file" name="file"/>
+        <input type="hidden" name="username" th:value="${username}"/>
+        <button type="submit">Yükle</button>
+    </form>
+</main>
+<footer>© 2024 SecureFile Drive</footer>
+</body>
+</html>

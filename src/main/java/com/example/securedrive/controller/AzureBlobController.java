@@ -1,6 +1,5 @@
 package com.example.securedrive.controller;
 
-
 import com.example.securedrive.model.File;
 import com.example.securedrive.model.FileVersion;
 import com.example.securedrive.model.Storage;
@@ -15,7 +14,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -23,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.web.servlet.ModelAndView;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
@@ -30,7 +29,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/files")
+@RequestMapping("files")
 public class AzureBlobController {
 
     @Autowired
@@ -49,40 +48,47 @@ public class AzureBlobController {
 
     @PostMapping("/upload")
     @PreAuthorize("hasRole('ROLE_ADMIN') or #username == authentication.name")
-    public ResponseEntity<String> uploadFile(
+    public ModelAndView uploadFile(
             @RequestParam("file") MultipartFile file,
             @RequestParam("username") String username,
-            @RequestParam(value = "versionNumber", required = false) String manualVersionNumber,
-            Authentication authentication) {
+            Authentication authentication,
+            @RequestParam(value = "versionNumber", required = false) String manualVersionNumber) {
 
-        logger.info("Upload request received for user: {}", username);
-
-        if (file.isEmpty()) {
-            return ResponseEntity.badRequest().body("File is missing or empty!");
-        }
-
-        if (!authentication.getName().equals(username)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You are not authorized to upload files for this user.");
-        }
-
-        Optional<User> currentUserOptional = userService.findByUsername(username);
-        if (currentUserOptional.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not found.");
-        }
-
-        User currentUser = currentUserOptional.get();
+        ModelAndView modelAndView = new ModelAndView();
 
         try {
+            if (file.isEmpty()) {
+                modelAndView.setViewName("error");
+                modelAndView.addObject("message", "Dosya eksik veya boş!");
+                return modelAndView;
+            }
+
+            if (!authentication.getName().equals(username) && authentication.getAuthorities().stream()
+                    .noneMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"))) {
+                modelAndView.setViewName("error");
+                modelAndView.addObject("message", "Bu kullanıcı için dosya yükleme yetkiniz yok.");
+                return modelAndView;
+            }
+
+            Optional<User> currentUserOptional = userService.findByUsername(username);
+            if (currentUserOptional.isEmpty()) {
+                modelAndView.setViewName("error");
+                modelAndView.addObject("message", "Kullanıcı bulunamadı.");
+                return modelAndView;
+            }
+
+            User currentUser = currentUserOptional.get();
+
             String aesKey = currentUser.getEncryptionKey();
             if (aesKey == null || aesKey.isEmpty()) {
                 aesKey = AESUtil.generateAESKey();
                 currentUser.setEncryptionKey(aesKey);
                 userService.saveUser(currentUser);
-                logger.info("Generated new AES key for user: {}", username);
+                logger.info("Kullanıcı için yeni AES anahtarı oluşturuldu: {}", username);
             }
 
             String uniqueFilePath = "uploads/" + username + "/" + file.getOriginalFilename();
-            logger.info("Generated unique file path: {}", uniqueFilePath);
+            logger.info("Benzersiz dosya yolu oluşturuldu: {}", uniqueFilePath);
 
             File userFile = fileService.findByFileNameAndUser(file.getOriginalFilename(), currentUser);
             if (userFile == null) {
@@ -91,109 +97,104 @@ public class AzureBlobController {
                 userFile.setPath(uniqueFilePath);
                 userFile.setUser(currentUser);
                 fileService.saveFile(userFile);
-                logger.info("File metadata created and saved for file: {}", file.getOriginalFilename());
+                logger.info("Dosya meta verileri oluşturuldu ve kaydedildi: {}", file.getOriginalFilename());
             }
 
             String versionNumber = (manualVersionNumber != null)
                     ? manualVersionNumber
                     : fileVersionService.generateNextVersion(userFile);
-            logger.info("Version number generated: {}", versionNumber);
+            logger.info("Versiyon numarası oluşturuldu: {}", versionNumber);
 
-            // Dosya türünü kontrol et
+            // Dosya türünü belirle
             String fileName = Objects.requireNonNull(file.getOriginalFilename()).toLowerCase();
-            boolean isBinary = fileName.endsWith(".jpg") || fileName.endsWith(".png") || fileName.endsWith(".mp4");
+            boolean isBinary = fileName.endsWith(".jpg") || fileName.endsWith(".png") || fileName.endsWith(".mp4")
+                    || fileName.endsWith(".doc") || fileName.endsWith(".docx")
+                    || fileName.endsWith(".pdf") || fileName.endsWith(".xlsx") || fileName.endsWith(".pptx");
+
 
             if (isBinary) {
-                // Binary dosyalar için: AES şifrele ve Base64 kodla
                 byte[] encryptedData = AESUtil.encrypt(file.getBytes(), aesKey);
                 String base64EncodedData = Base64.getEncoder().encodeToString(encryptedData);
                 String versionedFilePath = uniqueFilePath + "/versions/" + versionNumber + "/" + file.getOriginalFilename();
-
-                // Base64 kodlanmış veriyi bytes[] olarak sakla
                 azureBlobStorage.write(new Storage(versionedFilePath, base64EncodedData.getBytes(StandardCharsets.UTF_8)));
-                logger.info("Binary file uploaded: {}", versionedFilePath);
-
-                // Versiyon bilgisini kaydet
                 FileVersion version = fileVersionService.createVersion(userFile, versionNumber, null);
                 fileVersionService.saveFileVersion(version);
-                logger.info("Binary file version saved: {}", versionNumber);
             } else {
-                // Metin dosyalar için delta hesaplanır
                 String newContent = new String(file.getBytes(), StandardCharsets.UTF_8);
                 if (versionNumber.equals("v1")) {
-                    // İlk sürüm tam saklanır
                     byte[] encryptedData = AESUtil.encrypt(newContent.getBytes(StandardCharsets.UTF_8), aesKey);
                     String base64EncodedData = Base64.getEncoder().encodeToString(encryptedData);
                     String versionedFilePath = uniqueFilePath + "/versions/" + versionNumber + "/" + file.getOriginalFilename();
                     azureBlobStorage.write(new Storage(versionedFilePath, base64EncodedData.getBytes(StandardCharsets.UTF_8)));
-                    logger.info("Text file v1 uploaded: {}", versionedFilePath);
-
-                    // Versiyon bilgisini kaydet
                     FileVersion version = fileVersionService.createVersion(userFile, versionNumber, null);
                     fileVersionService.saveFileVersion(version);
-                    logger.info("Text file version saved: {}", versionNumber);
                 } else {
-                    // Sonraki sürümler için delta hesaplanır
                     String latestContent = fileVersionService.getLatestContent(userFile, currentUser);
                     String delta = DeltaUtil.calculateDelta(latestContent, newContent);
-                    logger.info("Delta calculated for version: {}", versionNumber);
-
                     String deltaPath = uniqueFilePath + "/versions/" + versionNumber + "/delta";
                     azureBlobStorage.write(new Storage(deltaPath, delta.getBytes(StandardCharsets.UTF_8)));
-                    logger.info("Delta file uploaded: {}", deltaPath);
-
-                    // Versiyon bilgisini kaydet
                     FileVersion version = fileVersionService.createVersion(userFile, versionNumber, deltaPath);
                     fileVersionService.saveFileVersion(version);
-                    logger.info("Delta version saved: {}", versionNumber);
                 }
             }
 
-            return ResponseEntity.ok("File uploaded successfully with version: " + versionNumber);
+            modelAndView.setViewName("success");
+            modelAndView.addObject("message", "Dosya başarıyla yüklendi. Versiyon: " + versionNumber);
+            return modelAndView;
         } catch (Exception e) {
-            logger.error("File upload failed for user: {}. Error: {}", username, e.getMessage(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("File upload failed: " + e.getMessage());
+            logger.error("Dosya yükleme başarısız oldu: {}", e.getMessage(), e);
+            modelAndView.setViewName("error");
+            modelAndView.addObject("message", "Dosya yükleme başarısız: " + e.getMessage());
+            return modelAndView;
         }
     }
 
-    @GetMapping("/download/{fileName}/{versionNumber}")
-    @PreAuthorize("hasRole('ROLE_ADMIN') or #authentication.name == principal.username")
+    @GetMapping("/download/{username}/{fileName}/{versionNumber}")
+    @PreAuthorize("hasRole('ROLE_ADMIN') or #username == authentication.name")
     public ResponseEntity<Resource> downloadSpecificVersion(
+            @PathVariable("username") String username,
             @PathVariable("fileName") String fileName,
             @PathVariable("versionNumber") String versionNumber,
             Authentication authentication) {
 
-        Optional<User> currentUser = userService.findByUsername(authentication.getName());
+        if (!authentication.getName().equals(username) && authentication.getAuthorities().stream()
+                .noneMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"))) {
+            return ResponseEntity.status(403).build();
+        }
+
+        Optional<User> currentUser = userService.findByUsername(username);
         if (currentUser.isEmpty()) {
-            logger.error("User not found: {}", authentication.getName());
-            return ResponseEntity.status(401).body(null);
+            logger.error("Kullanıcı bulunamadı: {}", username);
+            return ResponseEntity.status(401).build();
         }
 
         User user = currentUser.get();
         File file = fileService.findByFileNameAndUser(fileName, user);
         if (file == null) {
-            logger.error("File not found: {}", fileName);
-            return ResponseEntity.status(404).body(null);
+            logger.error("Dosya bulunamadı: {}", fileName);
+            return ResponseEntity.status(404).build();
         }
 
         try {
             String fileNameLower = fileName.toLowerCase();
-            boolean isBinary = fileNameLower.endsWith(".jpg") || fileNameLower.endsWith(".png") || fileNameLower.endsWith(".mp4");
+            boolean isBinary = fileNameLower.endsWith(".jpg") || fileNameLower.endsWith(".png") || fileNameLower.endsWith(".mp4")
+                    || fileNameLower.endsWith(".doc") || fileNameLower.endsWith(".docx")
+                    || fileNameLower.endsWith(".pdf") || fileNameLower.endsWith(".xlsx") || fileNameLower.endsWith(".pptx");
 
             byte[] originalData;
 
             if (isBinary) {
-                // For binary files: Read the encrypted and Base64-encoded data
+                // Binary dosyalar: Şifreli ve Base64 kodlanmış veriyi oku
                 String versionedFilePath = file.getPath() + "/versions/" + versionNumber + "/" + fileName;
                 byte[] base64EncodedData = azureBlobStorage.read(new Storage(versionedFilePath, null));
 
-                // Decode from Base64
+                // Base64'ten çöz
                 byte[] encryptedData = Base64.getDecoder().decode(base64EncodedData);
 
-                // Decrypt the data
+                // Veriyi deşifre et
                 originalData = AESUtil.decrypt(encryptedData, user.getEncryptionKey());
             } else {
-                // For text files: Reconstruct the file using delta computation
+                // Metin dosyalar: Dosyayı delta hesaplaması ile yeniden oluştur
                 String reconstructedContent = fileVersionService.reconstructFileContent(file, versionNumber, user);
                 originalData = reconstructedContent.getBytes(StandardCharsets.UTF_8);
             }
@@ -205,54 +206,80 @@ public class AzureBlobController {
                     .contentLength(originalData.length)
                     .body(resource);
         } catch (Exception e) {
-            logger.error("Error during file download: ", e);
-            return ResponseEntity.status(500).body(null);
+            logger.error("Dosya indirme sırasında hata oluştu: ", e);
+            return ResponseEntity.status(500).build();
         }
     }
 
-    @DeleteMapping("/delete/{fileName}/{versionNumber}")
-    @PreAuthorize("hasRole('ROLE_ADMIN') or #authentication.name == principal.username")
-    public ResponseEntity<String> deleteSpecificVersion(
+    @DeleteMapping("/delete/{username}/{fileName}/{versionNumber}")
+    @PreAuthorize("hasRole('ROLE_ADMIN') or #username == authentication.name")
+    public ModelAndView deleteSpecificVersion(
+            @PathVariable("username") String username,
             @PathVariable("fileName") String fileName,
             @PathVariable("versionNumber") String versionNumber,
             Authentication authentication) {
 
-        Optional<User> currentUser = userService.findByUsername(authentication.getName());
+        ModelAndView modelAndView = new ModelAndView();
+
+        if (!authentication.getName().equals(username) && authentication.getAuthorities().stream()
+                .noneMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"))) {
+            modelAndView.setViewName("error");
+            modelAndView.addObject("message", "Bu kullanıcı için dosya silme yetkiniz yok.");
+            return modelAndView;
+        }
+
+        Optional<User> currentUser = userService.findByUsername(username);
         if (currentUser.isEmpty()) {
-            return ResponseEntity.status(401).body("Unauthorized");
+            modelAndView.setViewName("error");
+            modelAndView.addObject("message", "Yetkisiz erişim");
+            return modelAndView;
         }
 
         User user = currentUser.get();
         File file = fileService.findByFileNameAndUser(fileName, user);
         if (file == null) {
-            return ResponseEntity.status(404).body("File not found");
+            modelAndView.setViewName("error");
+            modelAndView.addObject("message", "Dosya bulunamadı");
+            return modelAndView;
         }
 
         try {
             FileVersion version = fileVersionService.getVersionByFileAndNumber(file, versionNumber);
             if (version == null) {
-                return ResponseEntity.status(404).body("Version not found");
+                modelAndView.setViewName("error");
+                modelAndView.addObject("message", "Versiyon bulunamadı");
+                return modelAndView;
             }
 
+            // Blob'dan sil
             if (versionNumber.equals("v1")) {
-                // İlk sürümse, tam şifreli dosyayı sil
-                String encryptedFilePath = "uploads/" + user.getUsername() + "/" + fileName + "/versions/" + versionNumber + "/" + fileName;
+                String encryptedFilePath = file.getPath() + "/versions/" + versionNumber + "/" + fileName;
                 azureBlobStorage.delete(new Storage(encryptedFilePath, null));
             } else {
-                // Diğer sürümlerde delta dosyasını sil
                 if (version.getDeltaPath() != null) {
                     azureBlobStorage.delete(new Storage(version.getDeltaPath(), null));
                 }
             }
 
-            // Veritabanından versiyonu sil
+            // Versiyonu ve dosyayı MySQL'den sil
             fileVersionService.deleteFileVersion(version);
 
-            return ResponseEntity.ok("Version deleted: " + versionNumber);
+            // Eğer başka versiyon kalmadıysa dosyayı sil
+            if (fileVersionService.getAllVersions(file).isEmpty()) {
+                fileService.deleteFile(file);
+            }
+
+            // Dosya başarıyla silindi
+            modelAndView.setViewName("redirect:/files?success");
+            return modelAndView;
         } catch (Exception e) {
-            logger.error("Error during version deletion: ", e);
-            return ResponseEntity.status(500).body("Failed to delete version");
+            logger.error("Versiyon silme sırasında hata oluştu: ", e);
+            modelAndView.setViewName("error");
+            modelAndView.addObject("message", "Versiyon silinemedi: " + e.getMessage());
+            return modelAndView;
         }
     }
+
+
 
 }

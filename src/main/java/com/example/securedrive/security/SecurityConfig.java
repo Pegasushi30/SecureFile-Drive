@@ -1,62 +1,73 @@
 package com.example.securedrive.security;
 
-import com.example.securedrive.security.JwtAuthenticationFilter;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
-import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.client.registration.ClientRegistration;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
+import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.firewall.HttpFirewall;
-import org.springframework.security.web.firewall.StrictHttpFirewall;
 
 @Configuration
 @EnableWebSecurity
-@EnableGlobalMethodSecurity(prePostEnabled = true)
+@EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
+    private final B2CConfiguration b2cConfiguration;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final CustomOidcUserService customOidcUserService;
 
-    @Autowired
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
+    public SecurityConfig(B2CConfiguration b2cConfiguration,
+                          JwtAuthenticationFilter jwtAuthenticationFilter,
+                          CustomOidcUserService customOidcUserService) {
+        this.b2cConfiguration = b2cConfiguration;
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.customOidcUserService = customOidcUserService;
     }
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
-
-    @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
-        return authenticationConfiguration.getAuthenticationManager();
-    }
-
-
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.csrf(AbstractHttpConfigurer::disable)
+
+        http
+                .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authz -> authz
-                        .requestMatchers("/api/v1/auth/**").permitAll()  // Allow public access to authentication routes
-                        .anyRequest().authenticated()  // All other routes require authentication
+                        .requestMatchers("/", "/home", "/upload", "/files", "/css/**", "/js/**", "/favicon.ico").permitAll()
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .anyRequest().authenticated()
                 )
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))  // Stateless session management for JWT
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);  // Add JWT filter before username/password filter
+                .oauth2Login(oauth2 -> oauth2
+                        .clientRegistrationRepository(clientRegistrationRepository())
+                        .userInfoEndpoint(userInfo -> userInfo.oidcUserService(customOidcUserService))
+                        .defaultSuccessUrl("/home", true)
+                        .failureUrl("/login?error=true")
+                )
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
+
     @Bean
-    public HttpFirewall customHttpFirewall() {
-        return new CustomHttpFirewall();  // Use the custom firewall that handles %0A
+    public ClientRegistrationRepository clientRegistrationRepository() {
+        ClientRegistration b2cRegistration = ClientRegistration.withRegistrationId("azureb2c")
+                .clientId(b2cConfiguration.getClientId())
+                .clientSecret(b2cConfiguration.getClientSecret())
+                .scope("openid", "profile", "email", "https://sdfile.onmicrosoft.com/6c4e0c80-e9f5-4922-a3d3-097549f658d2/myapi.read")
+                .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
+                .redirectUri(b2cConfiguration.getRedirectUri())
+                .authorizationUri(b2cConfiguration.getAuthorizationUri())
+                .tokenUri(b2cConfiguration.getTokenUri())
+                .jwkSetUri(b2cConfiguration.getJwkSetUri())
+                .userNameAttributeName("sub")
+                .clientName("Azure B2C")
+                .build();
+
+        return new InMemoryClientRegistrationRepository(b2cRegistration);
     }
+
 }

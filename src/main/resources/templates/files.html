@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Dosyalarım</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<nav>
+    <a th:href="@{/upload}">Dosya Yükle</a>
+    <a th:href="@{/files}">Dosyalarım</a>
+    <a th:href="@{/home}">Anasayfa</a>
+</nav>
+<main>
+    <h1>Yüklediğiniz Dosyalar</h1>
+    <div th:if="${param.success}">
+        <p style="color: green;">Dosya başarıyla silindi!</p>
+    </div>
+    <ul>
+        <li th:each="file : ${files}">
+            <span th:text="${file.fileName}"></span>
+            <form th:action="@{'/files/download/' + ${username} + '/' + ${file.fileName} + '/v1'}" method="get">
+                <button type="submit" class="download">İndir</button>
+            </form>
+            <form th:action="@{'/files/delete/' + ${username} + '/' + ${file.fileName} + '/v1'}" method="post">
+                <input type="hidden" name="_method" value="delete"/>
+                <button type="submit" class="delete">Sil</button>
+            </form>
+        </li>
+    </ul>
+</main>
+<footer>© 2024 SecureFile Drive</footer>
+</body>
+</html>

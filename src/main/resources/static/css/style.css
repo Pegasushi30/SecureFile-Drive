@@ -1,0 +1,123 @@
+/* Genel Tema */
+body {
+    font-family: 'Poppins', Arial, sans-serif; /* Daha modern ve şık bir font */
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+    color: #333;
+    background-color: #F8F9FA;
+    text-align: center; /* Tüm içerik ortalanır */
+}
+
+/* Başlıklar */
+h1, h2, h3 {
+    color: #007BFF;
+    margin-bottom: 20px;
+    font-weight: bold;
+    text-align: center; /* Başlıkları ortalar */
+}
+
+/* Navigasyon */
+nav, .nav-links {
+    background-color: #007BFF;
+    padding: 10px;
+    color: white;
+    text-align: center;
+}
+
+nav a, .nav-links a {
+    color: white;
+    margin: 0 15px;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+nav a:hover, .nav-links a:hover {
+    text-decoration: underline;
+}
+
+/* Butonlar */
+button {
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    font-size: 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    margin: 0 5px; /* Butonlar arasına boşluk ekledi */
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+button.delete {
+    background-color: #dc3545;
+}
+
+button.delete:hover {
+    background-color: #c82333;
+}
+
+/* Form Stilleri */
+form {
+    display: inline; /* Formu kutu olmadan satır içi göster */
+    margin: 0; /* Ekstra boşlukları kaldır */
+    padding: 0; /* Varsayılan padding'i kaldır */
+    background: none; /* Arka plan rengini kaldır */
+    box-shadow: none; /* Gölgeyi kaldır */
+    border: none; /* Sınırları kaldır */
+}
+
+/* Form İçindeki Dosya Yükleme Input Stili */
+form input[type="file"] {
+    display: inline-block;
+    margin: 10px 0;
+    font-size: 16px;
+}
+
+/* Liste ve Kart Stilleri */
+ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0 auto;
+    max-width: 800px;
+    text-align: left; /* Listeler soldan hizalı */
+}
+
+li {
+    background: white;
+    margin: 10px 0;
+    padding: 15px;
+    border-radius: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+li span {
+    flex: 1;
+    margin-right: 10px;
+}
+
+/* Linkler */
+a {
+    color: #007BFF;
+    text-decoration: none;
+    font-size: 16px;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* Footer */
+footer {
+    text-align: center;
+    margin-top: 30px;
+    color: #666;
+    font-size: 14px;
+}

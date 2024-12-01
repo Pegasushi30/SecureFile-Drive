@@ -30,10 +30,11 @@ public class FileService {
         return fileRepository.findByFileNameAndUser(fileName, user);
     }
 
-    // Dosyayı ID'ye göre sil
-    public void deleteFile(Long id) {
-        fileRepository.deleteById(id);
+
+    public void deleteFile(File file) {
+        fileRepository.delete(file);
     }
+
 
     // Dosya ID'sine göre dosya getir
     public Optional<File> getFileById(Long id) {

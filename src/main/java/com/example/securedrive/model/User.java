@@ -25,28 +25,42 @@ public class User implements UserDetails {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // Azure AD veya B2C'den gelen kullanıcı kimliği (oid veya sub)
     @Column(nullable = false, unique = true)
     private String username;
 
     @Column(nullable = false, unique = true)
     private String email;
 
-    @Column(nullable = false)
-    private String password;
-
     @Enumerated(EnumType.STRING)
     private Role role;
 
+    // Kullanıcının dosyalarıyla ilişki
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<File> files;
 
     @Column(name = "encryption_key", nullable = false)
-    private String encryptionKey;  // AES key
+    private String encryptionKey;  // AES anahtarı
+
+    // UserDetails metodları
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + this.role.name()));
     }
+
+    @Override
+    public String getPassword() {
+        // Kullanılmadığı için null dönebilir
+        return null;
+    }
+
+    @Override
+    public String getUsername() {
+        return username;
+    }
+
+    // Diğer UserDetails metodları
 
     @Override
     public boolean isAccountNonExpired() {

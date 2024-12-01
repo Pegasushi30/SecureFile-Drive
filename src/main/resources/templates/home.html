@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Anasayfa</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<nav>
+    <a th:href="@{/upload}">Dosya Yükle</a>
+    <a th:href="@{/files}">Dosyalarım</a>
+    <a th:href="@{/home}">Anasayfa</a>
+</nav>
+<main>
+    <h1>Anasayfaya Hoş Geldiniz!</h1>
+    <p>Merhaba, <strong th:text="${displayName}">[Kullanıcı Adı]</strong></p>
+    <ul>
+        <li><strong>E-posta:</strong> <span th:text="${email}">[E-posta]</span></li>
+        <li><strong>Kullanıcı Adı:</strong> <span th:text="${username}">[Kullanıcı Adı]</span></li>
+        <li><strong>Rolleriniz:</strong>
+            <ul>
+                <li th:each="role : ${roles}" th:text="${role}"></li>
+            </ul>
+        </li>
+    </ul>
+</main>
+<footer>© 2024 SecureFile Drive</footer>
+</body>
+</html>
