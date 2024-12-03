@@ -1,7 +1,12 @@
 package com.example.securedrive.controller;
 
 import com.example.securedrive.security.B2CConfiguration;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -10,7 +15,6 @@ import java.io.IOException;
 
 @Controller
 public class OAuth2Controller {
-
     // Azure B2C giriş akışını başlatır
     @GetMapping("/oauth2/authorization/azureb2c")
     public String redirectToAzureOAuth2() {
@@ -36,14 +40,5 @@ public class OAuth2Controller {
                 "&prompt=login";
         response.sendRedirect(redirectUrl);
     }
-
-
-
-    @GetMapping("/logout")
-    public void logout(HttpServletResponse response) throws IOException {
-        String logoutUrl = "https://sdfile.b2clogin.com/sdfile.onmicrosoft.com/B2C_1_SignUpSignIn/oauth2/v2.0/logout" +
-                "?post_logout_redirect_uri=https://localhost:8443/";
-        response.sendRedirect(logoutUrl);
-    }
-
 }
+

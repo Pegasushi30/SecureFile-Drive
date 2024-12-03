@@ -46,11 +46,15 @@ public class SecurityConfig {
                         .defaultSuccessUrl("/home", true)
                         .failureUrl("/login?error=true")
                 )
+                .logout(logout -> logout
+                        .logoutSuccessUrl("https://sdfile.b2clogin.com/sdfile.onmicrosoft.com/B2C_1_SignUpSignIn/oauth2/v2.0/logout" +
+                                "?post_logout_redirect_uri=https://localhost:8443/")
+                        .permitAll()
+                )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
-
 
     @Bean
     public ClientRegistrationRepository clientRegistrationRepository() {

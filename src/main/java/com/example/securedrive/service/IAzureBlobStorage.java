@@ -8,4 +8,5 @@ public interface IAzureBlobStorage {
     String write(Storage storage) throws AzureBlobStorageException;
     byte[] read(Storage storage) throws AzureBlobStorageException;
     void delete(Storage storage) throws AzureBlobStorageException;
+    boolean exists(Storage storage) throws AzureBlobStorageException;
 }

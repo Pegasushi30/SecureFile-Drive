@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class FileVersion {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -30,7 +31,5 @@ public class FileVersion {
     @Column(nullable = false)
     private LocalDateTime timestamp; // Versiyon oluşturulma zamanı
 
-    @Column(nullable = true)
-    private String deltaPath; // Delta dosyasının Blob Storage'daki yolu (v1 için null)
+    private String deltaPath; // Delta dosyasının yolu (v1 için null)
 }
-

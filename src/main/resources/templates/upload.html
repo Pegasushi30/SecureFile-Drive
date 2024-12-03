@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
+    <meta charset="UTF-8">
     <title>Dosya Yükleme</title>
     <link rel="stylesheet" href="/css/style.css">
 </head>
@@ -9,13 +10,15 @@
     <a th:href="@{/upload}">Dosya Yükle</a>
     <a th:href="@{/files}">Dosyalarım</a>
     <a th:href="@{/home}">Anasayfa</a>
+    <a th:href="@{/shared-files}">Paylaşılan Dosyalar</a>
+    <a th:href="@{/logout}">Çıkış Yap</a>
 </nav>
 <main>
     <h1>Dosya Yükle</h1>
     <form th:action="@{/files/upload}" method="post" enctype="multipart/form-data">
         <label for="file">Yüklemek için bir dosya seçin:</label>
-        <input id="file" type="file" name="file"/>
-        <input type="hidden" name="username" th:value="${username}"/>
+        <input id="file" type="file" name="file" required />
+        <input type="hidden" name="username" th:value="${username}" />
         <button type="submit">Yükle</button>
     </form>
 </main>

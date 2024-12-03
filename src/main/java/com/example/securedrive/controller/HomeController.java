@@ -4,6 +4,7 @@ import com.example.securedrive.model.File;
 import com.example.securedrive.model.User;
 import com.example.securedrive.service.FileService;
 import com.example.securedrive.service.UserService;
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -66,11 +67,21 @@ public class HomeController {
         if (authentication != null) {
             String username = authentication.getName();
             Optional<User> userOptional = userService.findByUsername(username);
+
             if (userOptional.isPresent()) {
-                List<File> files = fileService.getFilesByUser(userOptional.get());
-                System.out.println("Files retrieved: " + files); // Debug log
-                modelAndView.addObject("files", files);
-                modelAndView.addObject("username", username);
+                User user = userOptional.get();
+
+                // Kullanıcıya ait dosyaları ve versiyonları al
+                List<File> files = fileService.getFilesByUser(user);
+
+                // Hibernate'in Lazy Loading özelliğini tetiklemek için dosyaların paylaşım verilerini yükleyin
+                files.forEach(file -> {
+                    Hibernate.initialize(file.getVersions());
+                    Hibernate.initialize(file.getFileShares());
+                });
+
+                modelAndView.addObject("files", files); // Dosyaları modele ekleyin
+                modelAndView.addObject("username", username); // Kullanıcı adını modele ekleyin
             } else {
                 modelAndView.addObject("files", List.of());
             }
@@ -82,12 +93,32 @@ public class HomeController {
     }
 
 
-
-
     @GetMapping("/upload")
     public ModelAndView uploadPage(Authentication authentication) {
         ModelAndView modelAndView = new ModelAndView("upload");
         modelAndView.addObject("username", authentication != null ? authentication.getName() : "Misafir");
+        return modelAndView;
+    }
+
+    @GetMapping("/shared-files")
+    public ModelAndView sharedFilesPage(Authentication authentication) {
+        ModelAndView modelAndView = new ModelAndView("shared-files");
+
+        if (authentication != null) {
+            String username = authentication.getName();
+            Optional<User> userOptional = userService.findByUsername(username);
+            if (userOptional.isPresent()) {
+                User user = userOptional.get();
+                List<File> sharedFiles = fileService.getFilesSharedWithUser(user);
+                modelAndView.addObject("files", sharedFiles);
+                modelAndView.addObject("username", username);
+            } else {
+                modelAndView.addObject("files", List.of());
+            }
+        } else {
+            modelAndView.addObject("files", List.of());
+        }
+
         return modelAndView;
     }
 }

@@ -1,5 +1,6 @@
 package com.example.securedrive.service.impl;
 
+import com.azure.storage.blob.BlobClientBuilder;
 import com.example.securedrive.exception.AzureBlobStorageException;
 import com.example.securedrive.model.Storage;
 import com.example.securedrive.service.IAzureBlobStorage;
@@ -19,6 +20,8 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.List;
+
+import static org.aspectj.weaver.tools.cache.SimpleCacheFactory.path;
 
 @Service
 @Slf4j
@@ -79,10 +82,28 @@ public class AzureBlobStorageImpl implements IAzureBlobStorage {
         }
     }
 
+
+    // Yeni eklenen exists metodunu burada bulabilirsiniz.
     @Override
-    public String update(Storage storage) throws AzureBlobStorageException {
-        // write metodu ile aynı işlemi yapabilir
-        return write(storage);
+    public boolean exists(Storage storage) throws AzureBlobStorageException {
+        try {
+            String path = storage.getFullPath();
+            if (StringUtils.isBlank(path)) {
+                log.warn("Invalid path provided for existence check: {}", path);
+                return false;
+            }
+
+            BlobClient blobClient = blobContainerClient.getBlobClient(path);
+            boolean exists = blobClient.exists();
+            log.info("Blob existence check for path '{}': {}", path, exists);
+            return exists;
+        } catch (BlobStorageException e) {
+            log.error("Error while checking blob existence for path '{}': {}", path, e.getServiceMessage());
+            throw new AzureBlobStorageException("Error checking blob existence: " + e.getServiceMessage());
+        } catch (Exception e) {
+            log.error("Unexpected error while checking blob existence for path '{}': {}", path, e.getMessage());
+            throw new AzureBlobStorageException("Unexpected error checking blob existence: " + e.getMessage());
+        }
     }
 
     @Override
@@ -96,26 +117,6 @@ public class AzureBlobStorageImpl implements IAzureBlobStorage {
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             client.download(outputStream);
             return outputStream.toByteArray();
-        } catch (BlobStorageException e) {
-            throw new AzureBlobStorageException(e.getServiceMessage());
-        } catch (Exception e) {
-            throw new AzureBlobStorageException(e.getMessage());
-        }
-    }
-
-    @Override
-    public List<String> listFiles(Storage storage) throws AzureBlobStorageException {
-        try {
-            String path = storage.getFullPath();
-            if (StringUtils.isBlank(path)) {
-                throw new AzureBlobStorageException("Storage path is null or invalid");
-            }
-            PagedIterable<BlobItem> blobList = blobContainerClient.listBlobsByHierarchy(path + "/");
-            List<String> blobNamesList = new ArrayList<>();
-            for (BlobItem blob : blobList) {
-                blobNamesList.add(blob.getName());
-            }
-            return blobNamesList;
         } catch (BlobStorageException e) {
             throw new AzureBlobStorageException(e.getServiceMessage());
         } catch (Exception e) {
@@ -139,28 +140,13 @@ public class AzureBlobStorageImpl implements IAzureBlobStorage {
             throw new AzureBlobStorageException(e.getMessage());
         }
     }
+    public byte[] readFromSasUrl(String sasUrl) {
+        BlobClient blobClient = new BlobClientBuilder()
+                .endpoint(sasUrl)
+                .buildClient();
 
-    @Override
-    public void createContainer() throws AzureBlobStorageException {
-        try {
-            blobServiceClient.createBlobContainer(containerName);
-            log.info("Container Created");
-        } catch (BlobStorageException e) {
-            throw new AzureBlobStorageException(e.getServiceMessage());
-        } catch (Exception e) {
-            throw new AzureBlobStorageException(e.getMessage());
-        }
-    }
-
-    @Override
-    public void deleteContainer() throws AzureBlobStorageException {
-        try {
-            blobServiceClient.deleteBlobContainer(containerName);
-            log.info("Container Deleted");
-        } catch (BlobStorageException e) {
-            throw new AzureBlobStorageException(e.getServiceMessage());
-        } catch (Exception e) {
-            throw new AzureBlobStorageException(e.getMessage());
-        }
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        blobClient.download(outputStream);
+        return outputStream.toByteArray();
     }
 }

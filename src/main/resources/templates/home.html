@@ -10,18 +10,14 @@
     <a th:href="@{/upload}">Dosya Yükle</a>
     <a th:href="@{/files}">Dosyalarım</a>
     <a th:href="@{/home}">Anasayfa</a>
+    <a th:href="@{/shared-files}">Paylaşılan Dosyalar</a>
+    <a th:href="@{/logout}">Çıkış Yap</a>
 </nav>
 <main>
     <h1>Anasayfaya Hoş Geldiniz!</h1>
-    <p>Merhaba, <strong th:text="${displayName}">[Kullanıcı Adı]</strong></p>
-    <ul>
+    <ul class="user-info">
         <li><strong>E-posta:</strong> <span th:text="${email}">[E-posta]</span></li>
-        <li><strong>Kullanıcı Adı:</strong> <span th:text="${username}">[Kullanıcı Adı]</span></li>
-        <li><strong>Rolleriniz:</strong>
-            <ul>
-                <li th:each="role : ${roles}" th:text="${role}"></li>
-            </ul>
-        </li>
+        <li><strong>Kullanıcı Adı:</strong> <span th:text="${displayName}">[Kullanıcı Adı]</span></li>
     </ul>
 </main>
 <footer>© 2024 SecureFile Drive</footer>

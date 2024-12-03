@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>İşlem Başarılı</title>
+    <title>Paylaşılan Dosyalar</title>
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
@@ -13,13 +13,13 @@
     <a th:href="@{/logout}">Çıkış Yap</a>
 </nav>
 <main>
-    <h1>İşlem Başarılı!</h1>
-    <p th:text="${message}">İşlem başarıyla tamamlandı.</p>
-    <div class="nav-links">
-        <a th:href="@{/upload}">Yeni Dosya Yükle</a>
-        <a th:href="@{/files}">Dosyalarımı Görüntüle</a>
-        <a th:href="@{/home}">Anasayfaya Dön</a>
-    </div>
+    <h1>Size Paylaşılan Dosyalar</h1>
+    <ul>
+        <li th:each="file : ${files}">
+            <span th:text="${file.fileName}"></span>
+            <a th:href="@{'/files/download-shared/' + ${file.id}}">İndir</a>
+        </li>
+    </ul>
 </main>
 <footer>© 2024 SecureFile Drive</footer>
 </body>
