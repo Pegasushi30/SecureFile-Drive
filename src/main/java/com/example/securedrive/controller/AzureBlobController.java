@@ -5,6 +5,7 @@ import com.example.securedrive.model.*;
 import com.example.securedrive.repository.FileShareRepository;
 import com.example.securedrive.security.AESUtil;
 import com.example.securedrive.security.DeltaUtil;
+import com.example.securedrive.security.KeyVaultService;
 import com.example.securedrive.service.FileService;
 import com.example.securedrive.service.FileVersionService;
 import com.example.securedrive.service.UserService;
@@ -45,6 +46,8 @@ public class AzureBlobController {
     @Autowired
     private FileShareRepository fileShareRepository;
 
+    @Autowired
+    private KeyVaultService keyVaultService;
     private static final Logger logger = LoggerFactory.getLogger(AzureBlobController.class);
 
     @PostMapping("/revoke-share/{fileId}")
@@ -181,6 +184,13 @@ public class AzureBlobController {
 
             byte[] originalData;
 
+            // Key Vault'tan şifreleme anahtarını alıyoruz
+            String encryptionKey = keyVaultService.getEncryptionKeyFromKeyVault(owner.getUsername()); // Key Vault'tan alınan anahtar
+
+            if (encryptionKey == null || encryptionKey.isEmpty()) {
+                return ResponseEntity.status(500).body("Şifreleme anahtarı bulunamadı.");
+            }
+
             if (isBinary) {
                 // Binary dosya işlemleri
                 String versionedFilePath = String.format(
@@ -198,8 +208,7 @@ public class AzureBlobController {
                 byte[] base64EncodedData = azureBlobStorage.read(new Storage(versionedFilePath, null));
 
                 byte[] encryptedData = Base64.getDecoder().decode(base64EncodedData);
-                originalData = AESUtil.decrypt(encryptedData, owner.getEncryptionKey());
-                // Dosyayı tekrar şifrelemiyoruz
+                originalData = AESUtil.decrypt(encryptedData, encryptionKey); // Key Vault anahtarını kullanarak şifreyi çözüyoruz
             } else {
                 // Metin dosyası işlemleri
                 String reconstructedContent = fileVersionService.reconstructFileContent(file, version, owner);
@@ -224,6 +233,7 @@ public class AzureBlobController {
             return ResponseEntity.status(500).body("Beklenmedik bir hata oluştu: " + ex.getMessage());
         }
     }
+
 
 
 
@@ -265,11 +275,12 @@ public class AzureBlobController {
 
             User currentUser = currentUserOptional.get();
 
-            String aesKey = currentUser.getEncryptionKey();
+            // AES Anahtarını Key Vault'tan al
+            String aesKey = keyVaultService.getEncryptionKeyFromKeyVault(username);
             if (aesKey == null || aesKey.isEmpty()) {
+                // Anahtar yoksa, yeni anahtar oluştur ve Key Vault'a kaydet
                 aesKey = AESUtil.generateAESKey();
-                currentUser.setEncryptionKey(aesKey);
-                userService.saveUser(currentUser);
+                keyVaultService.saveEncryptionKeyToKeyVault(username, aesKey);
                 logger.info("Kullanıcı için yeni AES anahtarı oluşturuldu: {}", username);
             }
 
@@ -297,8 +308,8 @@ public class AzureBlobController {
                     || fileName.endsWith(".doc") || fileName.endsWith(".docx")
                     || fileName.endsWith(".pdf") || fileName.endsWith(".xlsx") || fileName.endsWith(".pptx");
 
-
             if (isBinary) {
+                // Binary dosyayı şifrele
                 byte[] encryptedData = AESUtil.encrypt(file.getBytes(), aesKey);
                 String base64EncodedData = Base64.getEncoder().encodeToString(encryptedData);
                 String versionedFilePath = uniqueFilePath + "/versions/" + versionNumber + "/" + file.getOriginalFilename();
@@ -306,6 +317,7 @@ public class AzureBlobController {
                 FileVersion version = fileVersionService.createVersion(userFile, versionNumber, null);
                 fileVersionService.saveFileVersion(version);
             } else {
+                // Metin dosyasını işleme
                 String newContent = new String(file.getBytes(), StandardCharsets.UTF_8);
                 if (versionNumber.equals("v1")) {
                     byte[] encryptedData = AESUtil.encrypt(newContent.getBytes(StandardCharsets.UTF_8), aesKey);
@@ -315,6 +327,7 @@ public class AzureBlobController {
                     FileVersion version = fileVersionService.createVersion(userFile, versionNumber, null);
                     fileVersionService.saveFileVersion(version);
                 } else {
+                    // Farklı versiyonlar için delta kaydetme
                     String latestContent = fileVersionService.getLatestContent(userFile, currentUser);
                     String delta = DeltaUtil.calculateDelta(latestContent, newContent);
                     String deltaPath = uniqueFilePath + "/versions/" + versionNumber + "/delta";
@@ -334,7 +347,6 @@ public class AzureBlobController {
             return modelAndView;
         }
     }
-
     @GetMapping("/download/{username}/{fileName}")
     @PreAuthorize("hasRole('ROLE_ADMIN') or #username == authentication.name")
     public ResponseEntity<Resource> downloadSpecificVersion(
@@ -346,19 +358,20 @@ public class AzureBlobController {
         // Log the parameters for debugging
         logger.debug("Download request - Username: {}, FileName: {}, Version: {}", username, fileName, versionNumber);
 
+        // Kullanıcı adı kontrolü ve yetki kontrolü
         if (!authentication.getName().equals(username) && authentication.getAuthorities().stream()
                 .noneMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"))) {
             logger.error("Erişim reddedildi. Kullanıcı adı eşleşmiyor veya yeterli yetki yok: {}", username);
             return ResponseEntity.status(403).build();
         }
 
-        Optional<User> currentUser = userService.findByUsername(username);
-        if (currentUser.isEmpty()) {
+        Optional<User> currentUserOptional = userService.findByUsername(username);
+        if (currentUserOptional.isEmpty()) {
             logger.error("Kullanıcı bulunamadı: {}", username);
             return ResponseEntity.status(401).build();
         }
 
-        User user = currentUser.get();
+        User user = currentUserOptional.get();
         File file = fileService.findByFileNameAndUser(fileName, user);
         if (file == null) {
             logger.error("Dosya bulunamadı: {}", fileName);
@@ -374,16 +387,38 @@ public class AzureBlobController {
             byte[] originalData;
 
             if (isBinary) {
+                // Versiyonlu dosya yolu
                 String versionedFilePath = file.getPath() + "/versions/" + versionNumber + "/" + fileName;
+
+                // Azure Blob Storage'dan veriyi oku
                 byte[] base64EncodedData = azureBlobStorage.read(new Storage(versionedFilePath, null));
 
+                // Eğer veri boşsa hata döndür
+                if (base64EncodedData == null) {
+                    logger.error("Belirtilen blob boş: {}", versionedFilePath);
+                    return ResponseEntity.status(404).build();
+                }
+
+                // Base64 encoded veriyi çöz
                 byte[] encryptedData = Base64.getDecoder().decode(base64EncodedData);
-                originalData = AESUtil.decrypt(encryptedData, user.getEncryptionKey());
+
+                // AES anahtarını Key Vault'tan al
+                String encryptionKey = keyVaultService.getEncryptionKeyFromKeyVault(user.getUsername());
+
+                if (encryptionKey == null || encryptionKey.isEmpty()) {
+                    logger.error("Kullanıcı için AES anahtarı bulunamadı: {}", user.getUsername());
+                    return ResponseEntity.status(500).build();
+                }
+
+                // Şifre çözme işlemi
+                originalData = AESUtil.decrypt(encryptedData, encryptionKey);
             } else {
+                // Eğer dosya binary değilse (metin dosyası gibi), içerik yeniden oluşturuluyor
                 String reconstructedContent = fileVersionService.reconstructFileContent(file, versionNumber, user);
                 originalData = reconstructedContent.getBytes(StandardCharsets.UTF_8);
             }
 
+            // Dosya içeriğini ByteArrayResource olarak döndür
             ByteArrayResource resource = new ByteArrayResource(originalData);
 
             return ResponseEntity.ok()
@@ -395,6 +430,7 @@ public class AzureBlobController {
             return ResponseEntity.status(500).build();
         }
     }
+
 
 
 

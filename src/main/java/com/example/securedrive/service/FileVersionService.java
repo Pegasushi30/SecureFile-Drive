@@ -8,6 +8,7 @@ import com.example.securedrive.model.User;
 import com.example.securedrive.repository.FileVersionRepository;
 import com.example.securedrive.security.AESUtil;
 import com.example.securedrive.security.DeltaUtil;
+import com.example.securedrive.security.KeyVaultService;
 import com.example.securedrive.service.impl.AzureBlobStorageImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -25,6 +26,9 @@ public class FileVersionService {
 
     @Autowired
     private AzureBlobStorageImpl azureBlobStorage;
+
+    @Autowired
+    private KeyVaultService keyVaultService;
 
     public void saveFileVersion(FileVersion version) {
         fileVersionRepository.save(version);
@@ -56,8 +60,6 @@ public class FileVersionService {
         }
 
         StringBuilder content = new StringBuilder();
-
-        // İlk sürümün tam dosyasını al ve şifre çöz
         String initialVersionFullPath = "uploads/" + user.getUsername() + "/" + file.getFileName()
                 + "/versions/v1/" + file.getFileName();
 
@@ -66,22 +68,24 @@ public class FileVersionService {
         }
 
         byte[] initialEncryptedDataBase64 = azureBlobStorage.read(new Storage(initialVersionFullPath, null));
-
         if (initialEncryptedDataBase64 == null) {
             throw new Exception("Failed to read initial version blob");
         }
 
-        // Base64 çöz ve şifreyi çöz
+        // Decode the base64 data
         byte[] initialEncryptedData = Base64.getDecoder().decode(initialEncryptedDataBase64);
-        byte[] decryptedData = AESUtil.decrypt(initialEncryptedData, user.getEncryptionKey());
-        String initialContent = new String(decryptedData, StandardCharsets.UTF_8);
 
+        // Retrieve the AES key from Key Vault
+        String encryptionKey = keyVaultService.getEncryptionKeyFromKeyVault(user.getUsername());
+
+        // Decrypt the initial file content
+        byte[] decryptedData = AESUtil.decrypt(initialEncryptedData, encryptionKey);
+        String initialContent = new String(decryptedData, StandardCharsets.UTF_8);
         content.append(initialContent);
 
-        // Delta dosyalarını uygula
+        // Apply deltas for subsequent versions
         for (int i = 1; i < versions.size(); i++) {
             FileVersion version = versions.get(i);
-
             String deltaPath = version.getDeltaPath();
 
             if (deltaPath == null) {
@@ -99,7 +103,6 @@ public class FileVersionService {
             }
 
             String delta = new String(deltaData, StandardCharsets.UTF_8);
-
             content = new StringBuilder(DeltaUtil.applyDelta(content.toString(), delta));
         }
 
@@ -114,7 +117,6 @@ public class FileVersionService {
         }
 
         StringBuilder content = new StringBuilder();
-
         String initialVersionFullPath = "uploads/" + user.getUsername() + "/" + file.getFileName()
                 + "/versions/v1/" + file.getFileName();
 
@@ -123,24 +125,21 @@ public class FileVersionService {
         }
 
         byte[] initialEncryptedDataBase64 = azureBlobStorage.read(new Storage(initialVersionFullPath, null));
-
         if (initialEncryptedDataBase64 == null) {
             throw new Exception("Failed to read initial version blob");
         }
 
-        // Base64 çöz
         byte[] initialEncryptedData = Base64.getDecoder().decode(initialEncryptedDataBase64);
+        String encryptionKey = keyVaultService.getEncryptionKeyFromKeyVault(user.getUsername());
 
-        // Şifre çöz
-        byte[] decryptedData = AESUtil.decrypt(initialEncryptedData, user.getEncryptionKey());
+        byte[] decryptedData = AESUtil.decrypt(initialEncryptedData, encryptionKey);
         String initialContent = new String(decryptedData, StandardCharsets.UTF_8);
 
         content.append(initialContent);
 
-        // Delta dosyalarını uygula
+        // Apply deltas for versions up to the specified version number
         for (int i = 1; i < versions.size(); i++) {
             FileVersion version = versions.get(i);
-
             String deltaPath = version.getDeltaPath();
 
             if (!azureBlobStorage.checkBlobExists(deltaPath)) {
@@ -148,13 +147,11 @@ public class FileVersionService {
             }
 
             byte[] deltaData = azureBlobStorage.read(new Storage(deltaPath, null));
-
             if (deltaData == null) {
                 throw new Exception("Failed to read delta blob for version: " + version.getVersionNumber());
             }
 
             String delta = new String(deltaData, StandardCharsets.UTF_8);
-
             content = new StringBuilder(DeltaUtil.applyDelta(content.toString(), delta));
 
             if (version.getVersionNumber().equals(versionNumber)) {

@@ -7,10 +7,11 @@ import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserService;
-import org.springframework.security.oauth2.core.oidc.user.*;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
 
 @Service
 public class CustomOidcUserService extends OidcUserService {
@@ -18,13 +19,16 @@ public class CustomOidcUserService extends OidcUserService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private KeyVaultService keyVaultService;
+
     @Override
     @Transactional
     public OidcUser loadUser(OidcUserRequest userRequest) {
         System.out.println("loadUser çağrıldı!");
         OidcUser oidcUser = super.loadUser(userRequest);
 
-        // Log attributes to inspect them
+        // Kullanıcı özelliklerini al ve logla
         Map<String, Object> attributes = oidcUser.getAttributes();
         System.out.println("OIDC User Attributes: " + attributes);
 
@@ -43,32 +47,37 @@ public class CustomOidcUserService extends OidcUserService {
         }
 
         String name = (String) attributes.get("name");
+        if (name == null) {
+            name = "Anonymous";
+        }
 
-        // Declare a final variable for use in the lambda
-        final String finalEmail = email;
-
-        User user = userRepository.findByUsername(oid)
-                .orElseGet(() -> createUser(oid, finalEmail, name != null ? name : "Anonymous"));
+        // Kullanıcıyı veritabanında ara
+        User user = userRepository.findByUsername(oid).orElse(null);
+        if (user == null) {
+            // Kullanıcı yoksa oluştur
+            user = createUser(oid, email, name);
+        }
 
         return oidcUser;
     }
-
-
 
     private User createUser(String oid, String email, String name) {
         User newUser = new User();
         newUser.setUsername(oid);
         newUser.setEmail(email);
         newUser.setRole(Role.USER);
-        newUser.setEncryptionKey(generateAESKey());
-        return userRepository.save(newUser);
-    }
 
-    private String generateAESKey() {
+        // AES anahtarı oluştur ve Key Vault'a kaydet
         try {
-            return AESUtil.generateAESKey();
+            String encryptionKey = AESUtil.generateAESKey();
+            keyVaultService.saveEncryptionKeyToKeyVault(oid, encryptionKey); // Key Vault'a kaydet
+            System.out.println("AES anahtarı başarıyla oluşturuldu ve Key Vault'a kaydedildi.");
         } catch (Exception e) {
-            throw new RuntimeException("Failed to generate AES key", e);
+            System.err.println("AES anahtarı oluşturulurken hata oluştu: " + e.getMessage());
+            throw new RuntimeException("Failed to generate AES key for user: " + oid, e);
         }
+
+        // Kullanıcıyı veritabanına kaydet
+        return userRepository.save(newUser);
     }
 }

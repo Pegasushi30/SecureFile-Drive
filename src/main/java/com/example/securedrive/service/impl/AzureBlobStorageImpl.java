@@ -115,7 +115,7 @@ public class AzureBlobStorageImpl implements IAzureBlobStorage {
             }
             BlobClient client = blobContainerClient.getBlobClient(path);
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-            client.download(outputStream);
+            client.downloadStream(outputStream);
             return outputStream.toByteArray();
         } catch (BlobStorageException e) {
             throw new AzureBlobStorageException(e.getServiceMessage());
@@ -146,7 +146,7 @@ public class AzureBlobStorageImpl implements IAzureBlobStorage {
                 .buildClient();
 
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        blobClient.download(outputStream);
+        blobClient.downloadStream(outputStream);
         return outputStream.toByteArray();
     }
 }

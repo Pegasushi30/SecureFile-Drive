@@ -39,9 +39,6 @@ public class User implements UserDetails {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<File> files;
 
-    @Column(name = "encryption_key", nullable = false)
-    private String encryptionKey;  // AES anahtarı
-
     // UserDetails metodları
 
     @Override

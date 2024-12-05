@@ -14,6 +14,7 @@ public class B2CConfiguration {
     private String clientId;
     private String clientSecret;
     private String tenantDomain;
+    private String tenantId;
     private String signUpOrSignInPolicy;
     private String passwordResetPolicy;
     private String redirectUri;
