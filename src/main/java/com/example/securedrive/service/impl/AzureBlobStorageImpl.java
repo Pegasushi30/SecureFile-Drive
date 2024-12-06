@@ -149,4 +149,67 @@ public class AzureBlobStorageImpl implements IAzureBlobStorage {
         blobClient.downloadStream(outputStream);
         return outputStream.toByteArray();
     }
+
+    @Override
+    public List<String> listBlobs(String directoryPath) throws AzureBlobStorageException {
+        try {
+            if (StringUtils.isBlank(directoryPath)) {
+                throw new AzureBlobStorageException("Directory path is null or invalid");
+            }
+            List<String> blobNames = new ArrayList<>();
+            PagedIterable<BlobItem> blobs = blobContainerClient.listBlobsByHierarchy(directoryPath);
+            for (BlobItem blobItem : blobs) {
+                blobNames.add(blobItem.getName());
+            }
+            return blobNames;
+        } catch (BlobStorageException e) {
+            log.error("Azure BlobStorageException: {}", e.getServiceMessage());
+            throw new AzureBlobStorageException("Failed to list blobs: " + e.getServiceMessage());
+        } catch (Exception e) {
+            log.error("General exception during blob listing: {}", e.getMessage());
+            throw new AzureBlobStorageException("Blob listing failed: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public void createDirectory(String directoryPath) throws AzureBlobStorageException {
+        try {
+            if (StringUtils.isBlank(directoryPath)) {
+                throw new AzureBlobStorageException("Directory path is null or invalid");
+            }
+            String markerFilePath = directoryPath + ".marker";
+            BlobClient blobClient = blobContainerClient.getBlobClient(markerFilePath);
+            byte[] emptyContent = new byte[0];
+            blobClient.upload(new ByteArrayInputStream(emptyContent), emptyContent.length, true);
+            log.info("Directory created with marker at path: {}", markerFilePath);
+        } catch (BlobStorageException e) {
+            log.error("Azure BlobStorageException: {}", e.getServiceMessage());
+            throw new AzureBlobStorageException("Failed to create directory: " + e.getServiceMessage());
+        } catch (Exception e) {
+            log.error("General exception during directory creation: {}", e.getMessage());
+            throw new AzureBlobStorageException("Directory creation failed: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public void deleteDirectory(String directoryPath) throws AzureBlobStorageException {
+        try {
+            if (StringUtils.isBlank(directoryPath)) {
+                throw new AzureBlobStorageException("Directory path is null or invalid");
+            }
+            PagedIterable<BlobItem> blobs = blobContainerClient.listBlobsByHierarchy(directoryPath);
+            for (BlobItem blobItem : blobs) {
+                BlobClient blobClient = blobContainerClient.getBlobClient(blobItem.getName());
+                blobClient.delete();
+                log.info("Deleted blob: {}", blobItem.getName());
+            }
+            log.info("Directory deleted successfully: {}", directoryPath);
+        } catch (BlobStorageException e) {
+            log.error("Azure BlobStorageException: {}", e.getServiceMessage());
+            throw new AzureBlobStorageException("Failed to delete directory: " + e.getServiceMessage());
+        } catch (Exception e) {
+            log.error("General exception during directory deletion: {}", e.getMessage());
+            throw new AzureBlobStorageException("Directory deletion failed: " + e.getMessage());
+        }
+    }
 }

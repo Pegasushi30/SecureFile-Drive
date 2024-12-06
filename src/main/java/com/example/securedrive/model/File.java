@@ -22,9 +22,11 @@ public class File {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // Dosyanın orijinal adı
     @Column(nullable = false)
     private String fileName;
 
+    // Benzersiz dosya yolu
     @Column(nullable = false)
     private String path;
 
@@ -33,10 +35,15 @@ public class File {
 
     // Dosyanın sahibi kullanıcı
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)  // Buradaki nullable=false, user_id'nin boş olamayacağını belirtir
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
+    // Dosyanın ait olduğu dizin
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "directory_id")
+    private Directory directory;
 
     // Dosyanın versiyonları
     @OneToMany(mappedBy = "file", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private List<FileVersion> versions; // Bu alanda, dosyaya ait versiyonları tutacağız
+    private List<FileVersion> versions;
 }

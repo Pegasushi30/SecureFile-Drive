@@ -27,7 +27,8 @@ public class FileShare {
     @ManyToOne
     private User sharedWithUser;
 
+    @Column(length = 2000)
     private String sasUrl;
 
-    private String version; // Eklenen alan
+    private String version;
 }

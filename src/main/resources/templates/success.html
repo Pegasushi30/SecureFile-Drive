@@ -7,20 +7,26 @@
 <body>
 <nav>
     <a th:href="@{/upload}">Dosya Yükle</a>
-    <a th:href="@{/files}">Dosyalarım</a>
+    <a th:href="@{/directories}">Dizinlerim</a>
     <a th:href="@{/home}">Anasayfa</a>
     <a th:href="@{/shared-files}">Paylaşılan Dosyalar</a>
     <a th:href="@{/logout}">Çıkış Yap</a>
 </nav>
-<main>
+
+<!-- Ana İçerik Kutu İçinde -->
+<main class="main-content file-container">
     <h1>İşlem Başarılı!</h1>
     <p th:text="${message}">İşlem başarıyla tamamlandı.</p>
+
     <div class="nav-links">
         <a th:href="@{/upload}">Yeni Dosya Yükle</a>
-        <a th:href="@{/files}">Dosyalarımı Görüntüle</a>
+        <a th:href="@{/directories}">Dizinleri Görüntüle</a>
         <a th:href="@{/home}">Anasayfaya Dön</a>
     </div>
 </main>
-<footer>© 2024 SecureFile Drive</footer>
+
+<footer>
+    <p>&copy; 2024 SecureFile Drive. Tüm Hakları Saklıdır.</p>
+</footer>
 </body>
 </html>

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Ana Dizin</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<nav>
+    <a th:href="@{/upload}">Dosya Yükle</a>
+    <a th:href="@{/directories}">Dizinlerim</a>
+    <a th:href="@{/home}">Anasayfa</a>
+    <a th:href="@{/shared-files}">Paylaşılan Dosyalar</a>
+    <a th:href="@{/logout}">Çıkış Yap</a>
+</nav>
+
+<main>
+    <h1>Ana Dizin</h1>
+
+    <!-- Yeni Kök Dizin Oluştur Formu -->
+    <div class="directory-create-container">
+        <h2>Ana Dizin Altında Yeni Dizin Oluştur</h2>
+        <form th:action="@{/directories/create}" method="post">
+            <input type="hidden" name="username" th:value="${username}" />
+            <label for="directoryName">Dizin Adı:</label>
+            <input type="text" id="directoryName" name="name" required />
+            <button type="submit">Oluştur</button>
+        </form>
+    </div>
+
+    <!-- Dizinler -->
+    <div class="directory-container">
+        <h2>Dizinler</h2>
+        <ul class="directory-tree">
+            <li th:each="dir : ${directories}">
+                <a th:href="@{'/directories/' + ${dir.id}}" th:text="${dir.name}">Dizin Adı</a>
+                <ul th:if="${dir.subDirectories}">
+                    <li th:each="subDir : ${dir.subDirectories}">
+                        <a th:href="@{'/directories/' + ${subDir.id}}" th:text="${subDir.name}">Alt Dizin Adı</a>
+                        <ul th:if="${subDir.subDirectories}">
+                            <li th:each="subSubDir : ${subDir.subDirectories}">
+                                <a th:href="@{'/directories/' + ${subSubDir.id}}" th:text="${subSubDir.name}">Alt Alt Dizin</a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Ana Dizin Dosyaları -->
+    <div class="file-container">
+        <h2>Ana Dizin Dosyaları</h2>
+        <ul class="files-list">
+            <li class="file-card" th:each="file : ${files}">
+                <span th:text="${file.fileName}">Dosya</span>
+
+                <!-- Dosya Paylaşımı -->
+                <form th:action="@{/files/share}" method="post">
+                    <input type="hidden" name="username" th:value="${username}" />
+                    <input type="hidden" name="fileId" th:value="${file.id}" />
+                    <input type="hidden" name="directoryId" th:value="${file.directory != null ? file.directory.id : ''}" />
+                    <label for="sharedWithEmail">Paylaşılacak E-posta:</label>
+                    <input type="email" id="sharedWithEmail" name="sharedWithEmail" required />
+                    <label for="version">Versiyon:</label>
+                    <select name="version" id="version">
+                        <option th:each="ver : ${file.versions}" th:value="${ver.versionNumber}" th:text="${ver.versionNumber}"></option>
+                    </select>
+                    <button type="submit">Paylaş</button>
+                </form>
+
+                <!-- Paylaşımı Kaldır -->
+                <ul>
+                    <li th:each="share : ${file.fileShares}">
+                        Paylaşılan Kullanıcı: <span th:text="${share.sharedWithUser.username}"></span>
+                        <form th:action="@{'/files/revoke-share/' + ${file.id}}" method="post">
+                            <input type="hidden" name="sharedWithUsername" th:value="${share.sharedWithUser.username}" />
+                            <input type="hidden" name="username" th:value="${username}" />
+                            <input type="hidden" name="directoryId" th:value="${file.directory != null ? file.directory.id : ''}" />
+                            <button type="submit">Paylaşımı İptal Et</button>
+                        </form>
+                    </li>
+                </ul>
+
+                <!-- Dosya İndir -->
+                <form th:action="@{'/files/download/' + ${username} + '/' + ${file.id}}" method="get">
+                    <label for="versionNumber">Versiyon:</label>
+                    <select name="versionNumber" id="versionNumber">
+                        <option th:each="ver : ${file.versions}" th:value="${ver.versionNumber}" th:text="${ver.versionNumber}"></option>
+                    </select>
+                    <button type="submit">İndir</button>
+                </form>
+
+                <!-- Dosya Sil -->
+                <form th:action="@{'/files/delete/' + ${username} + '/' + ${file.id}}" method="post">
+                    <input type="hidden" name="_method" value="delete"/>
+                    <label for="deleteVersionNumber">Versiyon:</label>
+                    <select name="versionNumber" id="deleteVersionNumber">
+                        <option th:each="ver : ${file.versions}" th:value="${ver.versionNumber}" th:text="${ver.versionNumber}"></option>
+                    </select>
+                    <button type="submit" class="delete">Sil</button>
+                </form>
+
+            </li>
+        </ul>
+    </div>
+</main>
+
+<footer>
+    <p>&copy; 2024 SecureFile Drive. Tüm Hakları Saklıdır.</p>
+</footer>
+</body>
+</html>
