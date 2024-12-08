@@ -29,22 +29,33 @@
 
     <!-- Dizinler -->
     <div class="directory-container">
-        <h2>Dizinler</h2>
+        <div class="directory-header">
+            <h2>Dizinler</h2>
+            <button id="toggleDeleteMode" onclick="toggleDeleteMode()" class="small-btn">Silme Modunu Aç</button>
+        </div>
         <ul class="directory-tree">
             <li th:each="dir : ${directories}">
-                <a th:href="@{'/directories/' + ${dir.id}}" th:text="${dir.name}">Dizin Adı</a>
+                <div class="directory-item">
+                    <a th:href="@{'/directories/' + ${dir.id}}" th:text="${dir.name}"></a>
+                    <form th:action="@{'/directories/delete/' + ${dir.id}}" method="post" class="delete-mode" onsubmit="return confirm('Bu dizini silmek istediğinizden emin misiniz?');">
+                        <input type="hidden" name="_method" value="delete"/>
+                        <button type="submit" class="delete-icon-btn">×</button>
+                    </form>
+                </div>
                 <ul th:if="${dir.subDirectories}">
                     <li th:each="subDir : ${dir.subDirectories}">
-                        <a th:href="@{'/directories/' + ${subDir.id}}" th:text="${subDir.name}">Alt Dizin Adı</a>
-                        <ul th:if="${subDir.subDirectories}">
-                            <li th:each="subSubDir : ${subDir.subDirectories}">
-                                <a th:href="@{'/directories/' + ${subSubDir.id}}" th:text="${subSubDir.name}">Alt Alt Dizin</a>
-                            </li>
-                        </ul>
+                        <div class="directory-item">
+                            <a th:href="@{'/directories/' + ${subDir.id}}" th:text="${subDir.name}"></a>
+                            <form th:action="@{'/directories/delete/' + ${subDir.id}}" method="post" class="delete-mode" onsubmit="return confirm('Bu alt dizini silmek istediğinizden emin misiniz?');">
+                                <input type="hidden" name="_method" value="delete"/>
+                                <button type="submit" class="delete-icon-btn">×</button>
+                            </form>
+                        </div>
                     </li>
                 </ul>
             </li>
         </ul>
+
     </div>
 
     <!-- Ana Dizin Dosyaları -->
@@ -68,18 +79,19 @@
                     <button type="submit">Paylaş</button>
                 </form>
 
-                <!-- Paylaşımı Kaldır -->
-                <ul>
-                    <li th:each="share : ${file.fileShares}">
-                        Paylaşılan Kullanıcı: <span th:text="${share.sharedWithUser.username}"></span>
-                        <form th:action="@{'/files/revoke-share/' + ${file.id}}" method="post">
-                            <input type="hidden" name="sharedWithUsername" th:value="${share.sharedWithUser.username}" />
-                            <input type="hidden" name="username" th:value="${username}" />
-                            <input type="hidden" name="directoryId" th:value="${file.directory != null ? file.directory.id : ''}" />
-                            <button type="submit">Paylaşımı İptal Et</button>
-                        </form>
-                    </li>
-                </ul>
+                <!-- Paylaşımı İptal Et -->
+                <div>
+                    <form th:action="@{'/files/revoke-share/' + ${file.id}}" method="post">
+                        <label for="sharedEmailDropdown"><strong>Paylaşılan Email Adresleri</strong></label>
+                        <select id="sharedEmailDropdown" name="sharedWithEmail" required>
+                            <option value="" disabled selected>Email Seçiniz...</option>
+                            <option th:each="share : ${file.fileShares}" th:value="${share.sharedWithUser.email}" th:text="${share.sharedWithUser.email}">
+                                email@example.com
+                            </option>
+                        </select>
+                        <button type="submit" class="small-btn">Paylaşımı İptal Et</button>
+                    </form>
+                </div>
 
                 <!-- Dosya İndir -->
                 <form th:action="@{'/files/download/' + ${username} + '/' + ${file.id}}" method="get">
@@ -108,5 +120,29 @@
 <footer>
     <p>&copy; 2024 SecureFile Drive. Tüm Hakları Saklıdır.</p>
 </footer>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        let deleteModeActive = false;
+
+        function toggleDeleteMode() {
+            deleteModeActive = !deleteModeActive;
+            const directoryContainer = document.querySelector('.directory-container');
+
+            if (deleteModeActive) {
+                directoryContainer.classList.add('delete-mode-active');
+                document.getElementById('toggleDeleteMode').textContent = 'Silme Modunu Kapat';
+            } else {
+                directoryContainer.classList.remove('delete-mode-active');
+                document.getElementById('toggleDeleteMode').textContent = 'Silme Modunu Aç';
+            }
+        }
+
+        document.getElementById('toggleDeleteMode').addEventListener('click', toggleDeleteMode);
+    });
+
+
+</script>
+
 </body>
 </html>

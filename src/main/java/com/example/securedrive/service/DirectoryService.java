@@ -11,7 +11,7 @@ public interface DirectoryService {
     List<Directory> getSubDirectories(User user, Directory parentDirectory);
     void saveDirectory(Directory directory);
     Optional<Directory> findByIdAndUser(Long id, User user);
-
+    void deleteDirectory(Directory directory) ;
     List<Directory> getUserDirectories(User user);
     Optional<Directory> getDirectoryById(Long id);
 }

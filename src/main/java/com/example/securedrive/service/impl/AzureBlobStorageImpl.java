@@ -197,13 +197,39 @@ public class AzureBlobStorageImpl implements IAzureBlobStorage {
             if (StringUtils.isBlank(directoryPath)) {
                 throw new AzureBlobStorageException("Directory path is null or invalid");
             }
-            PagedIterable<BlobItem> blobs = blobContainerClient.listBlobsByHierarchy(directoryPath);
+
+            // Altındaki tüm blob'ları listele ve sil
+            String fullDirectoryPath = directoryPath.endsWith("/") ? directoryPath : directoryPath + "/";
+            PagedIterable<BlobItem> blobs = blobContainerClient.listBlobs(); // Tüm blobları listele
+
             for (BlobItem blobItem : blobs) {
-                BlobClient blobClient = blobContainerClient.getBlobClient(blobItem.getName());
-                blobClient.delete();
-                log.info("Deleted blob: {}", blobItem.getName());
+                String blobName = blobItem.getName();
+
+                // Belirtilen directoryPath'e ait olanları filtrele
+                if (!blobName.startsWith(fullDirectoryPath)) {
+                    continue;
+                }
+
+                BlobClient blobClient = blobContainerClient.getBlobClient(blobName);
+
+                // Marker, versiyon ve diğer blobları kontrol et
+                if (blobName.endsWith(".marker")) {
+                    log.info("Deleting marker file: {}", blobName);
+                } else if (blobName.contains("/versions/")) {
+                    log.info("Deleting versioned blob: {}", blobName);
+                } else {
+                    log.info("Deleting blob: {}", blobName);
+                }
+
+                if (blobClient.exists()) {
+                    blobClient.delete();
+                    log.info("Deleted blob: {}", blobName);
+                } else {
+                    log.warn("Blob does not exist: {}", blobName);
+                }
             }
-            log.info("Directory deleted successfully: {}", directoryPath);
+
+            log.info("Directory and its contents deleted successfully: {}", fullDirectoryPath);
         } catch (BlobStorageException e) {
             log.error("Azure BlobStorageException: {}", e.getServiceMessage());
             throw new AzureBlobStorageException("Failed to delete directory: " + e.getServiceMessage());
@@ -212,4 +238,7 @@ public class AzureBlobStorageImpl implements IAzureBlobStorage {
             throw new AzureBlobStorageException("Directory deletion failed: " + e.getMessage());
         }
     }
+
+
+
 }

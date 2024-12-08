@@ -133,4 +133,35 @@ public class DirectoryController {
 
         return modelAndView;
     }
+
+    @DeleteMapping("/delete/{id}")
+    public ModelAndView deleteDirectory(@PathVariable Long id, Authentication authentication) {
+        ModelAndView modelAndView = new ModelAndView("redirect:/directories");
+
+        String username = authentication.getName();
+        Optional<User> userOptional = userService.findByUsername(username);
+
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+
+            Optional<Directory> directoryOptional = directoryService.findByIdAndUser(id, user);
+            if (directoryOptional.isPresent()) {
+                try {
+                    Directory directory = directoryOptional.get();
+                    directoryService.deleteDirectory(directory);
+                    modelAndView.addObject("message", "Dizin başarıyla silindi.");
+                } catch (Exception e) {
+                    modelAndView.addObject("error", "Dizin silinirken bir hata oluştu: " + e.getMessage());
+                }
+            } else {
+                modelAndView.addObject("error", "Dizin bulunamadı veya yetkiniz yok.");
+            }
+        } else {
+            modelAndView.addObject("error", "Kullanıcı bulunamadı.");
+        }
+
+        return modelAndView;
+    }
+
+
 }

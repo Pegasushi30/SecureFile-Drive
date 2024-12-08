@@ -10,6 +10,7 @@ import com.example.securedrive.security.AESUtil;
 import com.example.securedrive.security.DeltaUtil;
 import com.example.securedrive.security.KeyVaultService;
 import com.example.securedrive.service.impl.AzureBlobStorageImpl;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -181,5 +182,10 @@ public class FileVersionService {
             }
         }
         return versionsUpTo;
+    }
+
+    @Transactional
+    public void deleteAllVersionsOfFile(File file) {
+        fileVersionRepository.deleteAllByFile(file);
     }
 }

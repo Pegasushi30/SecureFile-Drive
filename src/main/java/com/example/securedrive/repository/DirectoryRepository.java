@@ -14,4 +14,5 @@ public interface DirectoryRepository extends JpaRepository<Directory, Long> {
     List<Directory> findAllByUserAndParentDirectory(User user, Directory parentDirectory);
     List<Directory> findAllByUserAndParentDirectoryIsNull(User user);
     Optional<Directory> findByIdAndUser(Long id, User user);
+    List<Directory> findAllByParentDirectory(Directory parentDirectory);
 }
