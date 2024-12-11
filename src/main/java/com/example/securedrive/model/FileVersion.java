@@ -26,6 +26,9 @@ public class FileVersion {
     private File file;
 
     @Column(nullable = false)
+    private String hash; // Dosya hash değeri
+
+    @Column(nullable = false)
     private String versionNumber; // Versiyon numarası
 
     @Column(nullable = false)

@@ -5,6 +5,7 @@ import com.example.securedrive.model.*;
 import com.example.securedrive.repository.FileShareRepository;
 import com.example.securedrive.security.AESUtil;
 import com.example.securedrive.security.DeltaUtil;
+import com.example.securedrive.security.HashUtil;
 import com.example.securedrive.security.KeyVaultService;
 import com.example.securedrive.service.DirectoryService;
 import com.example.securedrive.service.FileService;
@@ -53,9 +54,6 @@ public class AzureBlobController {
     private DirectoryService directoryService; // Added DirectoryService
 
     private static final Logger logger = LoggerFactory.getLogger(AzureBlobController.class);
-
-    // Removed the '/create-directory' endpoint from this controller
-    // as directory creation is handled in DirectoryController
 
     @PostMapping("/revoke-share/{fileId}")
     @PreAuthorize("hasRole('ROLE_ADMIN') or #username == authentication.name")
@@ -301,7 +299,7 @@ public class AzureBlobController {
 
             // Benzersiz dosya yolunu oluştur
             String uniqueFilePath = (directory != null)
-                    ? String.format("uploads/%s/%s", username, getDirectoryPath(directory,file.getOriginalFilename()))
+                    ? String.format("uploads/%s/%s", username, getDirectoryPath(directory, file.getOriginalFilename()))
                     : String.format("uploads/%s/%s", username, file.getOriginalFilename());
 
             logger.info("Benzersiz dosya yolu oluşturuldu: {}", uniqueFilePath);
@@ -313,7 +311,27 @@ public class AzureBlobController {
                 userFile = fileService.findByFileNameAndUserDirectoryNull(file.getOriginalFilename(), currentUser);
             }
 
-            if (userFile == null) {
+            // Dosyanın hash'ini hesapla
+            String fileHash = HashUtil.calculateHash(file.getBytes());
+            logger.info("Hesaplanan dosya hash'i: {}", fileHash);
+
+            if (userFile != null) {
+                // Aynı hash değerine sahip dosya kontrolü
+                boolean isDuplicate = userFile.getVersions().stream()
+                        .anyMatch(version -> version.getHash().equals(fileHash));
+
+                if (isDuplicate) {
+                    modelAndView.setViewName("upload"); // Kullanıcıyı aynı sayfada tut
+                    modelAndView.addObject("errorMessage",
+                            "Bu dosya bu dizinde zaten mevcut. Versiyon: " +
+                                    userFile.getVersions().stream()
+                                            .filter(version -> version.getHash().equals(fileHash))
+                                            .findFirst()
+                                            .get()
+                                            .getVersionNumber());
+                    return modelAndView;
+                }
+            } else {
                 // Yeni dosya oluştur
                 userFile = new File();
                 userFile.setFileName(file.getOriginalFilename());
@@ -322,8 +340,6 @@ public class AzureBlobController {
                 userFile.setDirectory(directory);
                 fileService.saveFile(userFile);
                 logger.info("Yeni dosya oluşturuldu: {}", file.getOriginalFilename());
-            } else {
-                logger.info("Mevcut dosya bulundu, yeni versiyon eklenecek: {}", file.getOriginalFilename());
             }
 
             // Versiyon numarasını oluştur
@@ -345,6 +361,7 @@ public class AzureBlobController {
 
                 // Yeni versiyonu kaydet
                 FileVersion version = fileVersionService.createVersion(userFile, versionNumber, null);
+                version.setHash(fileHash);
                 fileVersionService.saveFileVersion(version);
             } else {
                 // Metin dosya işlemleri
@@ -357,6 +374,7 @@ public class AzureBlobController {
 
                     // Yeni versiyonu kaydet
                     FileVersion version = fileVersionService.createVersion(userFile, versionNumber, null);
+                    version.setHash(fileHash);
                     fileVersionService.saveFileVersion(version);
                 } else {
                     // Delta dosyası işlemleri
@@ -367,6 +385,7 @@ public class AzureBlobController {
 
                     // Yeni versiyonu kaydet
                     FileVersion version = fileVersionService.createVersion(userFile, versionNumber, deltaPath);
+                    version.setHash(fileHash);
                     fileVersionService.saveFileVersion(version);
                 }
             }
@@ -382,6 +401,7 @@ public class AzureBlobController {
             return modelAndView;
         }
     }
+
 
     private String getDirectoryPath(Directory directory, String fileName) {
         StringBuilder path = new StringBuilder();

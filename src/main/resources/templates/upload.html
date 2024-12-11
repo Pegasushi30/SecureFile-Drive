@@ -85,6 +85,12 @@
 </nav>
 <main>
     <h1>Dosya Yükle</h1>
+
+    <!-- Hata Mesajı -->
+    <div th:if="${errorMessage != null}" class="error-message">
+        <p th:text="${errorMessage}"></p>
+    </div>
+
     <form th:action="@{/files/upload}" method="post" enctype="multipart/form-data">
         <input type="hidden" name="username" th:value="${username}" />
 
