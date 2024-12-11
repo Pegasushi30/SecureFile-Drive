@@ -95,7 +95,6 @@ public class DirectoryController {
     }
 
 
-    // Yeni dizin oluşturma
     @PostMapping("/create")
     public ModelAndView createDirectory(
             @RequestParam("name") String name,
@@ -103,40 +102,55 @@ public class DirectoryController {
             @RequestParam("username") String username,
             Authentication authentication) {
 
-        ModelAndView modelAndView = new ModelAndView("redirect:/directories");
+        ModelAndView modelAndView;
 
         if (!authentication.getName().equals(username)) {
-            modelAndView.setViewName("error");
+            modelAndView = new ModelAndView("error");
             modelAndView.addObject("message", "Bu kullanıcı için dizin oluşturma yetkiniz yok.");
             return modelAndView;
         }
 
         Optional<User> userOptional = userService.findByUsername(username);
         if (userOptional.isEmpty()) {
-            modelAndView.setViewName("error");
+            modelAndView = new ModelAndView("error");
             modelAndView.addObject("message", "Kullanıcı bulunamadı.");
             return modelAndView;
         }
 
         User user = userOptional.get();
-
         Directory directory = new Directory();
         directory.setName(name);
         directory.setUser(user);
 
+        // Üst dizin kontrolü
         if (parentDirectoryId != null) {
             Optional<Directory> parentDirectoryOptional = directoryService.findByIdAndUser(parentDirectoryId, user);
-            parentDirectoryOptional.ifPresent(directory::setParentDirectory);
-        }
+            if (parentDirectoryOptional.isPresent()) {
+                Directory parentDirectory = parentDirectoryOptional.get();
+                directory.setParentDirectory(parentDirectory);
+                directoryService.saveDirectory(directory);
 
-        directoryService.saveDirectory(directory);
+                // Alt dizin oluşturulduktan sonra üst dizine yönlendir
+                modelAndView = new ModelAndView("redirect:/directories/" + parentDirectory.getId());
+                modelAndView.addObject("message", "Alt dizin başarıyla oluşturuldu.");
+            } else {
+                modelAndView = new ModelAndView("error");
+                modelAndView.addObject("message", "Üst dizin bulunamadı.");
+            }
+        } else {
+            // Eğer üst dizin yoksa, ana dizine yönlendir
+            directoryService.saveDirectory(directory);
+            modelAndView = new ModelAndView("redirect:/directories");
+            modelAndView.addObject("message", "Yeni kök dizin başarıyla oluşturuldu.");
+        }
 
         return modelAndView;
     }
 
+
     @DeleteMapping("/delete/{id}")
     public ModelAndView deleteDirectory(@PathVariable Long id, Authentication authentication) {
-        ModelAndView modelAndView = new ModelAndView("redirect:/directories");
+        ModelAndView modelAndView;
 
         String username = authentication.getName();
         Optional<User> userOptional = userService.findByUsername(username);
@@ -146,22 +160,37 @@ public class DirectoryController {
 
             Optional<Directory> directoryOptional = directoryService.findByIdAndUser(id, user);
             if (directoryOptional.isPresent()) {
+                Directory directory = directoryOptional.get();
+                Directory parentDirectory = directory.getParentDirectory(); // Üst dizini al
+
                 try {
-                    Directory directory = directoryOptional.get();
                     directoryService.deleteDirectory(directory);
+
+                    // Kullanıcının silinen dizinin bulunduğu sayfada kalması için üst dizine yönlendir
+                    if (parentDirectory != null) {
+                        modelAndView = new ModelAndView("redirect:/directories/" + parentDirectory.getId());
+                    } else {
+                        // Eğer üst dizin yoksa ana dizine yönlendir
+                        modelAndView = new ModelAndView("redirect:/directories");
+                    }
+
                     modelAndView.addObject("message", "Dizin başarıyla silindi.");
                 } catch (Exception e) {
+                    modelAndView = new ModelAndView("redirect:/directories/" + (parentDirectory != null ? parentDirectory.getId() : ""));
                     modelAndView.addObject("error", "Dizin silinirken bir hata oluştu: " + e.getMessage());
                 }
             } else {
+                modelAndView = new ModelAndView("redirect:/directories");
                 modelAndView.addObject("error", "Dizin bulunamadı veya yetkiniz yok.");
             }
         } else {
+            modelAndView = new ModelAndView("redirect:/directories");
             modelAndView.addObject("error", "Kullanıcı bulunamadı.");
         }
 
         return modelAndView;
     }
+
 
 
 }

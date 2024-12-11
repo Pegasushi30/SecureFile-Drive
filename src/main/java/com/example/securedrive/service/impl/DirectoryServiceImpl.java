@@ -88,44 +88,36 @@ public class DirectoryServiceImpl implements DirectoryService {
     @Override
     @Transactional
     public void deleteDirectory(Directory directory) {
-        // Azure Blob Storage'dan directories altındaki dizinleri sil
-        String directoryPath = "directories/" + directory.getUser().getUsername() + "/" + buildDirectoryPath(directory);
-        try {
-            azureBlobStorage.deleteDirectory(directoryPath);
-        } catch (AzureBlobStorageException e) {
-            throw new RuntimeException("Azure Blob Storage'dan directories silinirken hata oluştu: " + e.getMessage());
-        }
-
-        // Azure Blob Storage'dan uploads altındaki dosyaları sil
-        String uploadsPath = "uploads/" + directory.getUser().getUsername() + "/" + directory.getId();
-        try {
-            azureBlobStorage.deleteDirectory(uploadsPath);
-        } catch (AzureBlobStorageException e) {
-            System.out.println("Uploads altında dosyalar silinirken hata oluştu: {}" + e.getMessage());
-        }
-
-        // Veritabanındaki ilişkili dosyaları ve versiyonlarını sil
-        List<File> files = fileRepository.findAllByDirectory(directory);
-        for (File file : files) {
-            // FileVersion kayıtlarını sil
-            fileVersionRepository.deleteAllByFile(file);
-
-            // File kayıtlarını sil
-            System.out.println("Deleting file from database: {}"+file.getId());
-            fileRepository.delete(file);
-        }
-
         // Alt dizinleri sil
-        List<Directory> subDirectories = directoryRepository.findAllByParentDirectory(directory);
+        List<Directory> subDirectories = directory.getSubDirectories();
         for (Directory subDirectory : subDirectories) {
-            System.out.println("Deleting subdirectory: {}"+ subDirectory.getId());
-            deleteDirectory(subDirectory); // Rekürsif silme
+            try {
+                deleteDirectory(subDirectory); // Rekürsif silme
+            } catch (Exception e) {
+                System.out.println("Alt dizin silinirken hata: " + subDirectory.getId() + " - " + e.getMessage());
+            }
         }
 
-        // Son olarak dizin kaydını sil
-        System.out.println("Deleting directory from database: {}"+ directory.getId());
-        directoryRepository.delete(directory);
+        // İlişkili dosyaları sil
+        List<File> files = directory.getFiles();
+        for (File file : files) {
+            try {
+                fileVersionRepository.deleteAllByFile(file);
+                fileRepository.delete(file);
+            } catch (Exception e) {
+                System.out.println("Dosya silinirken hata: " + file.getId() + " - " + e.getMessage());
+            }
+        }
+
+        // Dizin kaydını sil
+        try {
+            directoryRepository.delete(directory);
+        } catch (Exception e) {
+            System.out.println("Dizin silinirken hata: " + directory.getId() + " - " + e.getMessage());
+        }
     }
+
+
 
 
 }

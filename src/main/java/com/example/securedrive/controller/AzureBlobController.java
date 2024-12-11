@@ -61,7 +61,7 @@ public class AzureBlobController {
     @PreAuthorize("hasRole('ROLE_ADMIN') or #username == authentication.name")
     public ModelAndView revokeShare(
             @PathVariable Long fileId,
-            @RequestParam("sharedWithUsername") String sharedWithUsername,
+            @RequestParam("sharedWithEmail") String sharedWithEmail,
             @RequestParam("username") String username,
             @RequestParam(value = "directoryId", required = false) Long directoryId, // directoryId optional
             Authentication authentication) {
@@ -78,7 +78,7 @@ public class AzureBlobController {
 
         // Kullanıcıları al
         Optional<User> ownerOptional = userService.findByUsername(username);
-        Optional<User> sharedWithUserOptional = userService.findByUsername(sharedWithUsername);
+        Optional<User> sharedWithUserOptional = userService.findByEmail(sharedWithEmail);
 
         if (ownerOptional.isEmpty() || sharedWithUserOptional.isEmpty()) {
             modelAndView.setViewName("error");

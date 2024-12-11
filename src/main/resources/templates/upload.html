@@ -3,11 +3,82 @@
 <head>
     <title>Dosya Yükleme</title>
     <link rel="stylesheet" href="/css/style.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(115deg, #1e3c72, #2a5298);
+            color: #fff;
+            text-align: center;
+        }
+
+        main {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+
+        .drag-drop-area {
+            border: 2px dashed #fff;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        .drag-drop-area:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-color: #007BFF;
+        }
+
+        .drag-drop-area p {
+            font-size: 18px;
+            margin: 10px 0;
+        }
+
+        .drag-drop-area input[type="file"] {
+            display: none;
+        }
+
+        #file-chosen {
+            font-size: 14px;
+            margin-top: 10px;
+            display: block;
+            color: #f0f0f0;
+        }
+
+        button[type="submit"] {
+            background: #007BFF;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s ease;
+        }
+
+        button[type="submit"]:hover {
+            background: #0056b3;
+        }
+
+        select {
+            padding: 10px;
+            border-radius: 5px;
+            border: none;
+            margin: 10px 0;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+    </style>
 </head>
 <body>
 <nav>
     <a th:href="@{/upload}">Dosya Yükle</a>
-    <a th:href="@{/directories}">Dizinlerim</a>
+    <a th:href="@{/directories}">Tüm Dizinlerim</a>
     <a th:href="@{/home}">Anasayfa</a>
     <a th:href="@{/shared-files}">Paylaşılan Dosyalar</a>
     <a th:href="@{/logout}">Çıkış Yap</a>
@@ -16,19 +87,55 @@
     <h1>Dosya Yükle</h1>
     <form th:action="@{/files/upload}" method="post" enctype="multipart/form-data">
         <input type="hidden" name="username" th:value="${username}" />
-        <label for="file">Dosya Seç:</label>
-        <input id="file" type="file" name="file" required />
+
+        <!-- Drag and Drop Alanı -->
+        <div class="drag-drop-area" id="dragDropArea">
+            <p>Dosyalarınızı buraya sürükleyip bırakın veya tıklayın</p>
+            <input id="file" type="file" name="file" class="custom-file-input" required />
+            <span id="file-chosen">Dosya seçilmedi</span>
+        </div>
+
         <label for="directory">Dizin Seç:</label>
         <select name="directoryId" id="directory">
             <option value="">Ana Dizin</option>
             <option th:each="dir : ${directories}" th:value="${dir.id}" th:text="${dir.name}"></option>
         </select>
+
         <button type="submit">Yükle</button>
     </form>
-
 </main>
 <footer>
     <p>&copy; 2024 SecureFile Drive. Tüm Hakları Saklıdır.</p>
 </footer>
+<script>
+    const dragDropArea = document.getElementById('dragDropArea');
+    const fileInput = document.getElementById('file');
+    const fileChosen = document.getElementById('file-chosen');
+
+    dragDropArea.addEventListener('click', () => {
+        fileInput.click();
+    });
+
+    dragDropArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dragDropArea.style.backgroundColor = 'rgba(0, 123, 255, 0.2)';
+    });
+
+    dragDropArea.addEventListener('dragleave', () => {
+        dragDropArea.style.backgroundColor = 'transparent';
+    });
+
+    dragDropArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dragDropArea.style.backgroundColor = 'transparent';
+        const files = e.dataTransfer.files;
+        fileInput.files = files;
+        fileChosen.textContent = files[0] ? files[0].name : 'Dosya seçilmedi';
+    });
+
+    fileInput.addEventListener('change', () => {
+        fileChosen.textContent = fileInput.files[0] ? fileInput.files[0].name : 'Dosya seçilmedi';
+    });
+</script>
 </body>
 </html>

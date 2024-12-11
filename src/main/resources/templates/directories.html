@@ -7,7 +7,7 @@
 <body>
 <nav>
     <a th:href="@{/upload}">Dosya Yükle</a>
-    <a th:href="@{/directories}">Dizinlerim</a>
+    <a th:href="@{/directories}">Tüm Dizinlerim</a>
     <a th:href="@{/home}">Anasayfa</a>
     <a th:href="@{/shared-files}">Paylaşılan Dosyalar</a>
     <a th:href="@{/logout}">Çıkış Yap</a>
@@ -31,9 +31,15 @@
     <div class="directory-container">
         <div class="directory-header">
             <h2>Dizinler</h2>
-            <button id="toggleDeleteMode" onclick="toggleDeleteMode()" class="small-btn">Silme Modunu Aç</button>
+            <label class="small-slider">
+                <input type="checkbox" id="toggleDeleteMode" />
+                <span class="slider"></span>
+            </label>
         </div>
+
         <ul class="directory-tree">
+            <!-- Ana dizinleri ve alt dizinleri özyinelemeli olarak listele -->
+            <li th:if="${directories.isEmpty()}" class="info-message">Burada henüz bir alt dizin oluşturmadınız.</li>
             <li th:each="dir : ${directories}">
                 <div class="directory-item">
                     <a th:href="@{'/directories/' + ${dir.id}}" th:text="${dir.name}"></a>
@@ -42,26 +48,17 @@
                         <button type="submit" class="delete-icon-btn">×</button>
                     </form>
                 </div>
-                <ul th:if="${dir.subDirectories}">
-                    <li th:each="subDir : ${dir.subDirectories}">
-                        <div class="directory-item">
-                            <a th:href="@{'/directories/' + ${subDir.id}}" th:text="${subDir.name}"></a>
-                            <form th:action="@{'/directories/delete/' + ${subDir.id}}" method="post" class="delete-mode" onsubmit="return confirm('Bu alt dizini silmek istediğinizden emin misiniz?');">
-                                <input type="hidden" name="_method" value="delete"/>
-                                <button type="submit" class="delete-icon-btn">×</button>
-                            </form>
-                        </div>
-                    </li>
-                </ul>
+                <!-- Alt dizinleri listele -->
+                <ul th:if="${dir.subDirectories}" th:include="this ::recursiveSubdirectories" th:with="subDirs=${dir.subDirectories}"></ul>
             </li>
         </ul>
-
     </div>
 
     <!-- Ana Dizin Dosyaları -->
     <div class="file-container">
         <h2>Ana Dizin Dosyaları</h2>
         <ul class="files-list">
+            <li th:if="${files.isEmpty()}" class="info-message">Buraya henüz bir dosya eklemediniz.</li>
             <li class="file-card" th:each="file : ${files}">
                 <span th:text="${file.fileName}">Dosya</span>
 
@@ -80,15 +77,17 @@
                 </form>
 
                 <!-- Paylaşımı İptal Et -->
-                <div>
+                <div th:if="${file.fileShares.size() == 1}">
                     <form th:action="@{'/files/revoke-share/' + ${file.id}}" method="post">
                         <label for="sharedEmailDropdown"><strong>Paylaşılan Email Adresleri</strong></label>
                         <select id="sharedEmailDropdown" name="sharedWithEmail" required>
                             <option value="" disabled selected>Email Seçiniz...</option>
-                            <option th:each="share : ${file.fileShares}" th:value="${share.sharedWithUser.email}" th:text="${share.sharedWithUser.email}">
-                                email@example.com
-                            </option>
+                            <option th:each="share : ${file.fileShares}" th:value="${share.sharedWithUser.email}" th:text="${share.sharedWithUser.email}"></option>
                         </select>
+
+                        <!-- Gizli input ile username gönder -->
+                        <input type="hidden" name="username" th:value="${username}" />
+
                         <button type="submit" class="small-btn">Paylaşımı İptal Et</button>
                     </form>
                 </div>
@@ -111,7 +110,6 @@
                     </select>
                     <button type="submit" class="delete">Sil</button>
                 </form>
-
             </li>
         </ul>
     </div>
@@ -120,6 +118,20 @@
 <footer>
     <p>&copy; 2024 SecureFile Drive. Tüm Hakları Saklıdır.</p>
 </footer>
+
+<!-- Recursive Template -->
+<div th:fragment="recursiveSubdirectories">
+    <li th:each="subDir : ${subDirs}">
+        <div class="directory-item">
+            <a th:href="@{'/directories/' + ${subDir.id}}" th:text="${subDir.name}"></a>
+            <form th:action="@{'/directories/delete/' + ${subDir.id}}" method="post" class="delete-mode" onsubmit="return confirm('Bu dizini silmek istediğinizden emin misiniz?');">
+                <input type="hidden" name="_method" value="delete"/>
+                <button type="submit" class="delete-icon-btn">×</button>
+            </form>
+        </div>
+        <ul th:if="${subDir.subDirectories}" th:include="this ::recursiveSubdirectories" th:with="subDirs=${subDir.subDirectories}"></ul>
+    </li>
+</div>
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
@@ -140,8 +152,6 @@
 
         document.getElementById('toggleDeleteMode').addEventListener('click', toggleDeleteMode);
     });
-
-
 </script>
 
 </body>

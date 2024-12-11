@@ -7,7 +7,7 @@
 <body>
 <nav>
     <a th:href="@{/upload}">Dosya Yükle</a>
-    <a th:href="@{/directories}">Dizinlerim</a>
+    <a th:href="@{/directories}">Tüm Dizinlerim</a>
     <a th:href="@{/home}">Anasayfa</a>
     <a th:href="@{/shared-files}">Paylaşılan Dosyalar</a>
     <a th:href="@{/logout}">Çıkış Yap</a>
@@ -29,7 +29,7 @@
 
     <!-- Yeni Alt Dizin Oluşturma Kutusu -->
     <div class="directory-create-container">
-        <h3>Yeni Alt Dizin Oluştur</h3>
+        <h2>Yeni Alt Dizin Oluştur</h2>
         <form th:action="@{/directories/create}" method="post">
             <input type="hidden" name="username" th:value="${username}" />
             <input type="hidden" name="parentDirectoryId" th:value="${currentDirectory.id}" />
@@ -41,14 +41,28 @@
 
     <!-- Alt Dizinler Kutusu -->
     <div class="directory-container">
-        <h2>Alt Dizinler</h2>
+        <div class="directory-header">
+            <h2>Dizinler</h2>
+            <label class="small-slider">
+                <input type="checkbox" id="toggleDeleteMode" />
+                <span class="slider"></span>
+            </label>
+        </div>
         <ul class="directory-tree">
             <li th:if="${subDirectories.isEmpty()}" class="info-message">Burada henüz bir alt dizin oluşturmadınız.</li>
             <li th:each="sub : ${subDirectories}">
-                <a th:href="@{'/directories/' + ${sub.id}}" th:text="${sub.name}">Alt Dizin Adı</a>
+                <div class="directory-item">
+                    <a th:href="@{'/directories/' + ${sub.id}}" th:text="${sub.name}">Alt Dizin Adı</a>
+                    <form th:action="@{'/directories/delete/' + ${sub.id}}" method="post" class="delete-mode"
+                          onsubmit="return confirm('Bu dizini silmek istediğinizden emin misiniz?');">
+                        <input type="hidden" name="_method" value="delete"/>
+                        <button type="submit" class="delete-icon-btn">×</button>
+                    </form>
+                </div>
             </li>
         </ul>
     </div>
+
 
     <!-- Dosyalar Kutusu -->
     <div class="file-container">
@@ -62,7 +76,7 @@
                 <form th:action="@{/files/share}" method="post">
                     <input type="hidden" name="username" th:value="${username}" />
                     <input type="hidden" name="fileId" th:value="${file.id}" />
-                    <input type="hidden" name="directoryId" th:value="${directoryId}" />
+                    <input type="hidden" name="directoryId" th:value="${file.directory != null ? file.directory.id : ''}" />
                     <label for="sharedWithEmail">Paylaşılacak E-posta:</label>
                     <input type="email" id="sharedWithEmail" name="sharedWithEmail" required />
                     <label for="version">Versiyon:</label>
@@ -72,18 +86,21 @@
                     <button type="submit">Paylaş</button>
                 </form>
 
-                <!-- Paylaşımı Kaldırma -->
-                <ul>
-                    <li th:each="share : ${file.fileShares}">
-                        Paylaşılan Kullanıcı: <span th:text="${share.sharedWithUser.username}"></span>
-                        <form th:action="@{'/files/revoke-share/' + ${file.id}}" method="post">
-                            <input type="hidden" name="sharedWithUsername" th:value="${share.sharedWithUser.username}" />
-                            <input type="hidden" name="username" th:value="${username}" />
-                            <input type="hidden" name="directoryId" th:value="${directoryId}" />
-                            <button type="submit">Paylaşımı İptal Et</button>
-                        </form>
-                    </li>
-                </ul>
+                <!-- Paylaşımı İptal Et -->
+                <div th:if="${file.fileShares.size() == 1}">
+                    <form th:action="@{'/files/revoke-share/' + ${file.id}}" method="post">
+                        <label for="sharedEmailDropdown"><strong>Paylaşılan Email Adresleri</strong></label>
+                        <select id="sharedEmailDropdown" name="sharedWithEmail" required>
+                            <option value="" disabled selected>Email Seçiniz...</option>
+                            <option th:each="share : ${file.fileShares}" th:value="${share.sharedWithUser.email}" th:text="${share.sharedWithUser.email}"></option>
+                        </select>
+
+                        <!-- Gizli input ile username gönder -->
+                        <input type="hidden" name="username" th:value="${username}" />
+
+                        <button type="submit" class="small-btn">Paylaşımı İptal Et</button>
+                    </form>
+                </div>
 
                 <!-- Dosya İndir -->
                 <form th:action="@{'/files/download/' + ${username} + '/' + ${file.id}}" method="get">
@@ -106,10 +123,32 @@
             </li>
         </ul>
     </div>
+
 </main>
 
 <footer>
     <p>&copy; 2024 SecureFile Drive. Tüm Hakları Saklıdır.</p>
 </footer>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        let deleteModeActive = false;
+
+        function toggleDeleteMode() {
+            deleteModeActive = !deleteModeActive;
+            const directoryContainer = document.querySelector('.directory-container');
+
+            if (deleteModeActive) {
+                directoryContainer.classList.add('delete-mode-active');
+                document.getElementById('toggleDeleteMode').textContent = 'Silme Modunu Kapat';
+            } else {
+                directoryContainer.classList.remove('delete-mode-active');
+                document.getElementById('toggleDeleteMode').textContent = 'Silme Modunu Aç';
+            }
+        }
+
+        document.getElementById('toggleDeleteMode').addEventListener('click', toggleDeleteMode);
+    });
+</script>
 </body>
 </html>

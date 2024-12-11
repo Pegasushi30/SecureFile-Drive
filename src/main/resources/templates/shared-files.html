@@ -2,39 +2,40 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Paylaşılan Dosyalar</title>
     <link rel="stylesheet" href="/css/style.css">
-    <!-- Font Awesome İkonları İçin CDN -->
+    <!-- Font Awesome İkonları -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" integrity="sha512-Fo3rlrZj/k7ujTTX5p2eNp9B+5PS4rKZBBP1Y1+6qFXB8uM76fGgGvK3zMpnUjpu7bbFbfA4Zm+Q95Fh+Wg+w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 </head>
-<body class="shared-files-page"> <!-- Özel sınıf eklendi -->
+<body class="shared-files-page">
 <nav>
     <a th:href="@{/upload}">Dosya Yükle</a>
-    <a th:href="@{/directories}">Dizinlerim</a>
+    <a th:href="@{/directories}">Tüm Dizinlerim</a>
     <a th:href="@{/home}">Anasayfa</a>
     <a th:href="@{/shared-files}">Paylaşılan Dosyalar</a>
     <a th:href="@{/logout}">Çıkış Yap</a>
 </nav>
 
-<main class="main-content">
+<main>
     <h1>Size Paylaşılan Dosyalar</h1>
     <div class="content-wrapper">
-        <div class="file-list">
-            <ul>
-                <li th:each="fileShare : ${fileShares}" class="file-item">
-                    <div class="file-details">
-                        <span th:text="${fileShare.file.fileName}"></span>
-                        <span th:text="${fileShare.version != null ? 'Versiyon: ' + fileShare.version : 'Versiyon: Mevcut Değil'}" class="version-label"></span>
-                        <span th:text="'Sahibi: ' + ${fileShare.owner.email}" class="owner-label"></span>
-                    </div>
-                    <a class="download-btn" th:href="@{'/files/download-shared/' + ${fileShare.file.id}}" aria-label="Dosyayı indir">
-                        <i class="fas fa-download"></i> İndir
-                    </a>
-                </li>
-            </ul>
-            <!-- Dosya yoksa mesaj göster -->
-            <p th:if="${#lists.isEmpty(fileShares)}">Paylaşılan dosyanız bulunmamaktadır.</p>
-        </div>
+        <!-- Dosya yoksa mesaj göster -->
+        <p th:if="${#lists.isEmpty(fileShares)}" class="no-files-message">Paylaşılan dosyanız bulunmamaktadır.</p>
+
+        <!-- Dosya listesi -->
+        <ul th:if="${!#lists.isEmpty(fileShares)}" class="file-list">
+            <li th:each="fileShare : ${fileShares}" class="file-item">
+                <div class="file-details">
+                    <span th:text="${fileShare.file.fileName}"></span>
+                    <span th:text="${fileShare.version != null ? 'Versiyon: ' + fileShare.version : 'Versiyon: Mevcut Değil'}" class="version-label"></span>
+                    <span th:text="'Sahibi: ' + ${fileShare.owner.email}" class="owner-label"></span>
+                </div>
+                <a class="download-btn" th:href="@{'/files/download-shared/' + ${fileShare.file.id}}">
+                    <i class="fas fa-download"></i> İndir
+                </a>
+            </li>
+        </ul>
     </div>
 </main>
 
