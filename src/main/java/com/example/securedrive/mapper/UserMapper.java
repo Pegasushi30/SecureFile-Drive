@@ -1,0 +1,70 @@
+package com.example.securedrive.mapper;
+
+import org.springframework.security.core.GrantedAuthority;
+import com.example.securedrive.dto.UserDto;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+
+@Component
+public class UserMapper {
+
+    public UserDto toUserDTO(Authentication authentication) {
+        if (authentication.getPrincipal() instanceof DefaultOidcUser oidcUser) {
+            // Username resolution with fallbacks
+            String username = oidcUser.getPreferredUsername();
+            if (username == null) {
+                username = oidcUser.getAttribute("sub");
+                if (username == null) {
+                    username = oidcUser.getEmail();
+                }
+            }
+
+            if (username == null) {
+                throw new IllegalArgumentException("Username could not be resolved from OIDC token");
+            }
+
+            // Email resolution with fallbacks
+            String email = resolveEmail(oidcUser);
+
+            // Display name resolution with fallback
+            String displayName = oidcUser.getFullName();
+            if (displayName == null) {
+                displayName = oidcUser.getAttribute("name");
+                if (displayName == null) {
+                    displayName = "Unknown User";
+                }
+            }
+
+            // Roles extraction
+            List<String> roles = oidcUser.getAuthorities().stream()
+                    .map(GrantedAuthority::getAuthority)
+                    .toList();
+
+            // Return UserDto
+            return new UserDto(username, email, displayName, roles);
+        }
+
+        throw new IllegalArgumentException("Unsupported authentication principal");
+    }
+
+    private String resolveEmail(DefaultOidcUser oidcUser) {
+        // Primary email resolution
+        String email = oidcUser.getEmail();
+        if (email == null) {
+            email = oidcUser.getAttribute("email");
+        }
+
+        // Fallback to "emails" array attribute
+        if (email == null) {
+            List<String> emails = oidcUser.getAttribute("emails");
+            if (emails != null && !emails.isEmpty()) {
+                email = emails.get(0); // First email from the list
+            }
+        }
+
+        return email != null ? email : "E-posta bulunamadı";
+    }
+}

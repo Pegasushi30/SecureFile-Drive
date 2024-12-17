@@ -10,11 +10,17 @@
 </head>
 <body class="shared-files-page">
 <nav>
-    <a th:href="@{/upload}">Dosya Yükle</a>
-    <a th:href="@{/directories}">Tüm Dizinlerim</a>
-    <a th:href="@{/home}">Anasayfa</a>
-    <a th:href="@{/shared-files}">Paylaşılan Dosyalar</a>
-    <a th:href="@{/logout}">Çıkış Yap</a>
+    <div class="nav-left">
+        <img src="/images/SFD_Icon.png" alt="Logo" class="nav-icon">
+        <span class="logo-text">Secure File Drive</span>
+    </div>
+    <div class="nav-links">
+        <a th:href="@{/upload}">Dosya Yükle</a>
+        <a th:href="@{/directories}">Tüm Dizinlerim</a>
+        <a th:href="@{/home}">Kullanıcı Bilgilerim</a>
+        <a th:href="@{/shared-files}">Benimle Paylaşılanlar</a>
+        <a th:href="@{/logout}">Çıkış Yap</a>
+    </div>
 </nav>
 
 <main>

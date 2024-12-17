@@ -1,16 +1,22 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title th:text="${currentDirectory != null} ? ${'Dizin: ' + currentDirectory.name} : 'Ana Dizin'">Dizin İçeriği</title>
+    <title th:text="${currentDirectory != null} ? 'Dizin: ' + ${currentDirectory.name} : 'Ana Dizin'">Dizin İçeriği</title>
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
 <nav>
-    <a th:href="@{/upload}">Dosya Yükle</a>
-    <a th:href="@{/directories}">Tüm Dizinlerim</a>
-    <a th:href="@{/home}">Anasayfa</a>
-    <a th:href="@{/shared-files}">Paylaşılan Dosyalar</a>
-    <a th:href="@{/logout}">Çıkış Yap</a>
+    <div class="nav-left">
+        <img src="/images/SFD_Icon.png" alt="Logo" class="nav-icon">
+        <span class="logo-text">Secure File Drive</span>
+    </div>
+    <div class="nav-links">
+        <a th:href="@{/upload}">Dosya Yükle</a>
+        <a th:href="@{/directories}">Tüm Dizinlerim</a>
+        <a th:href="@{/home}">Kullanıcı Bilgilerim</a>
+        <a th:href="@{/shared-files}">Benimle Paylaşılanlar</a>
+        <a th:href="@{/logout}">Çıkış Yap</a>
+    </div>
 </nav>
 
 <main>
@@ -20,8 +26,8 @@
     <!-- Navigasyon -->
     <div class="navigation-links">
         <a th:href="@{/directories}" class="nav-button">Ana Dizin'e Geri Dön</a>
-        <a th:if="${currentDirectory.parentDirectory != null}"
-           th:href="@{'/directories/' + ${currentDirectory.parentDirectory.id}}"
+        <a th:if="${currentDirectory.parentDirectoryId != null}"
+           th:href="@{'/directories/' + ${currentDirectory.parentDirectoryId}}"
            class="nav-button">
             Bir Üst Dizine Geri Dön
         </a>
@@ -59,10 +65,14 @@
                         <button type="submit" class="delete-icon-btn">×</button>
                     </form>
                 </div>
+                <!-- Alt dizinleri özyinelemeli olarak listele -->
+                <ul th:if="${!#lists.isEmpty(sub.subDirectories)}"
+                    th:insert="~{this :: recursiveSubdirectories}"
+                    th:with="subDirs=${sub.subDirectories}">
+                </ul>
             </li>
         </ul>
     </div>
-
 
     <!-- Dosyalar Kutusu -->
     <div class="file-container">
@@ -76,7 +86,6 @@
                 <form th:action="@{/files/share}" method="post">
                     <input type="hidden" name="username" th:value="${username}" />
                     <input type="hidden" name="fileId" th:value="${file.id}" />
-                    <input type="hidden" name="directoryId" th:value="${file.directory != null ? file.directory.id : ''}" />
                     <label for="sharedWithEmail">Paylaşılacak E-posta:</label>
                     <input type="email" id="sharedWithEmail" name="sharedWithEmail" required />
                     <label for="version">Versiyon:</label>
@@ -85,22 +94,6 @@
                     </select>
                     <button type="submit">Paylaş</button>
                 </form>
-
-                <!-- Paylaşımı İptal Et -->
-                <div th:if="${file.fileShares.size() == 1}">
-                    <form th:action="@{'/files/revoke-share/' + ${file.id}}" method="post">
-                        <label for="sharedEmailDropdown"><strong>Paylaşılan Email Adresleri</strong></label>
-                        <select id="sharedEmailDropdown" name="sharedWithEmail" required>
-                            <option value="" disabled selected>Email Seçiniz...</option>
-                            <option th:each="share : ${file.fileShares}" th:value="${share.sharedWithUser.email}" th:text="${share.sharedWithUser.email}"></option>
-                        </select>
-
-                        <!-- Gizli input ile username gönder -->
-                        <input type="hidden" name="username" th:value="${username}" />
-
-                        <button type="submit" class="small-btn">Paylaşımı İptal Et</button>
-                    </form>
-                </div>
 
                 <!-- Dosya İndir -->
                 <form th:action="@{'/files/download/' + ${username} + '/' + ${file.id}}" method="get">
@@ -123,32 +116,30 @@
             </li>
         </ul>
     </div>
-
 </main>
 
 <footer>
     <p>&copy; 2024 SecureFile Drive. Tüm Hakları Saklıdır.</p>
 </footer>
 
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        let deleteModeActive = false;
+<!-- Recursive Template -->
+<div th:fragment="recursiveSubdirectories">
+    <li th:each="subDir : ${subDirs}">
+        <div class="directory-item">
+            <a th:href="@{'/directories/' + ${subDir.id}}" th:text="${subDir.name}"></a>
+            <form th:action="@{'/directories/delete/' + ${subDir.id}}" method="post" class="delete-mode"
+                  onsubmit="return confirm('Bu dizini silmek istediğinizden emin misiniz?');">
+                <input type="hidden" name="_method" value="delete"/>
+                <button type="submit" class="delete-icon-btn">×</button>
+            </form>
+        </div>
+        <ul th:if="${!#lists.isEmpty(subDir.subDirectories)}"
+            th:insert="~{this :: recursiveSubdirectories}"
+            th:with="subDirs=${subDir.subDirectories}">
+        </ul>
+    </li>
+</div>
 
-        function toggleDeleteMode() {
-            deleteModeActive = !deleteModeActive;
-            const directoryContainer = document.querySelector('.directory-container');
-
-            if (deleteModeActive) {
-                directoryContainer.classList.add('delete-mode-active');
-                document.getElementById('toggleDeleteMode').textContent = 'Silme Modunu Kapat';
-            } else {
-                directoryContainer.classList.remove('delete-mode-active');
-                document.getElementById('toggleDeleteMode').textContent = 'Silme Modunu Aç';
-            }
-        }
-
-        document.getElementById('toggleDeleteMode').addEventListener('click', toggleDeleteMode);
-    });
-</script>
+<script src="/js/deleteModeHandler.js"></script>
 </body>
 </html>

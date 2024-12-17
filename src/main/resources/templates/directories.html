@@ -6,15 +6,25 @@
 </head>
 <body>
 <nav>
-    <a th:href="@{/upload}">Dosya Yükle</a>
-    <a th:href="@{/directories}">Tüm Dizinlerim</a>
-    <a th:href="@{/home}">Anasayfa</a>
-    <a th:href="@{/shared-files}">Paylaşılan Dosyalar</a>
-    <a th:href="@{/logout}">Çıkış Yap</a>
+    <div class="nav-left">
+        <img src="/images/SFD_Icon.png" alt="Logo" class="nav-icon">
+        <span class="logo-text">Secure File Drive</span>
+    </div>
+    <div class="nav-links">
+        <a th:href="@{/upload}">Dosya Yükle</a>
+        <a th:href="@{/directories}">Tüm Dizinlerim</a>
+        <a th:href="@{/home}">Kullanıcı Bilgilerim</a>
+        <a th:href="@{/shared-files}">Benimle Paylaşılanlar</a>
+        <a th:href="@{/logout}">Çıkış Yap</a>
+    </div>
 </nav>
 
 <main>
     <h1>Ana Dizin</h1>
+
+    <!-- Başarı veya Hata Mesajları -->
+    <div th:if="${message}" class="success-message" th:text="${message}"></div>
+    <div th:if="${error}" class="error-message" th:text="${error}"></div>
 
     <!-- Yeni Kök Dizin Oluştur Formu -->
     <div class="directory-create-container">
@@ -43,13 +53,17 @@
             <li th:each="dir : ${directories}">
                 <div class="directory-item">
                     <a th:href="@{'/directories/' + ${dir.id}}" th:text="${dir.name}"></a>
-                    <form th:action="@{'/directories/delete/' + ${dir.id}}" method="post" class="delete-mode" onsubmit="return confirm('Bu dizini silmek istediğinizden emin misiniz?');">
+                    <form th:action="@{'/directories/delete/' + ${dir.id}}" method="post" class="delete-mode"
+                          onsubmit="return confirm('Bu dizini silmek istediğinizden emin misiniz?');">
                         <input type="hidden" name="_method" value="delete"/>
                         <button type="submit" class="delete-icon-btn">×</button>
                     </form>
                 </div>
                 <!-- Alt dizinleri listele -->
-                <ul th:if="${dir.subDirectories}" th:include="this ::recursiveSubdirectories" th:with="subDirs=${dir.subDirectories}"></ul>
+                <ul th:if="${!#lists.isEmpty(dir.subDirectories)}"
+                    th:insert="~{this :: recursiveSubdirectories}"
+                    th:with="subDirs=${dir.subDirectories}">
+                </ul>
             </li>
         </ul>
     </div>
@@ -66,7 +80,6 @@
                 <form th:action="@{/files/share}" method="post">
                     <input type="hidden" name="username" th:value="${username}" />
                     <input type="hidden" name="fileId" th:value="${file.id}" />
-                    <input type="hidden" name="directoryId" th:value="${file.directory != null ? file.directory.id : ''}" />
                     <label for="sharedWithEmail">Paylaşılacak E-posta:</label>
                     <input type="email" id="sharedWithEmail" name="sharedWithEmail" required />
                     <label for="version">Versiyon:</label>
@@ -75,22 +88,6 @@
                     </select>
                     <button type="submit">Paylaş</button>
                 </form>
-
-                <!-- Paylaşımı İptal Et -->
-                <div th:if="${file.fileShares.size() == 1}">
-                    <form th:action="@{'/files/revoke-share/' + ${file.id}}" method="post">
-                        <label for="sharedEmailDropdown"><strong>Paylaşılan Email Adresleri</strong></label>
-                        <select id="sharedEmailDropdown" name="sharedWithEmail" required>
-                            <option value="" disabled selected>Email Seçiniz...</option>
-                            <option th:each="share : ${file.fileShares}" th:value="${share.sharedWithUser.email}" th:text="${share.sharedWithUser.email}"></option>
-                        </select>
-
-                        <!-- Gizli input ile username gönder -->
-                        <input type="hidden" name="username" th:value="${username}" />
-
-                        <button type="submit" class="small-btn">Paylaşımı İptal Et</button>
-                    </form>
-                </div>
 
                 <!-- Dosya İndir -->
                 <form th:action="@{'/files/download/' + ${username} + '/' + ${file.id}}" method="get">
@@ -124,35 +121,19 @@
     <li th:each="subDir : ${subDirs}">
         <div class="directory-item">
             <a th:href="@{'/directories/' + ${subDir.id}}" th:text="${subDir.name}"></a>
-            <form th:action="@{'/directories/delete/' + ${subDir.id}}" method="post" class="delete-mode" onsubmit="return confirm('Bu dizini silmek istediğinizden emin misiniz?');">
+            <form th:action="@{'/directories/delete/' + ${subDir.id}}" method="post" class="delete-mode"
+                  onsubmit="return confirm('Bu dizini silmek istediğinizden emin misiniz?');">
                 <input type="hidden" name="_method" value="delete"/>
                 <button type="submit" class="delete-icon-btn">×</button>
             </form>
         </div>
-        <ul th:if="${subDir.subDirectories}" th:include="this ::recursiveSubdirectories" th:with="subDirs=${subDir.subDirectories}"></ul>
+        <ul th:if="${!#lists.isEmpty(subDir.subDirectories)}"
+            th:insert="~{this :: recursiveSubdirectories}"
+            th:with="subDirs=${subDir.subDirectories}">
+        </ul>
     </li>
 </div>
 
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        let deleteModeActive = false;
-
-        function toggleDeleteMode() {
-            deleteModeActive = !deleteModeActive;
-            const directoryContainer = document.querySelector('.directory-container');
-
-            if (deleteModeActive) {
-                directoryContainer.classList.add('delete-mode-active');
-                document.getElementById('toggleDeleteMode').textContent = 'Silme Modunu Kapat';
-            } else {
-                directoryContainer.classList.remove('delete-mode-active');
-                document.getElementById('toggleDeleteMode').textContent = 'Silme Modunu Aç';
-            }
-        }
-
-        document.getElementById('toggleDeleteMode').addEventListener('click', toggleDeleteMode);
-    });
-</script>
-
+<script src="/js/deleteModeHandler.js"></script>
 </body>
 </html>

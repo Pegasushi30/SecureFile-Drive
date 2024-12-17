@@ -1,15 +1,8 @@
 package com.example.securedrive.controller;
 
-import com.example.securedrive.security.B2CConfiguration;
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 
 import java.io.IOException;
 
@@ -29,7 +22,6 @@ public class OAuth2Controller {
 
     @GetMapping("/forgot-password")
     public void forgotPassword(HttpServletResponse response) throws IOException {
-        System.out.println("baldo");
         String redirectUrl = "https://sdfile.b2clogin.com/sdfile.onmicrosoft.com/B2C_1_passwordreset/oauth2/v2.0/authorize" +
                 "?p=B2C_1_passwordreset" +
                 "&client_id=6c4e0c80-e9f5-4922-a3d3-097549f658d2" +

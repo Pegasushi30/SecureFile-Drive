@@ -1,5 +1,7 @@
+// com/example/securedrive/service/DirectoryService.java
 package com.example.securedrive.service;
 
+import com.example.securedrive.dto.DirectoryDto;
 import com.example.securedrive.model.Directory;
 import com.example.securedrive.model.User;
 
@@ -7,11 +9,27 @@ import java.util.List;
 import java.util.Optional;
 
 public interface DirectoryService {
+    // Mevcut Entity bazlı metotlar (dahili kullanım için)
     List<Directory> getRootDirectories(User user);
     List<Directory> getSubDirectories(User user, Directory parentDirectory);
     void saveDirectory(Directory directory);
     Optional<Directory> findByIdAndUser(Long id, User user);
-    void deleteDirectory(Directory directory) ;
+    void deleteDirectory(Directory directory);
     List<Directory> getUserDirectories(User user);
     Optional<Directory> getDirectoryById(Long id);
+
+    // DTO bazlı metotlar
+    List<DirectoryDto> getRootDirectoriesAsDto(User user);
+    List<DirectoryDto> getSubDirectoriesAsDto(User user, Long parentDirectoryId);
+    DirectoryDto getDirectoryByIdAsDto(Long id, User user);
+
+    // Yeni eklenen DTO bazlı metot
+    DirectoryDto createDirectory(DirectoryDto directoryDto);
+
+    // Yeni eklenen silme metodu
+    void deleteDirectoryById(Long id, User user);
+    List<DirectoryDto> getDirectoriesByUsername(String username);
 }
+
+
+

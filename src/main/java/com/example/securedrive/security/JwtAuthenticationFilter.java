@@ -33,12 +33,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             if (jwtService.isTokenValid(token)) {
                 String username = jwtService.extractUsername(token);
-
-                // Kullanıcının yetkilerini token'dan alabilirsiniz
-                // Örnek olarak, burada yetkileri boş bırakıyoruz
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(username, null, null);
-
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
         }
