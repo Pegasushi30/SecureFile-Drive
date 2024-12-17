@@ -1,0 +1,866 @@
+/* HTML ve Body'nin tam yüksekliğe sahip olmasını sağlar */
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+/* Genel Tema */
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    font-family: 'Roboto', Arial, sans-serif;
+    line-height: 1.6;
+    color: #ffffff; /* Metin rengi beyaz */
+    margin: 0;
+    padding: 0;
+    text-align: center;
+
+    /* Ana Arka Plan Rengi */
+    background-color: #1e3c72;
+
+    /* Grid Deseni */
+    background-image:
+            linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+
+    background-size: 80px 80px; /* Grid kutu boyutları */
+    background-attachment: fixed; /* Scroll etkisi olmaması için */
+    position: relative; /* Flex container için relative */
+}
+
+/* Matt Glass Container */
+.matt-glass {
+    position: absolute; /* Sayfa içeriğini kapsar */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%; /* Tüm içeriği kapsar */
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px) brightness(0.9);
+    z-index: -1; /* Arka planda kalır */
+}
+
+/* İçerik */
+main {
+    color: #ffffff;
+    margin-top: 20px;
+    padding: 20px;
+    flex: 1;
+}
+
+
+
+/* Başlıklar */
+h1, h2, h3 {
+    color: #ffffff; /* Beyaz renk, kontrast için */
+    margin-bottom: 20px;
+    text-align: center;
+    font-weight: normal; /* Daha ince bir yazı tipi */
+}
+
+/* Container içinde yer alan H2 başlıklar */
+.directory-container h2,
+.directory-create-container h2,
+.file-container h2,
+.user-info-container h2 {
+    color: #0056b3; /* Daha açık bir mavi tonu */
+    background: transparent; /* Arka planı korur */
+    font-weight: normal; /* Vurgu için kalın */
+}
+
+/* Navigasyon */
+nav {
+    background: rgba(0, 0, 0, 0.7); /* Hafif şeffaf siyah */
+    padding: 15px 40px; /* Sol ve sağ tarafa ekstra padding */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    display: flex;
+    justify-content: space-between; /* Sol ve sağ tarafı ayırır */
+    align-items: center;
+    border-radius: 10px; /* Hafif yuvarlak köşeler */
+    backdrop-filter: blur(5px);
+    margin: 0 20px; /* Sağ ve sol tarafa boşluk ekler */
+}
+
+/* Navigasyon Sol Kısmı */
+.nav-left {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* Logo ile metin arasındaki boşluk */
+}
+
+.nav-left .nav-icon {
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+}
+
+.nav-left .logo-text {
+    font-size: 16px; /* Nav linkleriyle aynı boyut */
+    font-weight: bold;
+    color: white;
+    text-decoration: none;
+    transition: color 0.3s ease;
+    padding: 5px 10px; /* Link padding'ini aynı yapar */
+}
+
+.nav-left .logo-text:hover {
+    color: #f1f1f1;
+    text-shadow: 2px 2px 8px rgba(255, 255, 255, 0.6);
+}
+
+/* Navigasyon Linkleri */
+.nav-links {
+    display: flex;
+    gap: 15px;
+}
+
+.nav-links a {
+    color: white;
+    text-decoration: none;
+    font-size: 16px; /* Logo yazısıyla aynı boyut */
+    font-weight: bold;
+    position: relative; /* Underline animasyonu için */
+    padding: 5px 10px;
+    transition: color 0.3s ease; /* Sadece renk değişimini koru */
+}
+
+.nav-links a:hover {
+    color: #f1f1f1; /* Hover'da sadece renk değişimi */
+}
+
+.nav-links a::after {
+    content: '';
+    position: absolute;
+    width: 0; /* Başlangıçta görünmez */
+    height: 2px;
+    bottom: 0;
+    left: 50%;
+    background-color: white;
+    transition: all 0.3s ease; /* Smooth animasyon */
+    transform: translateX(-50%);
+}
+
+.nav-links a:hover::after {
+    width: 100%; /* Hover'da underline genişliği */
+}
+
+/* Aktif ve Tıklama Efekti */
+.nav-links a:active {
+    box-shadow: none; /* Basma efektini kaldırır */
+    transform: none;
+}
+
+/* Logo Hover Efekti */
+nav .logo {
+    font-size: 16px; /* Diğer nav linkleri ile aynı boyut */
+    font-weight: bold;
+    color: white;
+    text-decoration: none;
+    padding: 5px 10px;
+    transition: color 0.3s ease;
+}
+
+nav .logo:hover {
+    color: #f1f1f1;
+    text-shadow: 2px 2px 8px rgba(255, 255, 255, 0.6);
+}
+
+
+
+
+
+
+/* Dizin ve Dosya Kutuları */
+.directory-container, .directory-create-container, .file-container, .user-info-container {
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 20px;
+    margin: 20px auto;
+    max-width: 900px; /* Aynı genişlik */
+    background-color: #fff;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    text-align: left;
+}
+
+/* Navigasyon Bağlantıları (Kutular) - Diğer Sayfalardaki Navigation Links */
+.navigation-links {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    padding: 20px;
+}
+
+/* Minimalist Navigasyon Bağlantıları */
+.navigation-links a {
+    padding: 10px 20px;
+    background: #0056b3; /* Daha sade bir mavi */
+    color: white;
+    text-decoration: none;
+    font-weight: 500; /* Daha ince bir yazı tipi */
+    border-radius: 6px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Hafif gölge efekti */
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.navigation-links a:hover {
+    transform: translateY(-3px); /* Hover sırasında hafif yukarı kaldırma efekti */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); /* Daha belirgin gölge */
+}
+
+/* Ağaç Görünüm */
+.directory-tree {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.directory-tree ul {
+    margin-left: 20px;
+    padding-left: 15px;
+    border-left: 2px dashed #ddd;
+}
+
+.directory-tree li {
+    margin: 10px 0;
+    font-size: 16px;
+    line-height: 1.8;
+    position: relative;
+    padding-left: 25px;
+    list-style: none;
+}
+
+
+/* İkonları pseudo-element ile tanımla */
+.directory-tree li:before {
+    content: "📁";
+    font-size: 16px;
+    margin-right: 8px;
+    position: absolute;
+    left: 0;
+    top: 0;
+    color: #FFA500;
+}
+
+/* Boş Dizin Mesajı Stili */
+.info-message {
+    color: #1e3c72;
+}
+
+/* Boş Dizin Mesajı İkonu */
+.directory-tree .info-message::before {
+    content: "📁"; /* İkon */
+    font-size: 16px; /* İkon boyutu */
+    color: #FFA500; /* İkon rengi */
+    position: absolute;
+    left: 0;
+    top: 0;
+}
+
+
+/* Bağlantı stili */
+.directory-tree li a {
+    text-decoration: none;
+    font-weight: normal;
+    color: #1e3c72; /* Mor bir renk */
+}
+
+.directory-tree li a:hover {
+    text-decoration: underline;
+    color: #0056b3; /* Hover rengi */
+}
+
+/* Dosya Listesi */
+ul.files-list {
+    list-style-type: none;
+    padding: 0;
+    margin: 20px auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    text-align: left;
+}
+
+/* Dosya Kartları */
+li.file-card {
+    background: linear-gradient(135deg, #2a5298, #1e3c72); /* Gradient arka plan */
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Hafif gölge efekti */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    text-align: center;
+}
+
+li.file-card:hover {
+    transform: translateY(-5px); /* Hover sırasında yukarı hareket */
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3); /* Daha yoğun gölge */
+}
+
+/* Kart Başlıkları */
+li.file-card span {
+    font-size: 18px;
+    font-weight: normal;
+    color: #f1f1f1; /* Başlık rengi: gradient ile kontrast */
+    margin-bottom: 15px;
+    width: 100%;
+    text-align: center;
+    text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.5); /* Hafif gölge efekti */
+}
+
+/* Dosya İsimleri */
+li.file-card .file-name {
+    font-size: 14px;
+    font-weight: normal;
+    color: #dcdcdc; /* Gradient ile uyumlu nötr renk */
+    margin-bottom: 10px;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4); /* Daha belirgin görünüm için */
+}
+
+/* Dosya İsimleri Hover */
+li.file-card:hover .file-name {
+    color: #ffffff; /* Hover durumunda daha açık renk */
+    text-decoration: underline; /* Hover sırasında vurgu */
+}
+
+/* Dosya Kartları Hover */
+li.file-card:hover span {
+    color: #ffffff; /* Hover sırasında daha parlak renk */
+}
+
+/* Dosya Kartları Geçiş Efektleri */
+li.file-card {
+    transition: background 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Form Stilleri */
+form {
+    width: 100%;
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    box-shadow: none;
+    border: none;
+}
+
+form label {
+    font-size: 14px;
+    color: #ffffff;
+    width: 100%;
+    max-width: 250px;
+    margin: 0 auto 5px auto;
+    text-align: center;
+}
+
+form input, form select {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 14px;
+    margin-bottom: 10px;
+    width: 100%;
+    max-width: 250px;
+}
+
+/* Kullanıcı Profil Container */
+.user-profile-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: #ffffff;
+    padding: 40px;
+    border-radius: 15px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    max-width: 500px;
+    margin: 50px auto;
+    text-align: center;
+    font-family: 'Roboto', Arial, sans-serif;
+}
+
+/* Profil Fotoğrafı */
+.profile-picture img {
+    width: 120px; /* Profil fotoğrafı boyutu */
+    height: 120px;
+    border-radius: 50%; /* Yuvarlak fotoğraf */
+    object-fit: cover;
+    border: 3px solid #0056b3; /* Mavi çerçeve */
+    margin-bottom: 20px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease;
+}
+
+.profile-picture img:hover {
+    transform: scale(1.1); /* Hover'da büyüme efekti */
+}
+
+/* Kullanıcı Bilgileri */
+.profile-details h2 {
+    color: #0056b3;
+    font-size: 24px;
+    margin-bottom: 15px;
+}
+
+.profile-details p {
+    font-size: 18px;
+    color: #333;
+    margin-bottom: 10px;
+    line-height: 1.6;
+}
+
+.profile-details p strong {
+    color: #0056b3;
+    font-weight: bold;
+}
+
+
+
+
+/* Footer */
+footer {
+    margin-top: auto;
+    padding: 15px 20px;
+    background: rgba(0, 0, 0, 0.8); /* Hafif şeffaf siyah */
+    color: #ffffff;
+    text-align: center;
+    position: relative;
+    font-size: 0.9rem;
+}
+
+/* "Paylaşılan Dosyalar" Sayfasına Özel Stiller */
+.shared-files-page .content-wrapper {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 0;
+}
+.shared-files-page .file-details span:first-child {
+    color: #1e3c72;
+    font-weight: bold;
+    transition: color 0.3s ease;
+}
+
+.shared-files-page .file-details span:first-child:hover {
+    color: #0056b3;
+}
+
+.shared-files-page .file-list ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.shared-files-page .version-label {
+    color: #495057;
+    font-style: italic;
+}
+
+.shared-files-page .owner-label {
+    color: #495057;
+    font-style: italic;
+}
+
+.shared-files-page .file-item {
+    background-color: #ffffff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.shared-files-page .file-details {
+    text-align: left;
+}
+
+.shared-files-page .file-details span {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 16px;
+}
+
+.shared-files-page .download-btn {
+    background: linear-gradient(90deg, #0056b3, #007BFF);
+    color: white;
+    padding: 12px 24px;
+    font-size: 18px;
+    border-radius: 5px;
+    text-decoration: none;
+    transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.shared-files-page .download-btn:hover {
+    background: linear-gradient(90deg, #007BFF, #0056b3);
+}
+
+
+/* Dizin Öğesi Stili */
+.directory-item {
+    display: flex;
+    align-items: center; /* Dizin adı ve butonu hizalar */
+    justify-content: space-between;
+    margin-bottom: 5px;
+}
+
+
+.directory-header {
+    display: flex; /* Flexbox düzen */
+    align-items: center; /* Dikeyde hizalama */
+    justify-content: center; /* Elemanları yatayda ortalar */
+    position: relative; /* İçerideki elemanları yerleştirmek için konumlandırma sağlar */
+    width: 100%; /* Tüm genişliği kaplar */
+    margin-bottom: 10px; /* Alt boşluk */
+}
+
+.directory-header h2 {
+    margin: 0; /* Varsayılan marjları sıfırlar */
+    font-size: 1.5rem; /* Yazı boyutunu düzenler */
+    text-align: center; /* Yazıyı ortalar */
+    flex: none; /* Esnek davranışı kaldırır */
+}
+
+/* Slider Container */
+.small-slider {
+    position: absolute; /* Sliderın sağa sabitlenmesi */
+    right: 0; /* Sağ tarafa hizalar */
+    display: inline-block;
+    width: 50px; /* Slider genişliği */
+    height: 25px; /* Slider yüksekliği */
+}
+
+.small-slider input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+/* The slider design */
+.small-slider .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: 0.4s;
+    border-radius: 25px; /* Yuvarlak kenarlar */
+}
+
+.small-slider .slider:before {
+    position: absolute;
+    content: "";
+    height: 21px;
+    width: 21px;
+    left: 2px;
+    bottom: 2px;
+    background-color: white;
+    transition: 0.4s;
+    border-radius: 50%; /* Küçük daire */
+}
+
+/* Checked state */
+.small-slider input:checked + .slider {
+    background: linear-gradient(90deg, #007BFF, #0056b3);
+}
+
+.small-slider input:checked + .slider:before {
+    transform: translateX(25px); /* Slider dairesini sağa kaydır */
+}
+
+/* Custom File Input */
+.custom-file-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.custom-file-label {
+    background: linear-gradient(90deg, #007BFF, #0056b3); /* Mevcut renk gradyanı */
+    color: white;
+    padding: 12px 20px; /* Boyutlar submit button ile eşitlendi */
+    border-radius: 8px; /* Aynı yuvarlak kenar */
+    cursor: pointer;
+    text-align: center;
+    font-size: 16px;
+    font-weight: normal;
+    transition: box-shadow 0.3s ease, transform 0.2s ease; /* Mevcut efekt */
+}
+
+.custom-file-label:hover {
+    background-color: #003d80; /* Daha koyu mavi ton */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Hafif gölge efekti */
+    transform: translateY(-2px); /* Hafif yukarı kaldırma */
+}
+
+.custom-file-label:active {
+    transform: scale(0.98); /* Tıklama sırasında küçültme efekti */
+    box-shadow: 0 2px 10px rgba(0, 123, 255, 0.4); /* Daha hafif gölge */
+}
+
+.custom-file-input {
+    display: none; /* Input'u gizler */
+}
+
+#file-chosen {
+    font-size: 14px;
+    font-weight: 500;
+    color: #ffffff;
+    background: rgba(30, 60, 114, 0.8); /* Gradient ile uyumlu yarı opak mavi */
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 1px solid #0056b3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: left;
+    display: inline-block;
+    width: calc(100% - 120px); /* Buton genişliğiyle hizalamak için */
+    margin-left: 10px; /* Buton ile araya boşluk */
+    height: 40px; /* Butonla aynı yükseklik */
+    line-height: 40px; /* Butonla aynı hizada metin */
+    transition: background 0.3s ease, border-color 0.3s ease;
+}
+
+#file-chosen:hover {
+    background: rgba(30, 60, 114, 1); /* Daha belirgin bir mavi */
+    border-color: #007BFF;
+    cursor: default; /* Tıklanabilirlik olmadığını belirtmek için */
+}
+
+.custom-file-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    justify-content: space-between;
+}
+
+
+/* Genel Buton Stili */
+button {
+    background: #0056b3;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    font-size: 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: center;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    display: inline-block;
+    max-width: 200px;
+    margin: 10px auto;
+}
+
+/* Hover Durumu */
+button:hover {
+    background-color: #004080;
+    transform: translateY(-1px);
+}
+
+/* Tıklama Durumu */
+button:active {
+    background-color: #003060;
+    transform: scale(0.98);
+}
+
+/* Gönder Butonu */
+button[type="submit"] {
+    background: linear-gradient(90deg, #007BFF, #0056b3);
+    color: white;
+    transition: background-color 0.4s ease-in-out, transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+}
+
+button[type="submit"]:hover {
+    background-color: #005bb5;
+    transform: translateY(-3px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+}
+
+button[type="submit"]:active {
+    transform: scale(0.96);
+    background-color: #004a92;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* Sil Butonu */
+button.delete {
+    background: linear-gradient(90deg, #dc3545, #b02a37);
+    color: white;
+    transition: background-color 0.4s ease-in-out, transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+}
+
+button.delete:hover {
+    background-color: #b02a37;
+    transform: translateY(-3px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+}
+
+button.delete:active {
+    transform: scale(0.96);
+    background-color: #901f2c;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+
+/* Özel Silme Butonu */
+.delete-icon-btn {
+    all: unset;
+    display: none; /* Varsayılan olarak gizli */
+    border: none;
+    border-radius: 50%; /* Daire şeklinde */
+    width: 25px; /* Küçük boyut */
+    height: 25px;
+    font-size: 16px;
+    line-height: 25px;
+    text-align: center;
+    cursor: pointer;
+    margin-left: 10px;
+    padding: 0;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+/* Silme Modu */
+.delete-mode {
+    display: inline-block;
+}
+
+/* Silme Modunu Aktif Hale Getirme */
+.directory-item .delete-icon-btn {
+    display: none;
+}
+
+.delete-mode-active .directory-item .delete-icon-btn {
+    display: inline-block; /* Silme modu etkinse göster */
+}
+
+.delete-mode-active .delete-icon-btn:hover {
+    transform: scale(1.1); /* Hafif büyütme efekti */
+}
+
+/* Ana Container */
+.file-upload-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+    background: #f9f9f9;
+    border-radius: 15px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    font-family: 'Roboto', Arial, sans-serif;
+}
+
+/* Kullanıcı Yönlendirme İkonu */
+.file-upload-icon {
+    width: 100px; /* Boyut ayarı */
+    height: auto;
+    margin-bottom: 20px;
+}
+
+/* Ana Konteyner */
+.file-upload-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    max-width: 700px; /* Kutunun genişliğini artırdık */
+    margin: 30px auto; /* Sayfanın ortasında yerleştirir */
+    padding: 30px;
+    background: #f9f9f9;
+    border-radius: 15px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+/* Dosya Yükleme İkonu */
+.file-upload-icon {
+    width: 120px; /* Daha belirgin boyut */
+    height: auto;
+    margin-bottom: 20px;
+}
+
+/* Drag and Drop Alanı */
+.drag-drop-area {
+    border: 3px dashed #007BFF;
+    border-radius: 10px;
+    padding: 50px; /* Daha geniş bir iç boşluk */
+    width: 90%; /* Alanı beyaz kutu genişliğine uyarladık */
+    max-width: 600px; /* Maksimum genişlik sınırı */
+    margin: 20px auto; /* Yatayda merkezi */
+    background: rgba(240, 248, 255, 0.6);
+    transition: background 0.3s ease, border-color 0.3s ease;
+}
+
+.drag-drop-area:hover {
+    background: rgba(0, 123, 255, 0.1);
+    border-color: #0056b3;
+}
+
+/* Drag and Drop İçindeki Metin */
+.drag-drop-area p {
+    font-size: 18px;
+    color: #0056b3;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+/* Dosya İsmi Görüntüleme */
+#file-chosen {
+    font-size: 16px;
+    margin-top: 10px;
+    color: #333;
+    background-color: #ffffff;
+    border: 1px solid #007BFF;
+    border-radius: 5px;
+    padding: 10px 20px;
+    display: inline-block;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+#file-chosen:hover {
+    background-color: #007BFF;
+    color: white;
+    border-color: #0056b3;
+}
+
+/* Seçim Alanı */
+label {
+    font-size: 16px;
+    font-weight: bold;
+    margin: 15px 0 5px;
+    color: #0056b3;
+}
+
+select {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 16px;
+    width: 100%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+
+
+
+
+
+
