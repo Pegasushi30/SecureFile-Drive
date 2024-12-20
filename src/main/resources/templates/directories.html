@@ -8,7 +8,7 @@
 <nav>
     <div class="nav-left">
         <img src="/images/SFD_Icon.png" alt="Logo" class="nav-icon">
-        <span class="logo-text">Secure File Drive</span>
+        <a th:href="@{/intro}" class="logo-text">Secure File Drive</a>
     </div>
     <div class="nav-links">
         <a th:href="@{/upload}">Dosya Yükle</a>
@@ -88,6 +88,22 @@
                     </select>
                     <button type="submit">Paylaş</button>
                 </form>
+
+
+                <!-- Paylaşımı İptal Et -->
+                <div th:if="${file.fileShares.size() == 1}">
+                    <form th:action="@{'/files/revoke-share/' + ${file.id}}" method="post">
+                        <label for="sharedEmailDropdown"><strong>Paylaşılan Email Adresleri</strong></label>
+                        <select id="sharedEmailDropdown" name="sharedWithEmail" required>
+                            <option value="" disabled selected>Email Seçiniz...</option>
+                            <option th:each="share : ${file.fileShares}" th:value="${share.sharedWithUserEmail}" th:text="${share.sharedWithUserEmail}"></option>
+                        </select>
+                        <!-- Gizli input ile username gönder -->
+                        <input type="hidden" name="username" th:value="${username}" />
+                        <button type="submit" class="small-btn">Paylaşımı İptal Et</button>
+                    </form>
+                </div>
+
 
                 <!-- Dosya İndir -->
                 <form th:action="@{'/files/download/' + ${username} + '/' + ${file.id}}" method="get">

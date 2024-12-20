@@ -5,5 +5,8 @@ public record FileShareDto(
         Long id,
         String sharedWithUserEmail,
         String version,
-        String sasUrl
+        String sasUrl,
+        String fileName,
+        String ownerEmail
 ) {}
+

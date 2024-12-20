@@ -100,4 +100,10 @@ public class HomeController {
 
         return modelAndView;
     }
+
+    @GetMapping("/intro")
+    public ModelAndView introPage() {
+        return new ModelAndView("intro");
+    }
+
 }

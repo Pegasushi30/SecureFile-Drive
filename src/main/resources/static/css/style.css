@@ -428,7 +428,6 @@ form input, form select {
 /* Footer */
 footer {
     margin-top: auto;
-    padding: 15px 20px;
     background: rgba(0, 0, 0, 0.8); /* Hafif şeffaf siyah */
     color: #ffffff;
     text-align: center;
@@ -491,17 +490,29 @@ footer {
 }
 
 .shared-files-page .download-btn {
-    background: linear-gradient(90deg, #0056b3, #007BFF);
+    background: linear-gradient(90deg, rgba(0, 123, 255, 0.9), rgba(0, 86, 179, 0.9));
     color: white;
     padding: 12px 24px;
-    font-size: 18px;
-    border-radius: 5px;
+    font-size: 16px;
+    font-weight: bold;
+    border: none;
+    border-radius: 50px;
     text-decoration: none;
-    transition: background 0.3s ease, transform 0.2s ease;
+    display: inline-block;
+    text-align: center;
+    cursor: pointer;
+    transition: background 0.3s ease, box-shadow 0.3s ease;
 }
 
 .shared-files-page .download-btn:hover {
-    background: linear-gradient(90deg, #007BFF, #0056b3);
+    background: linear-gradient(90deg, rgba(0, 86, 179, 0.9), rgba(0, 65, 134, 0.9));
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+}
+
+.shared-files-page .download-btn:active {
+    background: linear-gradient(90deg, rgba(0, 65, 134, 0.9), rgba(0, 48, 98, 0.9));
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    transform: scale(0.96);
 }
 
 
@@ -650,7 +661,7 @@ footer {
 
 /* Genel Buton Stili */
 button {
-    background: #0056b3;
+    background: #004080; /* Daha koyu bir temel renk */
     color: white;
     border: none;
     padding: 12px 20px;
@@ -658,61 +669,84 @@ button {
     border-radius: 8px;
     cursor: pointer;
     text-align: center;
-    transition: background-color 0.2s ease, transform 0.1s ease;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
     display: inline-block;
     max-width: 200px;
     margin: 10px auto;
 }
 
-/* Hover Durumu */
 button:hover {
-    background-color: #004080;
-    transform: translateY(-1px);
+    background-color: #003060; /* Daha az parlak hover rengi */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); /* Daha hafif gölge */
 }
 
-/* Tıklama Durumu */
 button:active {
-    background-color: #003060;
-    transform: scale(0.98);
+    background-color: #002040;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 /* Gönder Butonu */
 button[type="submit"] {
-    background: linear-gradient(90deg, #007BFF, #0056b3);
+    background: linear-gradient(90deg, rgba(0, 123, 255, 0.9), rgba(0, 86, 179, 0.9)); /* Şeffaf gradient */
     color: white;
-    transition: background-color 0.4s ease-in-out, transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+    border-radius: 50px;
+    padding: 0.8rem 2rem;
+    font-size: 1.1rem;
+    font-weight: bold;
+    transition: background 0.3s ease, box-shadow 0.3s ease;
 }
 
 button[type="submit"]:hover {
-    background-color: #005bb5;
-    transform: translateY(-3px);
+    background: linear-gradient(90deg, rgba(0, 86, 179, 0.9), rgba(0, 65, 134, 0.9));
     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
 }
 
 button[type="submit"]:active {
-    transform: scale(0.96);
-    background-color: #004a92;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    background: linear-gradient(90deg, rgba(0, 65, 134, 0.9), rgba(0, 48, 98, 0.9));
 }
 
 /* Sil Butonu */
 button.delete {
-    background: linear-gradient(90deg, #dc3545, #b02a37);
+    background: linear-gradient(90deg, rgba(220, 53, 69, 0.9), rgba(176, 42, 55, 0.9));
     color: white;
-    transition: background-color 0.4s ease-in-out, transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+    border-radius: 50px;
+    padding: 0.8rem 2rem;
+    font-size: 1.1rem;
+    font-weight: bold;
+    transition: background 0.3s ease, box-shadow 0.3s ease;
 }
 
 button.delete:hover {
-    background-color: #b02a37;
-    transform: translateY(-3px);
+    background: linear-gradient(90deg, rgba(176, 42, 55, 0.9), rgba(144, 31, 44, 0.9));
     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
 }
 
 button.delete:active {
-    transform: scale(0.96);
-    background-color: #901f2c;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    background: linear-gradient(90deg, rgba(144, 31, 44, 0.9), rgba(120, 25, 37, 0.9));
 }
+
+/* Paylaş Butonu */
+button.share {
+    background: linear-gradient(90deg, rgba(50, 198, 166, 0.9), rgba(34, 142, 122, 0.9));
+    color: white;
+    border-radius: 50px;
+    padding: 0.8rem 2rem;
+    font-size: 1.1rem;
+    font-weight: bold;
+    transition: background 0.3s ease, box-shadow 0.3s ease;
+}
+
+button.share:hover {
+    background: linear-gradient(90deg, rgba(34, 142, 122, 0.9), rgba(27, 113, 94, 0.9));
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+}
+
+button.share:active {
+    background: linear-gradient(90deg, rgba(27, 113, 94, 0.9), rgba(19, 88, 69, 0.9));
+}
+
+
+
 
 
 /* Özel Silme Butonu */
@@ -749,6 +783,7 @@ button.delete:active {
 .delete-mode-active .delete-icon-btn:hover {
     transform: scale(1.1); /* Hafif büyütme efekti */
 }
+
 
 /* Ana Container */
 .file-upload-container {
@@ -858,9 +893,40 @@ select {
     margin-bottom: 20px;
 }
 
+/* Linkler için Buton Stili */
+.main-content .nav-links {
+    display: flex;
+    justify-content: center; /* Ortalamak için */
+    gap: 15px; /* Butonlar arası boşluk */
+    margin-top: 20px;
+}
+
+.main-content .nav-links a {
+    background: linear-gradient(90deg, #007BFF, #0056b3); /* Mavi gradient */
+    color: white;
+    text-decoration: none;
+    padding: 12px 20px;
+    font-size: 16px;
+    font-weight: bold;
+    border-radius: 8px; /* Yuvarlak köşeler */
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    position: relative; /* Ana yapıya uyum */
+}
+
+/* Hover Efekti: Alt çizgi olmadan */
+.main-content .nav-links a:hover {
+    background: #004a92; /* Hover'da koyu mavi */
+    transform: translateY(-2px); /* Hafif yukarı kaldırma efekti */
+}
+
+/* Alt çizgi animasyonunu devre dışı bırak */
+.main-content .nav-links a::after {
+    display: none; /* Alt çizgi tamamen devre dışı */
+}
 
 
 
 
 
 
+/*Intro CSS*/

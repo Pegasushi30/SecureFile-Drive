@@ -7,14 +7,19 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class FileShareMapper {
-
     public FileShareDto toDto(FileShare fileShare) {
         if (fileShare == null) return null;
+
+        String fileName = fileShare.getFile() != null ? fileShare.getFile().getFileName() : "Bilinmeyen Dosya";
+        String ownerEmail = fileShare.getOwner() != null ? fileShare.getOwner().getEmail() : "Bilinmeyen Sahip";
+
         return new FileShareDto(
                 fileShare.getId(),
                 fileShare.getSharedWithUser().getEmail(),
                 fileShare.getVersion(),
-                fileShare.getSasUrl()
+                fileShare.getSasUrl(),
+                fileName,
+                ownerEmail
         );
     }
 }

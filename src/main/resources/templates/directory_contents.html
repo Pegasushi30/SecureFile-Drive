@@ -8,7 +8,7 @@
 <nav>
     <div class="nav-left">
         <img src="/images/SFD_Icon.png" alt="Logo" class="nav-icon">
-        <span class="logo-text">Secure File Drive</span>
+        <a th:href="@{/intro}" class="logo-text">Secure File Drive</a>
     </div>
     <div class="nav-links">
         <a th:href="@{/upload}">Dosya Yükle</a>
@@ -94,6 +94,15 @@
                     </select>
                     <button type="submit">Paylaş</button>
                 </form>
+
+                <!-- Dosya Paylaşımını İptal Et -->
+                <form th:action="@{'/files/revoke-share/' + ${file.id}}" method="post">
+                    <input type="hidden" name="username" th:value="${username}" />
+                    <label for="revokeSharedWithEmail">Paylaşımı İptal Edeceğiniz E-posta:</label>
+                    <input type="email" id="revokeSharedWithEmail" name="sharedWithEmail" required />
+                    <button type="submit">Paylaşımı İptal Et</button>
+                </form>
+
 
                 <!-- Dosya İndir -->
                 <form th:action="@{'/files/download/' + ${username} + '/' + ${file.id}}" method="get">

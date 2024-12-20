@@ -12,7 +12,7 @@
 <nav>
     <div class="nav-left">
         <img src="/images/SFD_Icon.png" alt="Logo" class="nav-icon">
-        <span class="logo-text">Secure File Drive</span>
+        <a th:href="@{/intro}" class="logo-text">Secure File Drive</a>
     </div>
     <div class="nav-links">
         <a th:href="@{/upload}">Dosya Yükle</a>
@@ -33,15 +33,17 @@
         <ul th:if="${!#lists.isEmpty(fileShares)}" class="file-list">
             <li th:each="fileShare : ${fileShares}" class="file-item">
                 <div class="file-details">
-                    <span th:text="${fileShare.file.fileName}"></span>
+                    <span th:text="${fileShare.fileName}"></span>
                     <span th:text="${fileShare.version != null ? 'Versiyon: ' + fileShare.version : 'Versiyon: Mevcut Değil'}" class="version-label"></span>
-                    <span th:text="'Sahibi: ' + ${fileShare.owner.email}" class="owner-label"></span>
+                    <span th:text="'Sahibi: ' + ${fileShare.ownerEmail}" class="owner-label"></span>
                 </div>
-                <a class="download-btn" th:href="@{'/files/download-shared/' + ${fileShare.file.id}}">
+                <a class="download-btn" th:href="@{'/files/download-shared/' + ${fileShare.id}}">
                     <i class="fas fa-download"></i> İndir
                 </a>
             </li>
         </ul>
+
+
     </div>
 </main>
 

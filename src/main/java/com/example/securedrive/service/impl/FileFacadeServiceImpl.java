@@ -126,74 +126,80 @@ public class FileFacadeServiceImpl implements FileFacadeService {
         fileManagementService.shareFileWithUser(file, user, sharedWithUser, version);
     }
 
-
+    @Override
     public FileDownloadSharedResponseDto downloadSharedFile(FileDownloadSharedRequestDto dto) throws Exception {
+        String username = dto.getUsername();
+        Long sharedFileId = dto.getFileId(); // Bu aslında FileShare tablosundaki id
 
-            String username = dto.getUsername();
-            Long fileId = dto.getFileId();
-            Optional<User> sharedWithUserOptional = userManagementService.findByUsername(username);
-            if (sharedWithUserOptional.isEmpty()) {
-                throw new RuntimeException("User not found.");
-            }
+        logger.info("Starting download for sharedFileId: {}, username: {}", sharedFileId, username);
 
-            User sharedWithUser = sharedWithUserOptional.get();
+        // Kullanıcıyı doğrula
+        Optional<User> sharedWithUserOptional = userManagementService.findByUsername(username);
+        if (sharedWithUserOptional.isEmpty()) {
+            throw new RuntimeException("User not found.");
+        }
+        User sharedWithUser = sharedWithUserOptional.get();
 
-            // Fetch the FileShare entry for this file and user
-            Optional<FileShare> fileShareOptional = fileShareRepository.findByFileAndSharedWithUser(
-                    fileManagementService.findById(fileId).orElseThrow(() -> new IllegalArgumentException("File not found")),
-                    sharedWithUser
+        // FileShare kaydını getir
+        FileShare fileShare = fileShareRepository.findById(sharedFileId)
+                .orElseThrow(() -> new IllegalArgumentException("FileShare not found for id: " + sharedFileId));
+
+        // Kullanıcının erişim yetkisi var mı kontrol et
+        if (!fileShare.getSharedWithUser().getId().equals(sharedWithUser.getId())) {
+            logger.error("User {} does not have access to FileShare id: {}", username, sharedFileId);
+            throw new RuntimeException("You do not have access to this file.");
+        }
+
+        // FileShare'den file_id al ve File tablosundan kaydı getir
+        File file = fileShare.getFile();
+        if (file == null) {
+            throw new RuntimeException("File not found for FileShare id: " + sharedFileId);
+        }
+
+        // Gerekli bilgileri al
+        User owner = fileShare.getOwner();
+        String fileName = file.getFileName();
+        String version = fileShare.getVersion(); // FileShare'den versiyon al
+
+        // Dosya tipini kontrol et
+        String fileNameLower = fileName.toLowerCase();
+        boolean isBinary = fileNameLower.matches(".*\\.(jpg|png|mp4|docx?|xlsx|pdf|pptx)$");
+
+        byte[] originalData;
+
+        // Şifreleme anahtarını al
+        String encryptionKey = keyVaultService.getEncryptionKeyFromKeyVault(owner.getUsername());
+        if (encryptionKey == null || encryptionKey.isEmpty()) {
+            throw new RuntimeException("Encryption key not found.");
+        }
+
+        if (isBinary) {
+            // Binary dosya işlemleri
+            String versionedFilePath = String.format(
+                    "%s/versions/%s/%s",
+                    file.getPath(),
+                    version,
+                    fileName
             );
 
-            if (fileShareOptional.isEmpty()) {
-                throw new RuntimeException("You do not have access to this file.");
+            if (!azureBlobStorage.checkBlobExists(versionedFilePath)) {
+                throw new RuntimeException("Blob not found: " + versionedFilePath);
             }
 
-            FileShare fileShare = fileShareOptional.get();
-            File file = fileShare.getFile();
-            User owner = fileShare.getOwner();
+            byte[] base64EncodedData = azureBlobStorage.read(new Storage(versionedFilePath, null));
+            byte[] encryptedData = Base64.getDecoder().decode(base64EncodedData);
+            originalData = AESUtil.decrypt(encryptedData, encryptionKey);
+        } else {
+            // Metin dosya işlemleri
+            String reconstructedContent = fileVersionManagementService.reconstructFileContent(file, version, owner);
+            originalData = reconstructedContent.getBytes(StandardCharsets.UTF_8);
+        }
 
-            String fileName = file.getFileName();
+        ByteArrayResource resource = new ByteArrayResource(originalData);
 
-            // Retrieve the version from the FileShare object
-            String version = fileShare.getVersion(); // Ensure `FileShare` has a `version` field to store the shared version.
-
-            // Dosya tipini kontrol et
-            String fileNameLower = fileName.toLowerCase();
-            boolean isBinary = fileNameLower.matches(".*\\.(jpg|png|mp4|docx?|xlsx|pdf|pptx)$");
-
-            byte[] originalData;
-
-            // Şifreleme anahtarını al
-            String encryptionKey = keyVaultService.getEncryptionKeyFromKeyVault(owner.getUsername());
-            if (encryptionKey == null || encryptionKey.isEmpty()) {
-                throw new RuntimeException("Encryption key not found.");
-            }
-
-            if (isBinary) {
-                // Binary dosya işlemleri
-                String versionedFilePath = String.format(
-                        "%s/versions/%s/%s",
-                        file.getPath(),
-                        version,
-                        fileName
-                );
-
-                if (!azureBlobStorage.checkBlobExists(versionedFilePath)) {
-                    throw new RuntimeException("Blob not found: " + versionedFilePath);
-                }
-
-                byte[] base64EncodedData = azureBlobStorage.read(new Storage(versionedFilePath, null));
-                byte[] encryptedData = Base64.getDecoder().decode(base64EncodedData);
-                originalData = AESUtil.decrypt(encryptedData, encryptionKey);
-            } else {
-                // Metin dosya işlemleri
-                String reconstructedContent = fileVersionManagementService.reconstructFileContent(file, version, owner);
-                originalData = reconstructedContent.getBytes(StandardCharsets.UTF_8);
-            }
-             ByteArrayResource resource = new ByteArrayResource(originalData);
-
-            return new FileDownloadSharedResponseDto(originalData,fileName,resource);
+        return new FileDownloadSharedResponseDto(originalData, fileName, resource);
     }
+
 
     @Override
     public String uploadFile(FileUploadRequestDto dto) {
