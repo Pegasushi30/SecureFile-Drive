@@ -3,19 +3,20 @@ package com.example.securedrive.service.impl;
 
 import com.example.securedrive.dto.FileDto;
 import com.example.securedrive.dto.FileShareDto;
+import com.example.securedrive.dto.FileVersionDto;
 import com.example.securedrive.mapper.FileMapper;
 import com.example.securedrive.mapper.FileShareMapper;
-import com.example.securedrive.model.Directory;
-import com.example.securedrive.model.File;
-import com.example.securedrive.model.FileShare;
-import com.example.securedrive.model.User;
+import com.example.securedrive.model.*;
 import com.example.securedrive.repository.FileRepository;
 import com.example.securedrive.repository.FileShareRepository;
+import com.example.securedrive.repository.FileVersionRepository;
 import com.example.securedrive.repository.UserRepository;
 import com.example.securedrive.security.AzureBlobSASTokenGenerator;
 import com.example.securedrive.service.FileManagementService;
 import com.example.securedrive.service.UserManagementService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -31,6 +32,8 @@ public class FileManagementServiceImpl implements FileManagementService {
     private final FileMapper fileMapper;
     private final UserManagementService userManagementService;
     private final FileShareMapper fileShareMapper;
+    private final FileVersionRepository fileVersionRepository;
+    private final UserRepository userRepository;
 
     @Autowired
     public FileManagementServiceImpl(FileRepository fileRepository,
@@ -38,13 +41,17 @@ public class FileManagementServiceImpl implements FileManagementService {
                                      AzureBlobSASTokenGenerator azureBlobSASTokenGenerator,
                                      FileMapper fileMapper,
                                      UserManagementService userManagementService,
-                                     FileShareMapper fileShareMapper) {
+                                     FileShareMapper fileShareMapper,
+                                     FileVersionRepository fileVersionRepository,
+                                     UserRepository userRepository) {
         this.fileRepository = fileRepository;
         this.fileShareRepository = fileShareRepository;
         this.azureBlobSASTokenGenerator = azureBlobSASTokenGenerator;
         this.fileMapper = fileMapper;
         this.userManagementService = userManagementService;
         this.fileShareMapper = fileShareMapper;
+        this.fileVersionRepository = fileVersionRepository;
+        this.userRepository = userRepository;
     }
 
     @Override
@@ -108,6 +115,8 @@ public class FileManagementServiceImpl implements FileManagementService {
         }
 
         fileShareRepository.save(fileShare);
+        owner.getContacts().add(sharedWithUser);
+        userRepository.save(owner);
     }
 
     // DTO bazlı ek metotlar
@@ -137,5 +146,90 @@ public class FileManagementServiceImpl implements FileManagementService {
         return fileShares.stream().map(fileShareMapper::toDto).toList(); // DTO dönüşümü
     }
 
+    @Override
+    public long getTotalStorage(String username) {
+        // Kullanıcının toplam depolama kapasitesi
+        return 10L * 1024 * 1024 * 1024; // Örnek: 10 GB
+    }
+
+    @Override
+    public long getUsedStorage(String username) {
+        // Kullanıcının kullandığı toplam depolama
+        List<FileVersion> allVersions = fileVersionRepository.findAllByUsername(username);
+        return allVersions.stream().mapToLong(FileVersion::getSize).sum();
+    }
+    @Override
+    public List<FileDto> getLastUploadedFiles(String username, int limit) {
+        Pageable pageable = PageRequest.of(0, limit);
+        List<FileVersion> versions = fileVersionRepository.findTopVersionsByUsername(username, pageable);
+
+        return versions.stream()
+                .map(version -> {
+                    File file = version.getFile();
+                    String ownerUsername = file.getUser().getUsername();
+                    Long directoryId = file.getDirectory() != null ? file.getDirectory().getId() : null;
+
+                    FileVersionDto versionDto = new FileVersionDto(
+                            version.getId(),
+                            version.getVersionNumber(),
+                            version.getDeltaPath(),
+                            version.getHash(),
+                            version.getTimestamp(),
+                            version.getSize()
+                    );
+
+                    return new FileDto(
+                            file.getId(),
+                            file.getFileName(),
+                            file.getPath(),
+                            ownerUsername,
+                            directoryId,
+                            List.of(versionDto),
+                            null
+                    );
+                })
+                .collect(Collectors.toList());
+    }
+    @Override
+    public List<FileVersionDto> getLastUploadedFileVersions(String username, int limit) {
+        Pageable pageable = PageRequest.of(0, limit);
+        List<FileVersion> versions = fileVersionRepository.findTopVersionsByUsername(username, pageable);
+
+        return versions.stream()
+                .map(version -> new FileVersionDto(
+                        version.getId(),
+                        version.getVersionNumber(),
+                        version.getDeltaPath(),
+                        version.getHash(),
+                        version.getTimestamp(),
+                        version.getSize()
+                ))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<FileVersionDto> getLastAccessedFileVersions(String username, int limit) {
+        Pageable pageable = PageRequest.of(0, limit);
+        List<FileVersion> versions = fileVersionRepository.findLastAccessedByUsername(username, pageable);
+
+        return versions.stream()
+                .map(version -> new FileVersionDto(
+                        version.getId(),
+                        version.getVersionNumber(),
+                        version.getDeltaPath(),
+                        version.getHash(),
+                        version.getTimestamp(),
+                        version.getSize()
+                ))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public String getFileNameByVersionId(Long versionId) {
+        return fileVersionRepository.findById(versionId)
+                .map(FileVersion::getFile)
+                .map(File::getFileName)
+                .orElseThrow(() -> new IllegalArgumentException("File version not found for ID: " + versionId));
+    }
 
 }

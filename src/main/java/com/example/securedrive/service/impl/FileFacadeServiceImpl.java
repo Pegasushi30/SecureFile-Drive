@@ -353,44 +353,64 @@ public class FileFacadeServiceImpl implements FileFacadeService {
 
         logger.info("Dosya ismi: {}, Dosya hash'i: {}", fileNameLower, fileHash);
 
-        if (fileNameLower.matches(".*\\.(jpg|png|mp4|docx?|xlsx|pdf|pptx)$")) {
-            byte[] encryptedData = AESUtil.encrypt(fileData, aesKey);
-            logger.info("Şifrelenmiş veri uzunluğu: {}", encryptedData.length);
-            String versionedFilePath = uniqueFilePath + "/versions/" + versionNumber + "/" + dto.getFile().getOriginalFilename();
+        // Binary veya metin dosya ayrımı
+        boolean isBinaryFile = fileNameLower.matches(".*\\.(jpg|png|mp4|docx?|xlsx|pdf|pptx)$");
+
+        if (isBinaryFile) {
+            // Binary dosya işlemleri
+            processBinaryFile(fileData, aesKey, uniqueFilePath, userFile, versionNumber, fileHash);
+        } else {
+            // Metin dosyası işlemleri
+            processTextFile(fileData, aesKey, uniqueFilePath, userFile, versionNumber, fileHash);
+        }
+    }
+
+    // Binary dosyaları işleme
+    private void processBinaryFile(byte[] fileData, String aesKey, String uniqueFilePath, File userFile, String versionNumber, String fileHash) throws Exception {
+        byte[] encryptedData = AESUtil.encrypt(fileData, aesKey);
+        logger.info("Şifrelenmiş veri uzunluğu: {}", encryptedData.length);
+
+        String versionedFilePath = uniqueFilePath + "/versions/" + versionNumber + "/" + userFile.getFileName();
+        saveBlobToAzure(versionedFilePath, encryptedData);
+
+        FileVersion version = fileVersionManagementService.createVersion(userFile, versionNumber, null);
+        version.setHash(fileHash);
+        version.setSize((long) fileData.length);
+        fileVersionManagementService.saveFileVersion(version);
+    }
+
+    // Metin dosyalarını işleme
+    private void processTextFile(byte[] fileData, String aesKey, String uniqueFilePath, File userFile, String versionNumber, String fileHash) throws Exception {
+        String newContent = new String(fileData, StandardCharsets.UTF_8);
+        logger.info("Yeni içerik: {}", newContent);
+
+        if (versionNumber.equals("v1")) {
+            // İlk versiyon: Şifreleyip kaydet
+            byte[] encryptedData = AESUtil.encrypt(newContent.getBytes(StandardCharsets.UTF_8), aesKey);
+            String versionedFilePath = uniqueFilePath + "/versions/" + versionNumber + "/" + userFile.getFileName();
             saveBlobToAzure(versionedFilePath, encryptedData);
 
             FileVersion version = fileVersionManagementService.createVersion(userFile, versionNumber, null);
             version.setHash(fileHash);
+            version.setSize((long) fileData.length);
             fileVersionManagementService.saveFileVersion(version);
         } else {
-            String newContent = new String(fileData, StandardCharsets.UTF_8);
-            logger.info("Yeni içerik: {}", newContent);
+            // Son içerik al ve delta hesapla
+            String latestContent = fileVersionManagementService.getLatestContent(userFile, userFile.getUser());
+            logger.info("Son içerik: {}", latestContent);
 
-            if (versionNumber.equals("v1")) {
-                byte[] encryptedData = AESUtil.encrypt(newContent.getBytes(StandardCharsets.UTF_8), aesKey);
-                logger.info("Şifrelenmiş veri uzunluğu (v1): {}", encryptedData.length);
-                String versionedFilePath = uniqueFilePath + "/versions/" + versionNumber + "/" + dto.getFile().getOriginalFilename();
-                saveBlobToAzure(versionedFilePath, encryptedData);
+            String delta = DeltaUtil.calculateDelta(latestContent, newContent);
+            String deltaPath = uniqueFilePath + "/versions/" + versionNumber + "/delta";
+            saveBlobToAzure(deltaPath, delta.getBytes(StandardCharsets.UTF_8));
 
-                FileVersion version = fileVersionManagementService.createVersion(userFile, versionNumber, null);
-                version.setHash(fileHash);
-                fileVersionManagementService.saveFileVersion(version);
-            } else {
-                String latestContent = fileVersionManagementService.getLatestContent(userFile, userFile.getUser());
-                logger.info("Son içerik: {}", latestContent);
-
-                String delta = DeltaUtil.calculateDelta(latestContent, newContent);
-                logger.info("Oluşturulan delta: {}", delta);
-
-                String deltaPath = uniqueFilePath + "/versions/" + versionNumber + "/delta";
-                saveBlobToAzure(deltaPath, delta.getBytes(StandardCharsets.UTF_8));
-
-                FileVersion version = fileVersionManagementService.createVersion(userFile, versionNumber, deltaPath);
-                version.setHash(fileHash);
-                fileVersionManagementService.saveFileVersion(version);
-            }
+            FileVersion version = fileVersionManagementService.createVersion(userFile, versionNumber, deltaPath);
+            version.setHash(fileHash);
+            version.setSize((long) fileData.length);
+            fileVersionManagementService.saveFileVersion(version);
         }
     }
+
+
 
     private void saveBlobToAzure(String path, byte[] data) throws Exception {
         String base64EncodedData = Base64.getEncoder().encodeToString(data);

@@ -51,7 +51,8 @@ public class FileMapper {
                 version.getVersionNumber(),
                 version.getDeltaPath(),
                 version.getHash(),
-                version.getTimestamp()
+                version.getTimestamp(),
+                version.getSize()
         );
     }
 }

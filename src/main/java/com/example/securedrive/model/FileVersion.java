@@ -35,4 +35,10 @@ public class FileVersion {
     private LocalDateTime timestamp; // Versiyon oluşturulma zamanı
 
     private String deltaPath; // Delta dosyasının yolu (v1 için null)
+
+    @Column(nullable = false)
+    private Long size; // Dosyanın byte cinsinden boyutu
+
+    @Column
+    private LocalDateTime lastAccessed;
 }

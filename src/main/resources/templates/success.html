@@ -1,6 +1,8 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>İşlem Başarılı</title>
     <link rel="stylesheet" href="/css/style.css">
 </head>
@@ -10,6 +12,11 @@
         <img src="/images/SFD_Icon.png" alt="Logo" class="nav-icon">
         <a th:href="@{/intro}" class="logo-text">Secure File Drive</a>
     </div>
+    <!-- Hamburger Menü -->
+    <div class="hamburger-menu" id="hamburger-menu" onclick="toggleDrawer()">
+        ☰
+    </div>
+    <!-- Normal Navigasyon -->
     <div class="nav-links">
         <a th:href="@{/upload}">Dosya Yükle</a>
         <a th:href="@{/directories}">Tüm Dizinlerim</a>
@@ -18,6 +25,18 @@
         <a th:href="@{/logout}">Çıkış Yap</a>
     </div>
 </nav>
+
+<!-- Drawer Menü -->
+<div class="drawer-menu" id="drawer">
+    <a th:href="@{/upload}">Dosya Yükle</a>
+    <a th:href="@{/directories}">Tüm Dizinlerim</a>
+    <a th:href="@{/home}">Kullanıcı Bilgilerim</a>
+    <a th:href="@{/shared-files}">Benimle Paylaşılanlar</a>
+    <a th:href="@{/logout}">Çıkış Yap</a>
+</div>
+
+<!-- Arka Plan Karartma -->
+<div class="drawer-overlay" id="drawer-overlay" onclick="toggleDrawer()"></div>
 
 <!-- Ana İçerik Kutu İçinde -->
 <main class="main-content">
@@ -34,5 +53,6 @@
 <footer>
     <p>&copy; 2024 SecureFile Drive. Tüm Hakları Saklıdır.</p>
 </footer>
+<script src="/js/navigationToggleHandler.js"></script>
 </body>
 </html>

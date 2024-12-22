@@ -1,6 +1,8 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dosya Yükleme</title>
     <link rel="stylesheet" href="/css/style.css">
 </head>
@@ -10,6 +12,11 @@
         <img src="/images/SFD_Icon.png" alt="Logo" class="nav-icon">
         <a th:href="@{/intro}" class="logo-text">Secure File Drive</a>
     </div>
+    <!-- Hamburger Menü -->
+    <div class="hamburger-menu" id="hamburger-menu" onclick="toggleDrawer()">
+        ☰
+    </div>
+    <!-- Normal Navigasyon -->
     <div class="nav-links">
         <a th:href="@{/upload}">Dosya Yükle</a>
         <a th:href="@{/directories}">Tüm Dizinlerim</a>
@@ -19,6 +26,17 @@
     </div>
 </nav>
 
+<!-- Drawer Menü -->
+<div class="drawer-menu" id="drawer">
+    <a th:href="@{/upload}">Dosya Yükle</a>
+    <a th:href="@{/directories}">Tüm Dizinlerim</a>
+    <a th:href="@{/home}">Kullanıcı Bilgilerim</a>
+    <a th:href="@{/shared-files}">Benimle Paylaşılanlar</a>
+    <a th:href="@{/logout}">Çıkış Yap</a>
+</div>
+
+<!-- Arka Plan Karartma -->
+<div class="drawer-overlay" id="drawer-overlay" onclick="toggleDrawer()"></div>
 <main>
     <h1>Dosya Yükle</h1>
 
@@ -31,15 +49,21 @@
     <div class="file-upload-container">
         <img src="/images/FileUploadIcon.png" alt="Dosya Yükleme Gösterimi" class="file-upload-icon">
 
-        <form th:action="@{/files/upload}" method="post" enctype="multipart/form-data">
+        <form id="fileUploadForm" th:action="@{/files/upload}" method="post" enctype="multipart/form-data">
             <!-- Gizli Username Alanı -->
             <input type="hidden" name="username" th:value="${username}" />
 
-            <!-- Drag and Drop Alanı -->
-            <div class="drag-drop-area" id="dragDropArea">
+            <!-- Masaüstü için Drag and Drop Alanı -->
+            <div class="drag-drop-area desktop-only" id="dragDropArea">
                 <p>Dosyalarınızı buraya sürükleyip bırakın veya tıklayın</p>
-                <input id="file" type="file" name="file" class="custom-file-input" required />
-                <span id="file-chosen">Dosya seçilmedi</span>
+                <input id="file-desktop" type="file" name="file" class="custom-file-input" />
+                <span id="file-chosen">Henüz dosya seçilmedi</span>
+            </div>
+
+            <!-- Mobil için Sadece Dosya Seçme Alanı -->
+            <div class="mobile-only">
+                <label for="file-mobile" class="mobile-file-label">Dosya Seç</label>
+                <input id="file-mobile" type="file" name="file" class="custom-file-input" />
             </div>
 
             <!-- Dizini Seçme Alanı -->
@@ -60,5 +84,6 @@
 </footer>
 
 <script src="/js/dragDropHandler.js"></script>
+<script src="/js/navigationToggleHandler.js"></script>
 </body>
 </html>

@@ -1,8 +1,40 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ana Dizin</title>
     <link rel="stylesheet" href="/css/style.css">
+<style>
+    .delete-icon-btn {
+        display: none; /* Varsayılan olarak gizli */
+        border: none;
+        border-radius: 50%; /* Tamamen daire */
+        width: 35px; /* Daire genişliği */
+        height: 35px; /* Daire yüksekliği */
+        font-size: 20px; /* "×" sembolü boyutu */
+        line-height: 35px; /* Dikey ortalama */
+        text-align: center; /* Yatay ortalama */
+        cursor: pointer;
+        margin-left: 10px;
+        padding: 0;
+        color: white; /* Yazı rengi beyaz */
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Hafif gölge efekti */
+        transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+    /* Aktif Silme Modu */
+    .delete-mode-active .directory-item .delete-icon-btn {
+        display: inline-flex; /* Flex düzeni */
+        align-items: center; /* İçeriği dikey ortala */
+        justify-content: center; /* İçeriği yatay ortala */
+    }
+    /* Odaklanma Efekti */
+    .delete-icon-btn:focus {
+        outline: none; /* Dış çerçeve kaldır */
+    }
+
+</style>
+
 </head>
 <body>
 <nav>
@@ -10,6 +42,11 @@
         <img src="/images/SFD_Icon.png" alt="Logo" class="nav-icon">
         <a th:href="@{/intro}" class="logo-text">Secure File Drive</a>
     </div>
+    <!-- Hamburger Menü -->
+    <div class="hamburger-menu" id="hamburger-menu" onclick="toggleDrawer()">
+        ☰
+    </div>
+    <!-- Normal Navigasyon -->
     <div class="nav-links">
         <a th:href="@{/upload}">Dosya Yükle</a>
         <a th:href="@{/directories}">Tüm Dizinlerim</a>
@@ -18,6 +55,19 @@
         <a th:href="@{/logout}">Çıkış Yap</a>
     </div>
 </nav>
+
+<!-- Drawer Menü -->
+<div class="drawer-menu" id="drawer">
+    <a th:href="@{/upload}">Dosya Yükle</a>
+    <a th:href="@{/directories}">Tüm Dizinlerim</a>
+    <a th:href="@{/home}">Kullanıcı Bilgilerim</a>
+    <a th:href="@{/shared-files}">Benimle Paylaşılanlar</a>
+    <a th:href="@{/logout}">Çıkış Yap</a>
+</div>
+
+<!-- Arka Plan Karartma -->
+<div class="drawer-overlay" id="drawer-overlay" onclick="toggleDrawer()"></div>
+
 
 <main>
     <h1>Ana Dizin</h1>
@@ -70,62 +120,76 @@
 
     <!-- Ana Dizin Dosyaları -->
     <div class="file-container">
-        <h2>Ana Dizin Dosyaları</h2>
+        <!-- Arama Alanı -->
+        <div class="file-search-container">
+            <h2>Dosya Ara</h2>
+            <div class="search-bar">
+                <label for="searchQuery"></label>
+                <input type="text" id="searchQuery" placeholder="Dosya adını yazın..." onkeyup="filterFiles()" />
+            </div>
+        </div>
+        <div class="file-header">
+            <h2>Ana Dizin Dosyaları</h2>
+            <label class="small-slider">
+                <input type="checkbox" id="toggleFileMode" />
+                <span class="slider"></span>
+            </label>
+        </div>
         <ul class="files-list">
             <li th:if="${files.isEmpty()}" class="info-message">Buraya henüz bir dosya eklemediniz.</li>
             <li class="file-card" th:each="file : ${files}">
                 <span th:text="${file.fileName}">Dosya</span>
-
-                <!-- Dosya Paylaşımı -->
-                <form th:action="@{/files/share}" method="post">
-                    <input type="hidden" name="username" th:value="${username}" />
-                    <input type="hidden" name="fileId" th:value="${file.id}" />
-                    <label for="sharedWithEmail">Paylaşılacak E-posta:</label>
-                    <input type="email" id="sharedWithEmail" name="sharedWithEmail" required />
-                    <label for="version">Versiyon:</label>
-                    <select name="version" id="version">
-                        <option th:each="ver : ${file.versions}" th:value="${ver.versionNumber}" th:text="${ver.versionNumber}"></option>
-                    </select>
-                    <button type="submit">Paylaş</button>
-                </form>
-
-
-                <!-- Paylaşımı İptal Et -->
-                <div th:if="${file.fileShares.size() == 1}">
-                    <form th:action="@{'/files/revoke-share/' + ${file.id}}" method="post">
-                        <label for="sharedEmailDropdown"><strong>Paylaşılan Email Adresleri</strong></label>
-                        <select id="sharedEmailDropdown" name="sharedWithEmail" required>
-                            <option value="" disabled selected>Email Seçiniz...</option>
-                            <option th:each="share : ${file.fileShares}" th:value="${share.sharedWithUserEmail}" th:text="${share.sharedWithUserEmail}"></option>
-                        </select>
-                        <!-- Gizli input ile username gönder -->
+                <div class="file-details">
+                    <!-- Dosya Paylaşımı -->
+                    <form th:action="@{/files/share}" method="post">
                         <input type="hidden" name="username" th:value="${username}" />
-                        <button type="submit" class="small-btn">Paylaşımı İptal Et</button>
+                        <input type="hidden" name="fileId" th:value="${file.id}" />
+                        <label for="sharedWithEmail">Paylaşılacak E-posta:</label>
+                        <input type="email" id="sharedWithEmail" name="sharedWithEmail" required />
+                        <label for="version">Versiyon:</label>
+                        <select name="version" id="version">
+                            <option th:each="ver : ${file.versions}" th:value="${ver.versionNumber}" th:text="${ver.versionNumber}"></option>
+                        </select>
+                        <button type="submit">Paylaş</button>
                     </form>
-                </div>
 
+                    <!-- Paylaşımı İptal Et -->
+                    <div th:if="${file.fileShares.size() == 1}">
+                        <form th:action="@{'/files/revoke-share/' + ${file.id}}" method="post">
+                            <label for="sharedEmailDropdown"><strong>Paylaşılan Email Adresleri</strong></label>
+                            <select id="sharedEmailDropdown" name="sharedWithEmail" required>
+                                <option value="" disabled selected>Email Seçiniz...</option>
+                                <option th:each="share : ${file.fileShares}" th:value="${share.sharedWithUserEmail}" th:text="${share.sharedWithUserEmail}"></option>
+                            </select>
+                            <!-- Gizli input ile username gönder -->
+                            <input type="hidden" name="username" th:value="${username}" />
+                            <button type="submit" class="small-btn">Paylaşımı İptal Et</button>
+                        </form>
+                    </div>
 
-                <!-- Dosya İndir -->
-                <form th:action="@{'/files/download/' + ${username} + '/' + ${file.id}}" method="get">
-                    <label for="versionNumber">Versiyon:</label>
-                    <select name="versionNumber" id="versionNumber">
-                        <option th:each="ver : ${file.versions}" th:value="${ver.versionNumber}" th:text="${ver.versionNumber}"></option>
-                    </select>
-                    <button type="submit">İndir</button>
-                </form>
+                    <!-- Dosya İndir -->
+                    <form th:action="@{'/files/download/' + ${username} + '/' + ${file.id}}" method="get">
+                        <label for="versionNumber">Versiyon:</label>
+                        <select name="versionNumber" id="versionNumber">
+                            <option th:each="ver : ${file.versions}" th:value="${ver.versionNumber}" th:text="${ver.versionNumber}"></option>
+                        </select>
+                        <button type="submit">İndir</button>
+                    </form>
 
-                <!-- Dosya Sil -->
-                <form th:action="@{'/files/delete/' + ${username} + '/' + ${file.id}}" method="post">
-                    <input type="hidden" name="_method" value="delete"/>
-                    <label for="deleteVersionNumber">Versiyon:</label>
-                    <select name="versionNumber" id="deleteVersionNumber">
-                        <option th:each="ver : ${file.versions}" th:value="${ver.versionNumber}" th:text="${ver.versionNumber}"></option>
-                    </select>
-                    <button type="submit" class="delete">Sil</button>
-                </form>
+                    <!-- Dosya Sil -->
+                    <form th:action="@{'/files/delete/' + ${username} + '/' + ${file.id}}" method="post">
+                        <input type="hidden" name="_method" value="delete"/>
+                        <label for="deleteVersionNumber">Versiyon:</label>
+                        <select name="versionNumber" id="deleteVersionNumber">
+                            <option th:each="ver : ${file.versions}" th:value="${ver.versionNumber}" th:text="${ver.versionNumber}"></option>
+                        </select>
+                        <button type="submit" class="delete">Sil</button>
+                    </form>
+                </div><!-- file-details sonu -->
             </li>
         </ul>
     </div>
+
 </main>
 
 <footer>
@@ -151,5 +215,8 @@
 </div>
 
 <script src="/js/deleteModeHandler.js"></script>
+<script src="/js/navigationToggleHandler.js"></script>
+<script src="/js/filterFilesHandler.js"></script>
+<script src="/js/fileToggleHandler.js"></script>
 </body>
 </html>

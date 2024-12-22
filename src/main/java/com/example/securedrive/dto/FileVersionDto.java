@@ -7,5 +7,6 @@ public record FileVersionDto(
         String versionNumber,
         String deltaPath,
         String hash,
-        LocalDateTime timestamp
+        LocalDateTime timestamp,
+        Long size
 ) {}

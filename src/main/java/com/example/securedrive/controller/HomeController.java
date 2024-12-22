@@ -1,12 +1,13 @@
 package com.example.securedrive.controller;
 
-import com.example.securedrive.dto.DirectoryDto;
-import com.example.securedrive.dto.FileDto;
-import com.example.securedrive.dto.FileShareDto;
-import com.example.securedrive.dto.UserDto;
+import com.example.securedrive.dto.*;
 import com.example.securedrive.mapper.UserMapper;
+import com.example.securedrive.model.User;
+import com.example.securedrive.repository.UserRepository;
+import com.example.securedrive.security.FileSizeUtil;
 import com.example.securedrive.service.DirectoryService;
 import com.example.securedrive.service.FileManagementService;
+import com.example.securedrive.service.UserManagementService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,6 +15,9 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.ModelAndView;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @RestController
 public class HomeController {
@@ -21,14 +25,17 @@ public class HomeController {
     private final FileManagementService fileManagementService;
     private final DirectoryService directoryService;
     private final UserMapper userMapper;
+    private final UserManagementService userManagementService;
 
     @Autowired
     public HomeController(FileManagementService fileManagementService,
                           DirectoryService directoryService,
-                          UserMapper userMapper) {
+                          UserMapper userMapper,
+                          UserManagementService userManagementService) {
         this.fileManagementService = fileManagementService;
         this.directoryService = directoryService;
         this.userMapper = userMapper;
+        this.userManagementService = userManagementService;
     }
 
     @GetMapping("/home")
@@ -37,18 +44,70 @@ public class HomeController {
         UserDto userDto = authentication != null ? userMapper.toUserDTO(authentication) : null;
 
         if (userDto != null) {
+            // Kullanıcı bilgileri
             modelAndView.addObject("username", userDto.getUsername());
             modelAndView.addObject("email", userDto.getEmail());
             modelAndView.addObject("displayName", userDto.getDisplayName());
             modelAndView.addObject("roles", userDto.getRoles());
-        } else {
-            modelAndView.addObject("username", "Misafir");
-            modelAndView.addObject("roles", List.of("Yok"));
-            modelAndView.addObject("email", "E-posta bulunamadı");
+
+            // Son yüklenen dosyalar
+            List<FileVersionDto> lastUploadedFiles = fileManagementService.getLastUploadedFileVersions(userDto.getUsername(), 5);
+            Map<Long, String> lastUploadedNames = lastUploadedFiles.stream()
+                    .collect(Collectors.toMap(FileVersionDto::id,
+                            f -> fileManagementService.getFileNameByVersionId(f.id())));
+
+            Map<Long, String> lastUploadedSizes = lastUploadedFiles.stream()
+                    .collect(Collectors.toMap(FileVersionDto::id,
+                            f -> FileSizeUtil.formatSize(f.size())));
+
+            modelAndView.addObject("lastUploadedFiles", lastUploadedFiles);
+            modelAndView.addObject("lastUploadedNames", lastUploadedNames);
+            modelAndView.addObject("lastUploadedSizes", lastUploadedSizes);
+
+            // Son erişilen dosyalar
+            List<FileVersionDto> lastAccessedFiles = fileManagementService.getLastAccessedFileVersions(userDto.getUsername(), 5);
+            Map<Long, String> lastAccessedNames = lastAccessedFiles.stream()
+                    .collect(Collectors.toMap(FileVersionDto::id,
+                            f -> fileManagementService.getFileNameByVersionId(f.id())));
+
+            Map<Long, String> lastAccessedSizes = lastAccessedFiles.stream()
+                    .collect(Collectors.toMap(FileVersionDto::id,
+                            f -> FileSizeUtil.formatSize(f.size())));
+
+            modelAndView.addObject("lastAccessedFiles", lastAccessedFiles);
+            modelAndView.addObject("lastAccessedNames", lastAccessedNames);
+            modelAndView.addObject("lastAccessedSizes", lastAccessedSizes);
+
+            // Toplam ve kullanılan depolama
+            long totalStorage = fileManagementService.getTotalStorage(userDto.getUsername());
+            long usedStorage = fileManagementService.getUsedStorage(userDto.getUsername());
+            long remainingStorage = totalStorage - usedStorage;
+
+            String totalStorageFormatted = FileSizeUtil.formatSize(totalStorage);
+            String remainingStorageFormatted = FileSizeUtil.formatSize(remainingStorage);
+            double remainingPercentage = (remainingStorage / (double) totalStorage) * 100;
+
+            modelAndView.addObject("totalStorage", totalStorageFormatted);
+            modelAndView.addObject("remainingStorage", remainingStorageFormatted);
+            modelAndView.addObject("remainingPercentage", remainingPercentage);
+
+            // Contacts
+            Set<User> contacts = userManagementService.getContactsForUser(userDto.getUsername());
+            modelAndView.addObject("contacts", contacts);
+
+            // Seninle paylaşılan dosyalar
+            List<FileShareDto> sharedFiles = fileManagementService.getSharedFilesByUsername(userDto.getUsername());
+            modelAndView.addObject("sharedFiles", sharedFiles);
         }
 
         return modelAndView;
     }
+
+
+
+
+
+
 
     @GetMapping("/files")
     public ModelAndView filesPage(Authentication authentication) {

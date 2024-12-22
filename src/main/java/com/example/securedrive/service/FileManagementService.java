@@ -3,6 +3,7 @@ package com.example.securedrive.service;
 
 import com.example.securedrive.dto.FileDto;
 import com.example.securedrive.dto.FileShareDto;
+import com.example.securedrive.dto.FileVersionDto;
 import com.example.securedrive.model.Directory;
 import com.example.securedrive.model.File;
 import com.example.securedrive.model.User;
@@ -23,8 +24,13 @@ public interface FileManagementService {
     // DTO bazlı ek metotlar
     List<FileDto> getUserFilesInRootDirectoryAsDto(User user);
     List<FileDto> getFilesByDirectoryAsDto(Directory directory);
-
+    public List<FileDto> getLastUploadedFiles(String username, int limit);
     List<FileShareDto> getSharedFilesByUsername(String username);
     List<FileDto> getFilesByUsername(String username);
+    long getTotalStorage(String username);
+    long getUsedStorage(String username);
+    List<FileVersionDto> getLastAccessedFileVersions(String username, int limit);
+    List<FileVersionDto> getLastUploadedFileVersions(String username, int limit);
+    String getFileNameByVersionId(Long versionId);
 }
 

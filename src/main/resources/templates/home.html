@@ -1,6 +1,7 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="">
 <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta charset="UTF-8">
     <title>Kullanıcı Bilgileri</title>
     <link rel="stylesheet" href="/css/style.css">
@@ -12,6 +13,11 @@
         <img src="/images/SFD_Icon.png" alt="Logo" class="nav-icon">
         <a th:href="@{/intro}" class="logo-text">Secure File Drive</a>
     </div>
+    <!-- Hamburger Menü -->
+    <div class="hamburger-menu" id="hamburger-menu" onclick="toggleDrawer()">
+        ☰
+    </div>
+    <!-- Normal Navigasyon -->
     <div class="nav-links">
         <a th:href="@{/upload}">Dosya Yükle</a>
         <a th:href="@{/directories}">Tüm Dizinlerim</a>
@@ -21,26 +27,124 @@
     </div>
 </nav>
 
-<!-- Kullanıcı Bilgileri -->
+<!-- Drawer Menü -->
+<div class="drawer-menu" id="drawer">
+    <a th:href="@{/upload}">Dosya Yükle</a>
+    <a th:href="@{/directories}">Tüm Dizinlerim</a>
+    <a th:href="@{/home}">Kullanıcı Bilgilerim</a>
+    <a th:href="@{/shared-files}">Benimle Paylaşılanlar</a>
+    <a th:href="@{/logout}">Çıkış Yap</a>
+</div>
+
+<!-- Arka Plan Karartma -->
+<div class="drawer-overlay" id="drawer-overlay" onclick="toggleDrawer()"></div>
+
 <main>
-    <div class="user-profile-container">
-        <!-- Kullanıcı Fotoğrafı -->
-        <div class="profile-picture">
-            <img src="/images/UserPpIcon.png" alt="Profil Fotoğrafı">
+    <div class="main-layout">
+        <!-- Sol Kolon -->
+        <div class="left-column">
+            <div class="user-profile-container">
+                <div class="profile-picture">
+                    <img src="/images/UserPpIcon.png" alt="Profil Fotoğrafı">
+                </div>
+                <!-- Kullanıcı Bilgileri -->
+                <div class="profile-details">
+                    <h3>Kullanıcı Bilgileriniz</h3>
+                    <p><strong>E-posta:</strong> <span th:text="${email}">[E-posta]</span></p>
+                    <p><strong>Kullanıcı Adı:</strong> <span th:text="${displayName}">[Kullanıcı Adı]</span></p>
+                </div>
+                <!-- Kalan Alan -->
+                <div class="storage-container">
+                    <h3>Kalan Alan</h3>
+                    <div class="storage-bar">
+                        <!-- Kalan yüzdelik 'remainingPercentage' ile dinamik olarak hesaplandı -->
+                        <div class="storage-fill" th:style="'width:' + ${remainingPercentage} + '%;'"></div>
+                    </div>
+                    <p th:text="'Kalan: ' + ${remainingStorage} + ' / ' + ${totalStorage}"></p>
+                </div>
+                <!-- Contacts -->
+                <div class="contacts-container">
+                    <h3>Contacts</h3>
+                    <ul class="contact-list">
+                        <li th:each="contact : ${contacts}" class="contact-item">
+                            <i class="contact-icon">✉️</i>
+                            <span class="contact-email" th:text="${contact.email}">email@example.com</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
         </div>
 
-        <!-- Kullanıcı Bilgileri -->
-        <div class="profile-details">
-            <h2>Kullanıcı Bilgileriniz</h2>
-            <p><strong>E-posta:</strong> <span th:text="${email}">[E-posta]</span></p>
-            <p><strong>Kullanıcı Adı:</strong> <span th:text="${displayName}">[Kullanıcı Adı]</span></p>
+        <!-- Sağ Kolon -->
+        <div class="right-column">
+            <div class="section">
+                <h3>Son Yüklenen Dosyalar</h3>
+                <table class="file-table">
+                    <thead>
+                    <tr>
+                        <th>Dosya Adı</th>
+                        <th>Versiyon</th>
+                        <th>Boyut</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="file : ${lastUploadedFiles}">
+                        <td th:text="${lastUploadedNames[file.id]}">Dosya Adı</td>
+                        <td th:text="${file.versionNumber}">Versiyon</td>
+                        <td th:text="${lastUploadedSizes[file.id]}">Boyut</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="section">
+                <h3>Son Erişilen Dosyalar</h3>
+                <table class="file-table">
+                    <thead>
+                    <tr>
+                        <th>Dosya Adı</th>
+                        <th>Versiyon</th>
+                        <th>Boyut</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="file : ${lastAccessedFiles}">
+                        <td th:text="${lastAccessedNames[file.id]}">Dosya Adı</td>
+                        <td th:text="${file.versionNumber}">Versiyon</td>
+                        <td th:text="${lastAccessedSizes[file.id]}">Boyut</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="section">
+                <h3>Seninle Paylaşılan Dosyalar</h3>
+                <div class="shared-files-container">
+                    <div th:each="sharedFile : ${sharedFiles}" class="shared-file-card">
+                        <div class="file-icon">📁</div>
+                        <div class="file-details">
+                            <!-- Dosya Adı ve Yönlendirme -->
+                            <a href="https://localhost:8443/shared-files" class="file-name-link">
+                                <span th:text="${sharedFile.fileName}">Dosya Adı</span>
+                            </a>
+                            <span class="file-version" th:text="'Versiyon: ' + ${sharedFile.version}"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 </main>
+
 
 <!-- Footer -->
 <footer>
     <p>&copy; 2024 SecureFile Drive. Tüm Hakları Saklıdır.</p>
 </footer>
+
+<!-- JavaScript -->
+<script src="/js/navigationToggleHandler.js"></script>
 </body>
 </html>
