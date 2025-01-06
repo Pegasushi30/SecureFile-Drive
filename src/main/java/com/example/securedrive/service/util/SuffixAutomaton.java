@@ -4,50 +4,58 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Enhanced Suffix Automaton Implementation with Position Mapping
+ * Suffix Automaton implementation for efficient string matching.
+ * This class allows building a suffix automaton from a byte array and
+ * finding the longest match for a substring within the original data.
  */
 public class SuffixAutomaton {
+    /**
+     * State class represents a state in the suffix automaton.
+     */
     private static class State {
-        int len;
-        int link;
-        Map<Byte, Integer> next = new HashMap<>();
-        int firstPos; // İlk ortaya çıktığı pozisyon
+        int len; // Maximum length of the substring ending at this state
+        int link; // Suffix link
+        Map<Byte, Integer> next; // Transitions (character to state)
+        int firstPos; // The first ending position of the substring in the original string
+
+        State(int len, int link, int firstPos) {
+            this.len = len;
+            this.link = link;
+            this.next = new HashMap<>();
+            this.firstPos = firstPos;
+        }
     }
 
-    private final State[] st;
-    private int size;
-    private int last;
+    private final State[] st; // Array of states
+    private int size; // Number of states
+    private int last; // The index of the state representing the entire string
 
     /**
-     * Constructs the Suffix Automaton for the given data.
+     * Constructs the suffix automaton for the given data.
      *
-     * @param s The original data as a byte array
+     * @param data The original byte array to build the automaton from.
      */
-    public SuffixAutomaton(byte[] s) {
-        st = new State[2 * s.length + 2];
-        for (int i = 0; i < st.length; i++) {
-            st[i] = new State();
-        }
-        st[0].len = 0;
-        st[0].link = -1;
-        st[0].firstPos = -1; // Başlangıçta geçerli bir pozisyon yok
+    public SuffixAutomaton(byte[] data) {
+        // Maximum number of states is 2 * n + 2
+        st = new State[2 * data.length + 2];
+        st[0] = new State(0, -1, -1);
         size = 1;
         last = 0;
-        for (int i = 0; i < s.length; i++) {
-            extend(s[i], i); // 0 tabanlı pozisyon
+
+        for (int i = 0; i < data.length; i++) {
+            extend(data[i], i);
         }
     }
 
     /**
-     * Extends the automaton with a new character and its position.
+     * Extends the automaton with a new character.
      *
-     * @param c        The new character to add
-     * @param position The position of the new character in the original string (0-based)
+     * @param c   The new character to add.
+     * @param pos The current position in the original string.
      */
-    private void extend(byte c, int position) {
+    private void extend(byte c, int pos) {
         int curr = size++;
-        st[curr].len = st[last].len + 1;
-        st[curr].firstPos = position; // 'position' parametresi kullanılıyor
+        st[curr] = new State(st[last].len + 1, 0, pos);
         int p = last;
         while (p != -1 && !st[p].next.containsKey(c)) {
             st[p].next.put(c, curr);
@@ -61,10 +69,8 @@ public class SuffixAutomaton {
                 st[curr].link = q;
             } else {
                 int clone = size++;
-                st[clone].len = st[p].len + 1;
+                st[clone] = new State(st[p].len + 1, st[q].link, st[q].firstPos);
                 st[clone].next.putAll(st[q].next);
-                st[clone].link = st[q].link;
-                st[clone].firstPos = st[q].firstPos;
                 while (p != -1 && st[p].next.get(c) == q) {
                     st[p].next.put(c, clone);
                     p = st[p].link;
@@ -77,15 +83,14 @@ public class SuffixAutomaton {
     }
 
     /**
-     * Finds the longest match in the original data for the data starting at position in the new data.
-     * This method runs in O(n) time for the entire modified data.
+     * Find the longest match for the substring starting at modPos in the modified data.
      *
-     * @param newData     The modified data as a byte array
-     * @param startPosNew The starting position in the modified data
-     * @return MatchResult containing the offset and length of the longest match
+     * @param modified The modified byte array to match.
+     * @param modPos   The starting position in the modified array.
+     * @return MatchResult containing the offset and length of the match.
      */
-    public MatchResult findLongestMatch(byte[] newData, int startPosNew) {
-        if (startPosNew < 0 || startPosNew >= newData.length) {
+    public MatchResult findLongestMatch(byte[] modified, int modPos) {
+        if (modPos < 0 || modPos >= modified.length) {
             return new MatchResult(-1, 0);
         }
 
@@ -94,14 +99,14 @@ public class SuffixAutomaton {
         int bestLength = 0;
         int bestOffset = -1;
 
-        for (int i = startPosNew; i < newData.length; i++) {
-            byte c = newData[i];
+        for (int i = modPos; i < modified.length; i++) {
+            byte c = modified[i];
             if (st[currentState].next.containsKey(c)) {
                 currentState = st[currentState].next.get(c);
                 currentLength++;
                 if (currentLength > bestLength) {
                     bestLength = currentLength;
-                    bestOffset = st[currentState].firstPos - bestLength + 1; // Doğru offset hesaplaması
+                    bestOffset = st[currentState].firstPos - bestLength + 1;
                 }
             } else {
                 while (currentState != -1 && !st[currentState].next.containsKey(c)) {
@@ -115,7 +120,7 @@ public class SuffixAutomaton {
                     currentState = st[currentState].next.get(c);
                     if (currentLength > bestLength) {
                         bestLength = currentLength;
-                        bestOffset = st[currentState].firstPos - bestLength + 1; // Doğru offset hesaplaması
+                        bestOffset = st[currentState].firstPos - bestLength + 1;
                     }
                 }
             }
@@ -123,9 +128,4 @@ public class SuffixAutomaton {
 
         return new MatchResult(bestOffset, bestLength);
     }
-
-    /**
-     * MatchResult: Stores the offset and length of the match.
-     */
-    public record MatchResult(int offset, int length) {}
 }

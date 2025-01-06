@@ -1,13 +1,18 @@
 package com.example.securedrive.service.util;
 
+/**
+ * Suffix Array implementation using SA-IS algorithm and optimized longest match finding using Suffix Automaton.
+ */
 public class SuffixArray {
 
     private final byte[] data;
     final int[] suffixArray;
+    private final SuffixAutomaton suffixAutomaton;
 
     public SuffixArray(byte[] data) {
         this.data = data;
         this.suffixArray = buildSuffixArray(data);
+        this.suffixAutomaton = new SuffixAutomaton(data);
     }
 
     /**
@@ -72,71 +77,30 @@ public class SuffixArray {
         }
     }
 
-
-
-
+    /**
+     * Finds the longest match in the original data for the modified data starting at modPos.
+     *
+     * @param modified The modified data as byte array.
+     * @param modPos   The starting position in the modified data.
+     * @return MatchResult containing the offset in the original data and the length of the match.
+     */
     public MatchResult findLongestMatch(byte[] modified, int modPos) {
         if (modPos < 0 || modPos >= modified.length) {
             return new MatchResult(-1, 0);
         }
 
-        int left = 0;
-        int right = suffixArray.length - 1;
-        int bestOffset = -1;
-        int bestLength = 0;
-
-        while (left <= right) {
-            int mid = left + (right - left) / 2;
-            CompareResult cr = compareSuffixDetailed(modified, modPos, suffixArray[mid]);
-
-            if (cr.matchLen() > bestLength) {
-                bestLength = cr.matchLen();
-                bestOffset = suffixArray[mid];
-            }
-
-            if (cr.cmp() == 0) {
-                // Tam eşleşme bulundu, komşuları kontrol et
-                int temp = mid - 1;
-                while (temp >= left) {
-                    CompareResult tempCr = compareSuffixDetailed(modified, modPos, suffixArray[temp]);
-                    if (tempCr.cmp() != 0) break;
-                    if (tempCr.matchLen() > bestLength) {
-                        bestLength = tempCr.matchLen();
-                        bestOffset = suffixArray[temp];
-                    }
-                    temp--;
-                }
-
-                temp = mid + 1;
-                while (temp <= right) {
-                    CompareResult tempCr = compareSuffixDetailed(modified, modPos, suffixArray[temp]);
-                    if (tempCr.cmp() != 0) break;
-                    if (tempCr.matchLen() > bestLength) {
-                        bestLength = tempCr.matchLen();
-                        bestOffset = suffixArray[temp];
-                    }
-                    temp++;
-                }
-
-                // Tam eşleşme bulundu, aramayı sonlandır
-                break;
-            } else if (cr.cmp() < 0) {
-                // Modified dizesi suffix'ten küçük, sol yarıya daraltın
-                right = mid - 1;
-            } else {
-                // Modified dizesi suffix'ten büyük veya eşitse, sağ yarıya daraltın
-                left = mid + 1;
-            }
-        }
-        return new MatchResult(bestOffset, bestLength);
+        // Kullanılacak yöntem: Suffix Automaton ile O(n) zaman
+        // Orijinal dize üzerinde oluşturulmuş suffix automaton kullanılır
+        return suffixAutomaton.findLongestMatch(modified, modPos);
     }
-
-
-
-
 
     /**
      * Calculates the length of the matching prefix between the modified and original data.
+     *
+     * @param modified The modified data as byte array.
+     * @param modPos   The starting position in the modified data.
+     * @param saPos    The starting position in the suffix array.
+     * @return The length of the matching prefix.
      */
     int getMatchLength(byte[] modified, int modPos, int saPos) {
         int count = 0;
@@ -151,9 +115,4 @@ public class SuffixArray {
         }
         return count;
     }
-
-    /**
-     * MatchResult: Stores the offset and length of the match.
-     */
-    public record MatchResult(int offset, int length) {}
 }

@@ -76,75 +76,68 @@ public class DeltaUtil {
      */
     public static String applyDelta(String oldData, String delta) {
         String[] oldLines = splitLines(oldData);
-        List<String> resultLines = new ArrayList<>(List.of(oldLines));
-
         String[] deltaLines = splitLines(delta);
 
-        String previousCommand = null;
-        int previousLineNumber = -1;
+        List<String> resultLines = new ArrayList<>();
+        int oldIndex = 0;
+        int deltaIndex = 0;
 
-        for (String deltaLine : deltaLines) {
+        while (deltaIndex < deltaLines.length) {
+            String deltaLine = deltaLines[deltaIndex];
             if (deltaLine.isBlank()) {
+                deltaIndex++;
                 continue; // Boş satırları atla
             }
 
-            // "KOMUT:SATIR_NO:ICERIK"
             String[] parts = deltaLine.split(":", 3);
             if (parts.length < 3) {
                 throw new IllegalArgumentException("Geçersiz delta formatı: " + deltaLine);
             }
 
-            String command = parts[0];            // "A" ya da "R"
+            String command = parts[0];
             int lineNumber = Integer.parseInt(parts[1]);
             String content = parts[2];
 
             switch (command) {
                 case "A": { // Satır Ekleme
-                    // Eklenecek konum valid mi?
-                    if (lineNumber > resultLines.size()) {
-                        throw new IllegalStateException("Eklenecek satır numarası geçersiz: " + lineNumber);
+                    // Eklenecek konuma kadar eski satırları ekle
+                    while (resultLines.size() < lineNumber && oldIndex < oldLines.length) {
+                        resultLines.add(oldLines[oldIndex++]);
                     }
-
-                    // Belirtilen konuma yeni satır ekle
-                    resultLines.add(lineNumber, content);
-
-                    // Bir sonraki komut "R" olursa, bunun "A" komutundan sonra geldiğini bilmemiz lazım
-                    previousCommand = "A";
-                    previousLineNumber = lineNumber;
+                    // Yeni satırı ekle
+                    resultLines.add(content);
                     break;
                 }
                 case "R": { // Satır Silme
-                    // Normalde "R" lineNumber'dan siler.
-                    // Ancak bir önceki komut "A" VE aynı lineNumber ise,
-                    // eski satır kaydığı için lineNumber+1'den silmemiz lazım.
-                    int removeIndex = lineNumber;
-                    if ("A".equals(previousCommand) && lineNumber == previousLineNumber) {
-                        removeIndex = lineNumber + 1;
+                    // Silinecek konuma kadar eski satırları ekle
+                    while (resultLines.size() < lineNumber && oldIndex < oldLines.length) {
+                        resultLines.add(oldLines[oldIndex++]);
                     }
-
-                    if (removeIndex >= resultLines.size()) {
-                        throw new IllegalStateException("Silinmeye çalışılan satır numarası geçersiz: " + removeIndex);
+                    // Eski satırı atla (sil)
+                    if (oldIndex >= oldLines.length) {
+                        throw new IllegalStateException("Silinmeye çalışılan satır numarası geçersiz: " + lineNumber);
                     }
-
-                    // Sil ve içerik kontrolü yap
-                    String removedLine = resultLines.remove(removeIndex);
+                    String removedLine = oldLines[oldIndex++];
                     if (!removedLine.equals(content)) {
                         throw new IllegalStateException("Delta ve veri uyumsuz: "
                                 + "Silinmesi gereken: " + content + ", Silinen: " + removedLine);
                     }
-
-                    // Komuttan sonra "previousCommand" güncelle
-                    previousCommand = "R";
-                    previousLineNumber = lineNumber;
                     break;
                 }
                 default:
                     throw new IllegalArgumentException("Bilinmeyen delta komutu: " + command);
             }
+            deltaIndex++;
+        }
+
+        // Geriye kalan eski satırları ekle
+        while (oldIndex < oldLines.length) {
+            resultLines.add(oldLines[oldIndex++]);
         }
 
         return String.join("\n", resultLines);
     }
+
 
 
 

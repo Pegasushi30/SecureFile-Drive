@@ -111,10 +111,10 @@ public class SAIS {
             if (!isEqual) {
                 name[cur] = nameCount++;
             } else {
-                // Assign unique name even if equal (due to corrected comparison)
-                name[cur] = nameCount++;
+                name[cur] = nameCount - 1; // Aynı isim atanır
             }
         }
+
 
         // Step 9: Create reduced problem array
         int[] s1 = new int[lmsCount];
@@ -138,7 +138,6 @@ public class SAIS {
 
 
         // Step 11: Restore LMS positions in suffix array
-        // **CORRECTION HERE: Reverse the mapping to align sorted order correctly**
         for (int i = 0; i < lmsCount; i++) {
             lmsIdx[i] = lmsList.get(lmsCount - 1 - sa1[i]);
         }
@@ -197,8 +196,7 @@ public class SAIS {
 
         int n = s.length;
 
-
-        while (true) {
+        while (a < n && b < n) {
             if (s[a] != s[b]) {
                 return false;
             }
@@ -206,20 +204,17 @@ public class SAIS {
             a++;
             b++;
 
-            if (a < n && b < n) {
-                boolean aLMS = isLMS(a, isS);
-                boolean bLMS = isLMS(b, isS);
+            if (isLMS(a, isS) && isLMS(b, isS)) {
+                break; // Her iki substring de bir sonraki LMS pozisyonuna ulaştı
+            }
 
-                if (aLMS && bLMS) {
-                    return a == b; // Only equal if both reach the same position
-                }
-
-                if (aLMS != bLMS) {
-                    return false;
-                }
-            } else {
-                return a == b;
+            if (isLMS(a, isS) != isLMS(b, isS)) {
+                return false;
             }
         }
+
+        // Her iki substring de aynı noktada sonlandıysa eşittir
+        return isLMS(a, isS) && isLMS(b, isS);
     }
+
 }

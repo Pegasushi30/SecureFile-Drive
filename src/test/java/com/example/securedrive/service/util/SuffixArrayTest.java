@@ -5,8 +5,10 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Test class for SuffixArray.
+ */
 class SuffixArrayTest {
-
 
     @Test
     @DisplayName("buildSuffixArray - Basic test to verify the correct length of the suffix array")
@@ -34,7 +36,7 @@ class SuffixArrayTest {
         byte[] modified = "banana".getBytes();
 
         // When
-        SuffixArray.MatchResult result = suffixArray.findLongestMatch(modified, 0);
+        MatchResult result = suffixArray.findLongestMatch(modified, 0);
         String matchedSubstring = result.offset() >= 0
                 ? new String(data, result.offset(), result.length())
                 : "No match found";
@@ -59,7 +61,7 @@ class SuffixArrayTest {
         byte[] modified = "ban".getBytes();
 
         // When
-        SuffixArray.MatchResult result = suffixArray.findLongestMatch(modified, 0);
+        MatchResult result = suffixArray.findLongestMatch(modified, 0);
 
         // Then
         assertEquals(3, result.length(), "Expecting a 3-character match for 'ban'.");
@@ -75,7 +77,7 @@ class SuffixArrayTest {
         byte[] modified = "zzz".getBytes();
 
         // When
-        SuffixArray.MatchResult result = suffixArray.findLongestMatch(modified, 0);
+        MatchResult result = suffixArray.findLongestMatch(modified, 0);
 
         // Then
         assertEquals(-1, result.offset(), "Offset should be -1 when there is no match.");
@@ -91,7 +93,7 @@ class SuffixArrayTest {
         byte[] modified = "a".getBytes();
 
         // When
-        SuffixArray.MatchResult result = suffixArray.findLongestMatch(modified, 0);
+        MatchResult result = suffixArray.findLongestMatch(modified, 0);
 
         // Then
         assertEquals(1, result.length(), "Single character 'a' should have a match length of 1.");
@@ -125,8 +127,8 @@ class SuffixArrayTest {
         byte[] modified = "banana".getBytes();
 
         // When
-        SuffixArray.MatchResult resultNegative = suffixArray.findLongestMatch(modified, -1);
-        SuffixArray.MatchResult resultOutOfRange = suffixArray.findLongestMatch(modified, modified.length);
+        MatchResult resultNegative = suffixArray.findLongestMatch(modified, -1);
+        MatchResult resultOutOfRange = suffixArray.findLongestMatch(modified, modified.length);
 
         // Then
         assertEquals(-1, resultNegative.offset(), "Offset should be -1 for negative modPos.");
@@ -141,7 +143,7 @@ class SuffixArrayTest {
         // Given
         byte[] data = "banana".getBytes();
         SuffixArray suffixArray = new SuffixArray(data);
-        int saPos = suffixArray.suffixArray[3];
+        int saPos = suffixArray.suffixArray[3]; // Expected to be position 1 ('banana' suffix)
 
         // When
         SuffixArray.CompareResult cr = suffixArray.compareSuffixDetailed("banana".getBytes(), 1, saPos);
