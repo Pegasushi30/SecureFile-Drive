@@ -1,4 +1,3 @@
-// com/example/securedrive/dto/FileShareDto.java
 package com.example.securedrive.dto;
 
 public record FileShareDto(
@@ -7,6 +6,7 @@ public record FileShareDto(
         String version,
         String sasUrl,
         String fileName,
-        String ownerEmail
+        String ownerEmail,
+        String directoryName,  // Dizin adı
+        String directoryPath   // Dizin yolu
 ) {}
-

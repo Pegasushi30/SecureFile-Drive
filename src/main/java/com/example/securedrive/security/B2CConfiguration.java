@@ -1,4 +1,4 @@
-package com.example.securedrive.config;
+package com.example.securedrive.security;
 
 import lombok.Getter;
 import lombok.Setter;

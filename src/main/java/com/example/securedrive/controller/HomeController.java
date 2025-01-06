@@ -3,8 +3,7 @@ package com.example.securedrive.controller;
 import com.example.securedrive.dto.*;
 import com.example.securedrive.mapper.UserMapper;
 import com.example.securedrive.model.User;
-import com.example.securedrive.repository.UserRepository;
-import com.example.securedrive.security.FileSizeUtil;
+import com.example.securedrive.service.util.FileSizeUtil;
 import com.example.securedrive.service.DirectoryService;
 import com.example.securedrive.service.FileManagementService;
 import com.example.securedrive.service.UserManagementService;
@@ -151,14 +150,23 @@ public class HomeController {
 
         if (userDto != null) {
             List<FileShareDto> sharedFiles = fileManagementService.getSharedFilesByUsername(userDto.getUsername());
-            modelAndView.addObject("fileShares", sharedFiles);
+
+            // Paylaşan e-posta adresine ve dizin yoluna göre gruplama
+            Map<String, Map<String, List<FileShareDto>>> groupedShares = sharedFiles.stream()
+                    .collect(Collectors.groupingBy(
+                            FileShareDto::ownerEmail, // Sahibi maili ile grupla
+                            Collectors.groupingBy(FileShareDto::directoryPath)
+                    ));
+
+            modelAndView.addObject("groupedShares", groupedShares);
             modelAndView.addObject("username", userDto.getUsername());
         } else {
-            modelAndView.addObject("fileShares", List.of());
+            modelAndView.addObject("groupedShares", Map.of());
         }
 
         return modelAndView;
     }
+
 
     @GetMapping("/intro")
     public ModelAndView introPage() {

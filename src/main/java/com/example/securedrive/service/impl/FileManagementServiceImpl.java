@@ -99,25 +99,28 @@ public class FileManagementServiceImpl implements FileManagementService {
         String versionPath = String.format("%s/versions/%s/%s", file.getPath(), versionNumber, file.getFileName());
         String sasUrl = azureBlobSASTokenGenerator.getBlobUrl(versionPath);
 
-        Optional<FileShare> existingShare = fileShareRepository.findByFileAndSharedWithUser(file, sharedWithUser);
+        // Versiyon bazlı paylaşımı kontrol et
+        Optional<FileShare> existingShare = fileShareRepository.findByFileAndSharedWithUserAndVersion(file, sharedWithUser, versionNumber);
         FileShare fileShare;
         if (existingShare.isPresent()) {
             fileShare = existingShare.get();
-            fileShare.setSasUrl(sasUrl);
-            fileShare.setVersion(versionNumber);
+            fileShare.setSasUrl(sasUrl); // Mevcut paylaşımı güncelle
         } else {
             fileShare = new FileShare();
             fileShare.setFile(file);
             fileShare.setOwner(owner);
             fileShare.setSharedWithUser(sharedWithUser);
             fileShare.setSasUrl(sasUrl);
-            fileShare.setVersion(versionNumber);
+            fileShare.setVersion(versionNumber); // Versiyon bilgisini ekle
         }
 
         fileShareRepository.save(fileShare);
+
+        // Kullanıcıyı sahibin bağlantılarına ekle
         owner.getContacts().add(sharedWithUser);
         userRepository.save(owner);
     }
+
 
     // DTO bazlı ek metotlar
     @Override
@@ -185,8 +188,10 @@ public class FileManagementServiceImpl implements FileManagementService {
                             ownerUsername,
                             directoryId,
                             List.of(versionDto),
-                            null
+                            List.of(),   // boş liste (null yerine de koyabilirsiniz)
+                            null         // fileSharesJson de yoksa null
                     );
+
                 })
                 .collect(Collectors.toList());
     }

@@ -7,10 +7,12 @@ import com.example.securedrive.model.FileVersion;
 import com.example.securedrive.model.Storage;
 import com.example.securedrive.model.User;
 import com.example.securedrive.repository.FileVersionRepository;
-import com.example.securedrive.security.AESUtil;
-import com.example.securedrive.security.DeltaUtil;
+import com.example.securedrive.service.util.AESUtil;
+import com.example.securedrive.service.util.BinaryDeltaUtil;
+import com.example.securedrive.service.util.DeltaUtil;
 import com.example.securedrive.security.KeyVaultService;
 import com.example.securedrive.service.FileVersionManagementService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +20,7 @@ import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 
@@ -27,7 +30,7 @@ public class FileVersionManagementServiceImpl implements FileVersionManagementSe
     private final FileVersionRepository fileVersionRepository;
     private final AzureBlobStorageImpl azureBlobStorage;
     private final KeyVaultService keyVaultService;
-
+    private final ObjectMapper objectMapper = new ObjectMapper();
     private static final Logger logger = LoggerFactory.getLogger(FileVersionManagementServiceImpl.class);
 
     @Autowired
@@ -93,35 +96,76 @@ public class FileVersionManagementServiceImpl implements FileVersionManagementSe
         String encryptionKey = keyVaultService.getEncryptionKeyFromKeyVault(user.getUsername());
         byte[] decryptedData = AESUtil.decrypt(initialEncryptedData, encryptionKey);
 
-        String initialContent = new String(decryptedData, StandardCharsets.UTF_8);
-        content.append(initialContent);
+        String fileNameLower = file.getFileName().toLowerCase();
+        boolean isBinary = fileNameLower.matches(".*\\.(jpg|png|mp4|docx?|xlsx|pdf|pptx|mkv)$");
 
-        // Tüm versiyonların deltalarını uygula
-        for (int i = 1; i < versions.size(); i++) {
-            FileVersion version = versions.get(i);
-            String deltaPath = version.getDeltaPath();
+        if (isBinary) {
+            // Binary dosya işlemleri
+            byte[] contentBytes = decryptedData;
 
-            if (deltaPath == null) {
-                throw new Exception("Delta path is null for version: " + version.getVersionNumber());
+            // Tüm versiyonların deltalarını uygula (sadece delta.json varsa)
+            for (int i = 1; i < versions.size(); i++) {
+                FileVersion version = versions.get(i);
+                String deltaPath = version.getDeltaPath();
+
+                if (deltaPath == null) {
+                    throw new Exception("Delta path is null for version: " + version.getVersionNumber());
+                }
+
+                if (!azureBlobStorage.checkBlobExists(deltaPath)) {
+                    throw new AzureBlobStorageException("Delta blob not found at path: " + deltaPath);
+                }
+
+                byte[] deltaBase64Data = azureBlobStorage.read(new Storage(deltaPath, null));
+                if (deltaBase64Data == null) {
+                    throw new Exception("Failed to read delta blob for version: " + version.getVersionNumber());
+                }
+
+                byte[] deltaData = Base64.getDecoder().decode(deltaBase64Data);
+
+                // Delta komutlarını JSON'dan deserialize et
+                List<BinaryDeltaUtil.DeltaCommand> deltaCommands = Arrays.asList(
+                        objectMapper.readValue(deltaData, BinaryDeltaUtil.DeltaCommand[].class)
+                );
+
+                // BinaryDeltaUtil ile delta uygulama
+                contentBytes = BinaryDeltaUtil.applyDelta(contentBytes, deltaCommands);
             }
 
-            if (!azureBlobStorage.checkBlobExists(deltaPath)) {
-                throw new AzureBlobStorageException("Delta blob not found at path: " + deltaPath);
+            return Base64.getEncoder().encodeToString(contentBytes); // İkili veriyi Base64 ile encode ederek döndür
+        } else {
+            // Metin dosya işlemleri
+            String initialContent = new String(decryptedData, StandardCharsets.UTF_8);
+            content.append(initialContent);
+
+            // Tüm versiyonların deltalarını uygula
+            for (int i = 1; i < versions.size(); i++) {
+                FileVersion version = versions.get(i);
+                String deltaPath = version.getDeltaPath();
+
+                if (deltaPath == null) {
+                    throw new Exception("Delta path is null for version: " + version.getVersionNumber());
+                }
+
+                if (!azureBlobStorage.checkBlobExists(deltaPath)) {
+                    throw new AzureBlobStorageException("Delta blob not found at path: " + deltaPath);
+                }
+
+                byte[] deltaBase64Data = azureBlobStorage.read(new Storage(deltaPath, null));
+                if (deltaBase64Data == null) {
+                    throw new Exception("Failed to read delta blob for version: " + version.getVersionNumber());
+                }
+
+                byte[] deltaData = Base64.getDecoder().decode(deltaBase64Data);
+                String delta = new String(deltaData, StandardCharsets.UTF_8);
+
+                content = new StringBuilder(DeltaUtil.applyDelta(content.toString(), delta));
             }
 
-            byte[] deltaBase64Data = azureBlobStorage.read(new Storage(deltaPath, null));
-            if (deltaBase64Data == null) {
-                throw new Exception("Failed to read delta blob for version: " + version.getVersionNumber());
-            }
-
-            byte[] deltaData = Base64.getDecoder().decode(deltaBase64Data);
-            String delta = new String(deltaData, StandardCharsets.UTF_8);
-
-            content = new StringBuilder(DeltaUtil.applyDelta(content.toString(), delta));
+            return content.toString();
         }
-
-        return content.toString();
     }
+
 
     @Override
     public String reconstructFileContent(File file, String versionNumber, User user) throws Exception {
@@ -147,38 +191,82 @@ public class FileVersionManagementServiceImpl implements FileVersionManagementSe
         String encryptionKey = keyVaultService.getEncryptionKeyFromKeyVault(user.getUsername());
         byte[] decryptedData = AESUtil.decrypt(initialEncryptedData, encryptionKey);
 
-        String initialContent = new String(decryptedData, StandardCharsets.UTF_8);
-        content.append(initialContent);
+        String fileNameLower = file.getFileName().toLowerCase();
+        boolean isBinary = fileNameLower.matches(".*\\.(jpg|png|mp4|docx?|xlsx|pdf|pptx|mkv)$");
 
-        for (int i = 1; i < versions.size(); i++) {
-            FileVersion version = versions.get(i);
-            String deltaPath = version.getDeltaPath();
+        if (isBinary) {
+            // Binary dosya işlemleri
+            byte[] contentBytes = decryptedData;
 
-            if (deltaPath == null) {
-                throw new Exception("Delta path is null for version: " + version.getVersionNumber());
+            for (int i = 1; i < versions.size(); i++) {
+                FileVersion version = versions.get(i);
+                String deltaPath = version.getDeltaPath();
+
+                if (deltaPath == null) {
+                    throw new Exception("Delta path is null for version: " + version.getVersionNumber());
+                }
+
+                if (!azureBlobStorage.checkBlobExists(deltaPath)) {
+                    throw new AzureBlobStorageException("Delta blob not found at path: " + deltaPath);
+                }
+
+                byte[] deltaBase64Data = azureBlobStorage.read(new Storage(deltaPath, null));
+                if (deltaBase64Data == null) {
+                    throw new Exception("Failed to read delta blob for version: " + version.getVersionNumber());
+                }
+
+                byte[] deltaData = Base64.getDecoder().decode(deltaBase64Data);
+
+                // Delta komutlarını JSON'dan deserialize et
+                List<BinaryDeltaUtil.DeltaCommand> deltaCommands = Arrays.asList(
+                        objectMapper.readValue(deltaData, BinaryDeltaUtil.DeltaCommand[].class)
+                );
+
+                // BinaryDeltaUtil ile delta uygulama
+                contentBytes = BinaryDeltaUtil.applyDelta(contentBytes, deltaCommands);
+
+                if (version.getVersionNumber().equals(versionNumber)) {
+                    break;
+                }
             }
 
-            if (!azureBlobStorage.checkBlobExists(deltaPath)) {
-                throw new AzureBlobStorageException("Delta blob not found at path: " + deltaPath);
+            return Base64.getEncoder().encodeToString(contentBytes); // İkili veriyi Base64 ile encode ederek döndür
+        } else {
+            // Metin dosya işlemleri
+            String initialContent = new String(decryptedData, StandardCharsets.UTF_8);
+            content.append(initialContent);
+
+            for (int i = 1; i < versions.size(); i++) {
+                FileVersion version = versions.get(i);
+                String deltaPath = version.getDeltaPath();
+
+                if (deltaPath == null) {
+                    throw new Exception("Delta path is null for version: " + version.getVersionNumber());
+                }
+
+                if (!azureBlobStorage.checkBlobExists(deltaPath)) {
+                    throw new AzureBlobStorageException("Delta blob not found at path: " + deltaPath);
+                }
+
+                byte[] deltaBase64Data = azureBlobStorage.read(new Storage(deltaPath, null));
+                if (deltaBase64Data == null) {
+                    throw new Exception("Failed to read delta blob for version: " + version.getVersionNumber());
+                }
+
+                byte[] deltaData = Base64.getDecoder().decode(deltaBase64Data);
+                String delta = new String(deltaData, StandardCharsets.UTF_8);
+
+                content = new StringBuilder(DeltaUtil.applyDelta(content.toString(), delta));
+
+                if (version.getVersionNumber().equals(versionNumber)) {
+                    break;
+                }
             }
 
-            byte[] deltaBase64Data = azureBlobStorage.read(new Storage(deltaPath, null));
-            if (deltaBase64Data == null) {
-                throw new Exception("Failed to read delta blob for version: " + version.getVersionNumber());
-            }
-
-            byte[] deltaData = Base64.getDecoder().decode(deltaBase64Data);
-            String delta = new String(deltaData, StandardCharsets.UTF_8);
-
-            content = new StringBuilder(DeltaUtil.applyDelta(content.toString(), delta));
-
-            if (version.getVersionNumber().equals(versionNumber)) {
-                break;
-            }
+            return content.toString();
         }
-
-        return content.toString();
     }
+
 
 
     @Override

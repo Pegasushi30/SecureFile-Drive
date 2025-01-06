@@ -10,7 +10,8 @@ public record FileDto(
         String ownerUsername,
         Long directoryId,
         List<FileVersionDto> versions,
-        List<FileShareDto> fileShares // Yeni eklenen alan
+        List<FileShareDto> fileShares, // Yeni eklenen alan
+        String fileSharesJson
 ) {}
 
 

@@ -10,12 +10,16 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
+
+import java.util.HashMap;
+import java.util.Map;
 import java.util.NoSuchElementException;
 
 
@@ -34,28 +38,34 @@ public class AzureBlobController {
 
     private static final Logger logger = LoggerFactory.getLogger(AzureBlobController.class);
 
-    @PostMapping("/revoke-share/{fileId}")
-    @PreAuthorize("hasRole('ROLE_ADMIN') or #username == authentication.name")
-    public ModelAndView revokeShare(
-            @PathVariable Long fileId,
+    @PostMapping("/revoke-share")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> revokeShare(
+            @RequestParam("fileId") Long fileId,
             @RequestParam("sharedWithEmail") String sharedWithEmail,
             @RequestParam("username") String username,
-            @RequestParam(value = "directoryId", required = false) Long directoryId,
+            @RequestParam("version") String version,
             Authentication authentication) {
-
-        ModelAndView modelAndView = new ModelAndView();
         try {
-            FileRevokeShareRequestDto dto = new FileRevokeShareRequestDto(fileId,sharedWithEmail, username,directoryId);
+            // Paylaşımı iptal et
+            FileRevokeShareRequestDto dto = new FileRevokeShareRequestDto(fileId, sharedWithEmail, username, version);
             fileFacadeService.revokeShare(dto, authentication);
+            // Kalan paylaşım sayısını al
+            int remainingShares = fileFacadeService.getRemainingShares(fileId);
 
-            modelAndView.setViewName(directoryId == null ? "redirect:/directories" : "redirect:/directories/" + directoryId);
-        } catch (SecurityException | NoSuchElementException e) {
-            modelAndView.setViewName("error");
-            modelAndView.addObject("message", e.getMessage());
+            // Yanıt
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "Paylaşım başarıyla iptal edildi!");
+            response.put("remainingShares", remainingShares);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            e.printStackTrace(); // Hata detaylarını logla
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", e.getMessage()));
         }
-
-        return modelAndView;
     }
+
+
 
 
     @PostMapping("/share")

@@ -14,5 +14,5 @@ public class FileRevokeShareRequestDto {
     private Long fileId;
     private String sharedWithEmail;
     private String username;
-    private Long directoryId;
+    private String version;
 }

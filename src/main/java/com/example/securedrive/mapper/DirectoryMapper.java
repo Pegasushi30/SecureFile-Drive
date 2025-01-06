@@ -1,7 +1,9 @@
 package com.example.securedrive.mapper;
 
 import com.example.securedrive.dto.DirectoryDto;
+import com.example.securedrive.dto.DirectoryShareDto;
 import com.example.securedrive.model.Directory;
+import com.example.securedrive.model.DirectoryShare;
 import org.springframework.stereotype.Component;
 
 import java.util.Collections;
@@ -18,15 +20,21 @@ public class DirectoryMapper {
                 directory.getUser() != null ? directory.getUser().getUsername() : null,
                 directory.getSubDirectories() != null
                         ? directory.getSubDirectories().stream().map(this::toDto).collect(Collectors.toList())
-                        : Collections.emptyList() // Boş liste atandı
+                        : Collections.emptyList(),
+                directory.getDirectoryShares() != null
+                        ? directory.getDirectoryShares().stream().map(this::toShareDto).collect(Collectors.toList())
+                        : Collections.emptyList()
         );
     }
 
-    public Directory toEntity(DirectoryDto dto) {
-        if (dto == null) return null;
-        Directory directory = new Directory();
-        directory.setName(dto.name());
-        // parentDirectory ve user daha sonra service'te set edilecek
-        return directory;
+    private DirectoryShareDto toShareDto(DirectoryShare share) {
+        return new DirectoryShareDto(
+                share.getId(),
+                share.getDirectory().getId(),                 // directoryId
+                share.getDirectory().getName(),               // directoryName
+                share.getSharedWithUser().getEmail(),         // sharedWithUserEmail
+                share.getOwner().getEmail(),                  // ownerEmail
+                share.getSharedPath()
+        );
     }
 }

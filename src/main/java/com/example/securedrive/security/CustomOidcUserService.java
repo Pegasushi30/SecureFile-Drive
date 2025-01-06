@@ -3,6 +3,7 @@ package com.example.securedrive.security;
 import com.example.securedrive.model.Role;
 import com.example.securedrive.model.User;
 import com.example.securedrive.repository.UserRepository;
+import com.example.securedrive.service.util.AESUtil;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;

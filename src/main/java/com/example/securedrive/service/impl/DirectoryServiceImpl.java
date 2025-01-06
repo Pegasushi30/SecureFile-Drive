@@ -1,15 +1,15 @@
 package com.example.securedrive.service.impl;
 
 import com.example.securedrive.dto.DirectoryDto;
+import com.example.securedrive.dto.DirectoryShareDto;
+import com.example.securedrive.dto.DirectoryShareEmailDto;
+import com.example.securedrive.dto.DirectoryShareRequestDto;
 import com.example.securedrive.exception.AzureBlobStorageException;
 import com.example.securedrive.exception.DirectoryNotFoundException;
 import com.example.securedrive.mapper.DirectoryMapper;
-import com.example.securedrive.model.Directory;
-import com.example.securedrive.model.File;
-import com.example.securedrive.model.User;
-import com.example.securedrive.repository.DirectoryRepository;
-import com.example.securedrive.repository.FileRepository;
-import com.example.securedrive.repository.FileVersionRepository;
+import com.example.securedrive.model.*;
+import com.example.securedrive.repository.*;
+import com.example.securedrive.security.AzureBlobSASTokenGenerator;
 import com.example.securedrive.service.DirectoryService;
 import com.example.securedrive.service.IAzureBlobStorage;
 import com.example.securedrive.service.UserManagementService;
@@ -19,11 +19,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional
 public class DirectoryServiceImpl implements DirectoryService {
 
     private static final Logger logger = LoggerFactory.getLogger(DirectoryServiceImpl.class);
@@ -34,6 +34,10 @@ public class DirectoryServiceImpl implements DirectoryService {
     private final FileVersionRepository fileVersionRepository;
     private final DirectoryMapper directoryMapper;
     private final UserManagementService userManagementService;
+    private final DirectoryShareRepository directoryShareRepository;
+    private final FileShareRepository fileShareRepository;
+    private final AzureBlobSASTokenGenerator azureBlobSASTokenGenerator;
+    private final UserRepository userRepository;
 
     @Autowired
     public DirectoryServiceImpl(DirectoryRepository directoryRepository,
@@ -41,13 +45,21 @@ public class DirectoryServiceImpl implements DirectoryService {
                                 FileRepository fileRepository,
                                 FileVersionRepository fileVersionRepository,
                                 DirectoryMapper directoryMapper,
-                                UserManagementService userManagementService) {
+                                UserManagementService userManagementService,
+                                DirectoryShareRepository directoryShareRepository,
+                                FileShareRepository fileShareRepository,
+                                AzureBlobSASTokenGenerator azureBlobSASTokenGenerator,
+                                UserRepository userRepository) {
         this.directoryRepository = directoryRepository;
         this.azureBlobStorage = azureBlobStorage;
         this.fileRepository = fileRepository;
         this.fileVersionRepository = fileVersionRepository;
         this.directoryMapper = directoryMapper;
         this.userManagementService = userManagementService;
+        this.directoryShareRepository = directoryShareRepository;
+        this.fileShareRepository = fileShareRepository;
+        this.azureBlobSASTokenGenerator = azureBlobSASTokenGenerator;
+        this.userRepository = userRepository;
     }
 
     @Override
@@ -189,6 +201,193 @@ public class DirectoryServiceImpl implements DirectoryService {
         List<Directory> directories = getUserDirectories(user); // Mevcut metot
         return directories.stream().map(directoryMapper::toDto).toList(); // DTO dönüşümü
     }
+
+    @Override
+    public void shareDirectory(DirectoryShareRequestDto dto, User owner) {
+        Directory directory = directoryRepository.findById(dto.getDirectoryId())
+                .orElseThrow(() -> new RuntimeException("Directory not found"));
+
+        if (!directory.getUser().equals(owner)) {
+            throw new SecurityException("You do not have permission to share this directory.");
+        }
+
+        User sharedWithUser = userManagementService.findByEmail(dto.getSharedWithUserEmail())
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + dto.getSharedWithUserEmail()));
+
+        // Recursive paylaşım
+        shareDirectoryRecursive(directory, sharedWithUser, owner, dto.getUsername());
+    }
+
+    private void shareDirectoryRecursive(Directory directory, User sharedWithUser, User owner, String username) {
+        // Ana dizini paylaş
+        DirectoryShare directoryShare = new DirectoryShare();
+        directoryShare.setDirectory(directory);
+        directoryShare.setOwner(owner);
+        directoryShare.setSharedWithUser(sharedWithUser);
+        directoryShare.setSharedPath("directories/" + username + "/" + directory.getName());
+        directoryShareRepository.save(directoryShare);
+
+        // Dizin altındaki dosyaları paylaş
+        for (File file : directory.getFiles()) {
+            shareFileWithSasTokens(file, sharedWithUser, owner);
+        }
+
+        // Alt dizinler için recursive paylaşım
+        for (Directory subDirectory : directory.getSubDirectories()) {
+            shareDirectoryRecursive(subDirectory, sharedWithUser, owner, username);
+        }
+    }
+
+    private void shareFileWithSasTokens(File file, User sharedWithUser, User owner) {
+        // Dosyanın tüm versiyonları için SAS URL oluştur ve paylaşımı kaydet
+        for (FileVersion version : file.getVersions()) {
+            String versionPath = String.format("%s/versions/%s/%s", file.getPath(), version.getVersionNumber(), file.getFileName());
+            String sasUrl = azureBlobSASTokenGenerator.getBlobUrl(versionPath);
+
+            // Her versiyon için ayrı bir paylaşım oluştur
+            Optional<FileShare> existingShare = fileShareRepository.findByFileAndSharedWithUserAndVersion(file, sharedWithUser, version.getVersionNumber());
+            FileShare fileShare;
+            if (existingShare.isPresent()) {
+                // Eğer bu versiyon için paylaşım varsa, sadece SAS URL'yi güncelle
+                fileShare = existingShare.get();
+                fileShare.setSasUrl(sasUrl);
+            } else {
+                // Eğer paylaşım yoksa, yeni bir paylaşım oluştur
+                fileShare = new FileShare();
+                fileShare.setFile(file);
+                fileShare.setOwner(owner);
+                fileShare.setSharedWithUser(sharedWithUser);
+                fileShare.setSasUrl(sasUrl);
+                fileShare.setVersion(version.getVersionNumber());
+            }
+
+            // Paylaşımı kaydet
+            fileShareRepository.save(fileShare);
+        }
+
+        // Sahip kullanıcının iletişim listesine paylaşımı yapılan kullanıcıyı ekle
+        owner.getContacts().add(sharedWithUser);
+        userRepository.save(owner);
+    }
+
+
+
+    @Override
+    public void revokeDirectoryShare(Long directoryId, String sharedWithEmail, User owner) {
+        Directory directory = directoryRepository.findById(directoryId)
+                .orElseThrow(() -> new RuntimeException("Directory not found"));
+
+        if (!directory.getUser().equals(owner)) {
+            throw new SecurityException("You do not have permission to revoke share for this directory.");
+        }
+
+        User sharedWithUser = userManagementService.findByEmail(sharedWithEmail)
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + sharedWithEmail));
+
+        // Recursive paylaşımı iptal et
+        revokeDirectoryShareRecursive(directory, sharedWithUser);
+    }
+
+    @Override
+    public void revokeDirectoryShareRecursive(Directory directory, User sharedWithUser) {
+        // Ana dizin paylaşımını kaldır
+        directoryShareRepository.findByDirectoryAndSharedWithUser(directory, sharedWithUser)
+                .ifPresent(directoryShareRepository::delete);
+
+        // Dizin altındaki dosya paylaşımlarını kaldır
+        for (File file : directory.getFiles()) {
+            revokeFileSharesForAllVersions(file, sharedWithUser);
+        }
+
+        // Alt dizinler için recursive paylaşım iptali
+        for (Directory subDirectory : directory.getSubDirectories()) {
+            revokeDirectoryShareRecursive(subDirectory, sharedWithUser);
+        }
+    }
+
+    private void revokeFileSharesForAllVersions(File file, User sharedWithUser) {
+        // Dosyanın tüm versiyonları için paylaşımı kaldır
+        for (FileVersion version : file.getVersions()) {
+            fileShareRepository.findByFileAndSharedWithUserAndVersion(file, sharedWithUser, version.getVersionNumber())
+                    .ifPresent(fileShareRepository::delete);
+        }
+    }
+    @Override
+    public List<DirectoryShareDto> getSharedDirectories(User user) {
+        List<DirectoryShare> sharedDirectories = directoryShareRepository.findBySharedWithUserId(user.getId());
+
+        logger.debug("Paylaşılan dizin sayısı: {}", sharedDirectories.size());
+
+        sharedDirectories.forEach(share -> {
+            logger.debug("Share ID: {}, Directory ID: {}, Directory Name: {}, Shared With: {}",
+                    share.getId(),
+                    share.getDirectory() != null ? share.getDirectory().getId() : "null",
+                    share.getDirectory() != null ? share.getDirectory().getName() : "null",
+                    share.getSharedWithUser() != null ? share.getSharedWithUser().getEmail() : "null");
+        });
+
+        return sharedDirectories.stream()
+                .map(share -> new DirectoryShareDto(
+                        share.getId(),
+                        share.getDirectory().getId(),
+                        share.getDirectory().getName(),
+                        share.getSharedWithUser().getEmail(),
+                        share.getOwner().getEmail(),
+                        share.getSharedPath()
+                ))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    // Yeni metod: Kullanıcının paylaştığı dizinleri getirir
+    public List<DirectoryShareDto> getMySharedDirectories(User owner) {
+        List<DirectoryShare> sharedDirectories = directoryShareRepository.findByOwner(owner);
+
+        // Loglama ekleyin
+        logger.debug("Paylaşılan dizin sayısı: {}", sharedDirectories.size());
+
+        sharedDirectories.forEach(share -> {
+            logger.debug("Share ID: {}, Directory ID: {}, Directory Name: {}, Shared With: {}",
+                    share.getId(),
+                    share.getDirectory() != null ? share.getDirectory().getId() : "null",
+                    share.getDirectory() != null ? share.getDirectory().getName() : "null",
+                    share.getSharedWithUser() != null ? share.getSharedWithUser().getEmail() : "null");
+        });
+
+        return sharedDirectories.stream()
+                .map(share -> new DirectoryShareDto(
+                        share.getId(),
+                        share.getDirectory().getId(),
+                        share.getDirectory().getName(),
+                        share.getSharedWithUser().getEmail(),
+                        share.getOwner().getEmail(),
+                        share.getSharedPath()
+                ))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<DirectoryShareDto> getMySharedDirectoriesForDirectory(User owner, Long directoryId) {
+        Directory directory = directoryRepository.findById(directoryId)
+                .orElseThrow(() -> new RuntimeException("Directory not found"));
+
+        if (!directory.getUser().equals(owner)) {
+            throw new SecurityException("You do not have permission to view shares for this directory.");
+        }
+
+        return directoryShareRepository.findByDirectoryAndOwner(directory, owner).stream()
+                .map(share -> new DirectoryShareDto(
+                        share.getId(),
+                        share.getDirectory().getId(),
+                        share.getDirectory().getName(),
+                        share.getSharedWithUser().getEmail(),
+                        share.getOwner().getEmail(),
+                        share.getSharedPath()
+                ))
+                .collect(Collectors.toList());
+    }
+
+
 
 
 }

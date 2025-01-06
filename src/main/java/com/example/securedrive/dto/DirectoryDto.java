@@ -7,6 +7,7 @@ public record DirectoryDto(
         String name,
         Long parentDirectoryId,
         String username,
-        List<DirectoryDto> subDirectories
+        List<DirectoryDto> subDirectories,
+        List<DirectoryShareDto> directoryShares
 ) {}
 

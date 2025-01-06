@@ -5,6 +5,144 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title th:text="${currentDirectory != null} ? 'Dizin: ' + ${currentDirectory.name} : 'Ana Dizin'">Dizin İçeriği</title>
     <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .delete-icon-btn {
+            display: none; /* Varsayılan olarak gizli */
+            border: none;
+            border-radius: 50%; /* Tamamen daire */
+            width: 35px; /* Daire genişliği */
+            height: 35px; /* Daire yüksekliği */
+            font-size: 20px; /* "×" sembolü boyutu */
+            line-height: 35px; /* Dikey ortalama */
+            text-align: center; /* Yatay ortalama */
+            cursor: pointer;
+            margin-left: 10px;
+            padding: 0;
+            color: white; /* Yazı rengi beyaz */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Hafif gölge efekti */
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+        /* Aktif Silme Modu */
+        .delete-mode-active .directory-item .delete-icon-btn {
+            display: inline-flex; /* Flex düzeni */
+            align-items: center; /* İçeriği dikey ortala */
+            justify-content: center; /* İçeriği yatay ortala */
+        }
+        /* Odaklanma Efekti */
+        .delete-icon-btn:focus {
+            outline: none; /* Dış çerçeve kaldır */
+        }
+        .directory-actions {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            gap: 20px;
+            margin: 0 auto;
+            max-width: 940px; /* Reduce max-width for better alignment */
+        }
+
+
+        .directory-share-form {
+            flex: 1;
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            box-sizing: border-box;
+            color: #333; /* Metin rengini siyah yapmak için */
+            text-align: left; /* İçeriği sola hizalamak için */
+        }
+
+        .directory-create-container{
+            flex: 1;
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            box-sizing: border-box;
+            color: #333; /* Metin rengini siyah yapmak için */
+            text-align: left; /* İçeriği sola hizalamak için */
+        }
+
+        .directory-create-container h2,
+        .directory-share-form h3 {
+            color: #0056b3;
+            font-size: 18px; /* Adjusted for consistent heading size */
+            margin-bottom: 10px;
+        }
+
+
+        .shared-directories-table {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            box-sizing: border-box;
+            color: #333; /* Metin rengini siyah yapmak için */
+            text-align: left; /* İçeriği sola hizalamak için */
+            max-width: 940px; /* Reduce width for consistency */
+            margin: 20px auto; /* Center the table horizontally */
+        }
+
+        .shared-directories-table h3 {
+            color: #0056b3; /* Fix heading color */
+            font-size: 18px; /* Keep consistent heading size */
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        /* Tablo Stilleri */
+        .shared-directories-table table {
+            width: 100%; /* Tam genişlik kullanılır */
+            border-collapse: collapse;
+            /* Tabloyu ortalamak için */
+            margin: 15px auto 0;
+        }
+
+        .shared-directories-table th,
+        .shared-directories-table td {
+            padding: 12px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+
+        .shared-directories-table th {
+            background-color: #0056b3;
+            color: #ffffff;
+        }
+
+        .shared-directories-table tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        .directory-create-container label,
+        .directory-share-form label {
+            font-size: 14px;
+            color: #333;
+        }
+
+        /* Responsive Düzenlemeler */
+        @media (max-width: 1024px) {
+            .directory-actions {
+                flex-direction: column;
+                gap: 15px; /* Add gap for mobile view */
+            }
+        }
+
+        @media (max-width: 768px) {
+            .directory-create-container,
+            .directory-share-form,
+            .shared-directories-table {
+                width: 100%; /* Use full width on small screens */
+            }
+
+            .shared-directories-table table,
+            .shared-directories-table th,
+            .shared-directories-table td {
+                font-size: 14px;
+            }
+        }
+    </style>
 </head>
 <body>
 <nav>
@@ -52,16 +190,67 @@
         </a>
     </div>
 
-    <!-- Yeni Alt Dizin Oluşturma Kutusu -->
-    <div class="directory-create-container">
-        <h2>Yeni Alt Dizin Oluştur</h2>
-        <form th:action="@{/directories/create}" method="post">
-            <input type="hidden" name="username" th:value="${username}" />
-            <input type="hidden" name="parentDirectoryId" th:value="${currentDirectory.id}" />
-            <label for="subDirName">Alt Dizin Adı:</label>
-            <input type="text" id="subDirName" name="name" required />
-            <button type="submit">Oluştur</button>
-        </form>
+    <!-- Yeni Dizin Oluştur ve Dizin Paylaşımı Bölümleri -->
+    <div class="directory-actions">
+        <!-- Yeni Dizin Oluştur -->
+        <div class="directory-create-container">
+            <h2>Ana Dizin Altında Yeni Dizin Oluştur</h2>
+            <form th:action="@{/directories/create}" method="post">
+                <input type="hidden" name="username" th:value="${username}" />
+                <label for="directoryName">Dizin Adı:</label>
+                <input type="text" id="directoryName" name="name" required />
+                <button type="submit">Oluştur</button>
+            </form>
+        </div>
+
+        <!-- Dizin Paylaşımı Formu -->
+        <div class="directory-share-form">
+            <h3>Dizin Paylaşımı</h3>
+            <form th:action="@{/directories/share}" method="post">
+                <div class="form-group">
+                    <label for="directoryId">Dizin:</label>
+                    <select id="directoryId" name="directoryId" required>
+                        <option value="" disabled selected>Dizin Seçiniz...</option>
+                        <option th:each="sub : ${subDirectories}" th:value="${sub.id}" th:text="${sub.name}"></option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="sharedWithUserEmail">Paylaşılacak E-posta:</label>
+                    <input type="email" id="sharedWithUserEmail" name="sharedWithUserEmail" placeholder="örnek@eposta.com" required />
+                </div>
+                <button type="submit" class="share-button">Paylaş</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Paylaşılan Dizinler Tablosu -->
+    <div class="shared-directories-table">
+        <h3>Paylaştığınız Dizinler</h3>
+        <table>
+            <thead>
+            <tr>
+                <th>Dizin</th>
+                <th>Paylaşılan E-posta</th>
+                <th>İptal Et</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:if="${mySharedDirectories.isEmpty()}">
+                <td colspan="3">Hiçbir paylaşım bulunmamaktadır.</td>
+            </tr>
+            <tr th:each="share : ${mySharedDirectories}">
+                <td th:text="${share.directoryName}">Dizin Adı</td>
+                <td th:text="${share.sharedWithUserEmail}">Paylaşılan E-posta</td>
+                <td>
+                    <form th:action="@{/directories/revoke-share}" method="post">
+                        <input type="hidden" name="directoryId" th:value="${share.directoryId}" />
+                        <input type="hidden" name="sharedWithUserEmail" th:value="${share.sharedWithUserEmail}" />
+                        <button type="submit" class="revoke-button">İptal Et</button>
+                    </form>
+                </td>
+            </tr>
+            </tbody>
+        </table>
     </div>
 
     <!-- Alt Dizinler Kutusu -->
@@ -93,54 +282,74 @@
         </ul>
     </div>
 
-    <!-- Dosyalar Kutusu -->
+    <!-- Ana Dizin Dosyaları -->
     <div class="file-container">
-        <h2>Dosyalar</h2>
+        <!-- Arama Alanı -->
+        <div class="file-search-container">
+            <h2>Dosya Ara</h2>
+            <div class="search-bar">
+                <label for="searchQuery"></label>
+                <input type="text" id="searchQuery" placeholder="Dosya adını yazın..." onkeyup="filterFiles()" />
+            </div>
+        </div>
+        <div class="file-header">
+            <h2>Ana Dizin Dosyaları</h2>
+            <label class="small-slider">
+                <input type="checkbox" id="toggleFileMode" />
+                <span class="slider"></span>
+            </label>
+        </div>
         <ul class="files-list">
             <li th:if="${files.isEmpty()}" class="info-message">Buraya henüz bir dosya eklemediniz.</li>
             <li class="file-card" th:each="file : ${files}">
                 <span th:text="${file.fileName}">Dosya</span>
+                <div class="file-details">
+                    <!-- Dosya Paylaşımı -->
+                    <form th:action="@{/files/share}" method="post">
+                        <input type="hidden" name="username" th:value="${username}" />
+                        <input type="hidden" name="fileId" th:value="${file.id}" />
+                        <label for="sharedWithEmail">Paylaşılacak E-posta:</label>
+                        <input type="email" id="sharedWithEmail" name="sharedWithEmail" required />
+                        <label for="version">Versiyon:</label>
+                        <select name="version" id="version">
+                            <option th:each="ver : ${file.versions}" th:value="${ver.versionNumber}" th:text="${ver.versionNumber}"></option>
+                        </select>
+                        <button type="submit">Paylaş</button>
+                    </form>
 
-                <!-- Dosya Paylaşımı -->
-                <form th:action="@{/files/share}" method="post">
-                    <input type="hidden" name="username" th:value="${username}" />
-                    <input type="hidden" name="fileId" th:value="${file.id}" />
-                    <label for="sharedWithEmail">Paylaşılacak E-posta:</label>
-                    <input type="email" id="sharedWithEmail" name="sharedWithEmail" required />
-                    <label for="version">Versiyon:</label>
-                    <select name="version" id="version">
-                        <option th:each="ver : ${file.versions}" th:value="${ver.versionNumber}" th:text="${ver.versionNumber}"></option>
-                    </select>
-                    <button type="submit">Paylaş</button>
-                </form>
+                    <!-- Paylaşımı İptal Et -->
+                    <div th:if="${file.fileShares.size() == 1}">
+                        <form th:action="@{'/files/revoke-share/' + ${file.id}}" method="post">
+                            <label for="sharedEmailDropdown"><strong>Paylaşılan Email Adresleri</strong></label>
+                            <select id="sharedEmailDropdown" name="sharedWithEmail" required>
+                                <option value="" disabled selected>Email Seçiniz...</option>
+                                <option th:each="share : ${file.fileShares}" th:value="${share.sharedWithUserEmail}" th:text="${share.sharedWithUserEmail}"></option>
+                            </select>
+                            <!-- Gizli input ile username gönder -->
+                            <input type="hidden" name="username" th:value="${username}" />
+                            <button type="submit" class="small-btn">Paylaşımı İptal Et</button>
+                        </form>
+                    </div>
 
-                <!-- Dosya Paylaşımını İptal Et -->
-                <form th:action="@{'/files/revoke-share/' + ${file.id}}" method="post">
-                    <input type="hidden" name="username" th:value="${username}" />
-                    <label for="revokeSharedWithEmail">Paylaşımı İptal Edeceğiniz E-posta:</label>
-                    <input type="email" id="revokeSharedWithEmail" name="sharedWithEmail" required />
-                    <button type="submit">Paylaşımı İptal Et</button>
-                </form>
+                    <!-- Dosya İndir -->
+                    <form th:action="@{'/files/download/' + ${username} + '/' + ${file.id}}" method="get">
+                        <label for="versionNumber">Versiyon:</label>
+                        <select name="versionNumber" id="versionNumber">
+                            <option th:each="ver : ${file.versions}" th:value="${ver.versionNumber}" th:text="${ver.versionNumber}"></option>
+                        </select>
+                        <button type="submit">İndir</button>
+                    </form>
 
-
-                <!-- Dosya İndir -->
-                <form th:action="@{'/files/download/' + ${username} + '/' + ${file.id}}" method="get">
-                    <label for="versionNumber">Versiyon:</label>
-                    <select name="versionNumber" id="versionNumber">
-                        <option th:each="ver : ${file.versions}" th:value="${ver.versionNumber}" th:text="${ver.versionNumber}"></option>
-                    </select>
-                    <button type="submit">İndir</button>
-                </form>
-
-                <!-- Dosya Sil -->
-                <form th:action="@{'/files/delete/' + ${username} + '/' + ${file.id}}" method="post">
-                    <input type="hidden" name="_method" value="delete"/>
-                    <label for="deleteVersionNumber">Versiyon:</label>
-                    <select name="versionNumber" id="deleteVersionNumber">
-                        <option th:each="ver : ${file.versions}" th:value="${ver.versionNumber}" th:text="${ver.versionNumber}"></option>
-                    </select>
-                    <button type="submit" class="delete">Sil</button>
-                </form>
+                    <!-- Dosya Sil -->
+                    <form th:action="@{'/files/delete/' + ${username} + '/' + ${file.id}}" method="post">
+                        <input type="hidden" name="_method" value="delete"/>
+                        <label for="deleteVersionNumber">Versiyon:</label>
+                        <select name="versionNumber" id="deleteVersionNumber">
+                            <option th:each="ver : ${file.versions}" th:value="${ver.versionNumber}" th:text="${ver.versionNumber}"></option>
+                        </select>
+                        <button type="submit" class="delete">Sil</button>
+                    </form>
+                </div><!-- file-details sonu -->
             </li>
         </ul>
     </div>
@@ -168,7 +377,9 @@
     </li>
 </div>
 
+<script src="/js/deleteModeHandler.js"></script>
 <script src="/js/navigationToggleHandler.js"></script>
-<script src="/js/dragDropHandler.js"></script>
+<script src="/js/filterFilesHandler.js"></script>
+<script src="/js/fileToggleHandler.js"></script>
 </body>
 </html>

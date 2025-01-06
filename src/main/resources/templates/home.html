@@ -5,6 +5,26 @@
     <meta charset="UTF-8">
     <title>Kullanıcı Bilgileri</title>
     <link rel="stylesheet" href="/css/style.css">
+    <style>
+        @media (max-width: 768px) {
+            .main-layout {
+                flex-direction: column;
+            }
+
+            .right-column {
+                flex-direction: column;
+            }
+
+            .right-column > div {
+                margin-bottom: 20px;
+            }
+        }
+
+        .file-table td {
+            word-break: break-word;
+            white-space: normal;
+        }
+    </style>
 </head>
 <body>
 <!-- Navigasyon -->
@@ -77,45 +97,47 @@
         </div>
 
         <!-- Sağ Kolon -->
-        <div class="right-column">
-            <div class="section">
-                <h3>Son Yüklenen Dosyalar</h3>
-                <table class="file-table">
-                    <thead>
-                    <tr>
-                        <th>Dosya Adı</th>
-                        <th>Versiyon</th>
-                        <th>Boyut</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr th:each="file : ${lastUploadedFiles}">
-                        <td th:text="${lastUploadedNames[file.id]}">Dosya Adı</td>
-                        <td th:text="${file.versionNumber}">Versiyon</td>
-                        <td th:text="${lastUploadedSizes[file.id]}">Boyut</td>
-                    </tr>
-                    </tbody>
-                </table>
-            </div>
+        <div class="right-column" style="display: flex; flex-direction: column; gap: 20px;">
+            <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                <div class="section" style="flex: 1; min-width: 300px;">
+                    <h3>Son Yüklenen Dosyalar</h3>
+                    <table class="file-table">
+                        <thead>
+                        <tr>
+                            <th>Dosya Adı</th>
+                            <th>Versiyon</th>
+                            <th>Boyut</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="file : ${lastUploadedFiles}">
+                            <td th:text="${lastUploadedNames[file.id]}">Dosya Adı</td>
+                            <td th:text="${file.versionNumber}">Versiyon</td>
+                            <td th:text="${lastUploadedSizes[file.id]}">Boyut</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
 
-            <div class="section">
-                <h3>Son Erişilen Dosyalar</h3>
-                <table class="file-table">
-                    <thead>
-                    <tr>
-                        <th>Dosya Adı</th>
-                        <th>Versiyon</th>
-                        <th>Boyut</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr th:each="file : ${lastAccessedFiles}">
-                        <td th:text="${lastAccessedNames[file.id]}">Dosya Adı</td>
-                        <td th:text="${file.versionNumber}">Versiyon</td>
-                        <td th:text="${lastAccessedSizes[file.id]}">Boyut</td>
-                    </tr>
-                    </tbody>
-                </table>
+                <div class="section" style="flex: 1; min-width: 300px;">
+                    <h3>Son Erişilen Dosyalar</h3>
+                    <table class="file-table">
+                        <thead>
+                        <tr>
+                            <th>Dosya Adı</th>
+                            <th>Versiyon</th>
+                            <th>Boyut</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="file : ${lastAccessedFiles}">
+                            <td th:text="${lastAccessedNames[file.id]}">Dosya Adı</td>
+                            <td th:text="${file.versionNumber}">Versiyon</td>
+                            <td th:text="${lastAccessedSizes[file.id]}">Boyut</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             <div class="section">
@@ -133,15 +155,13 @@
                     </div>
                 </div>
             </div>
-
         </div>
     </div>
 </main>
 
-
 <!-- Footer -->
 <footer>
-    <p>&copy; 2024 SecureFile Drive. Tüm Hakları Saklıdır.</p>
+    <p>&copy; 2024 Secure File Drive. Tüm Hakları Saklıdır.</p>
 </footer>
 
 <!-- JavaScript -->

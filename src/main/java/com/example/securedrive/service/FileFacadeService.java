@@ -5,6 +5,7 @@ import com.example.securedrive.dto.*;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.security.core.Authentication;
 
+import java.util.List;
 
 
 public interface FileFacadeService {
@@ -14,4 +15,5 @@ public interface FileFacadeService {
     String uploadFile(FileUploadRequestDto dto);
     String deleteSpecificVersion(FileDeleteSpecificVersionRequestDto dto);
     ByteArrayResource downloadSpecificVersion(FileDownloadSpecificVersionRequestDto dto) throws Exception;
+    int getRemainingShares(Long fileId) ;
 }

@@ -1,4 +1,4 @@
-package com.example.securedrive.config;
+package com.example.securedrive.security;
 
 import com.azure.storage.blob.BlobContainerClient;
 import com.azure.storage.blob.BlobServiceClient;

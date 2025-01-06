@@ -1,4 +1,4 @@
-package com.example.securedrive.security;
+package com.example.securedrive.service.util;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;

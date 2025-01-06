@@ -2,10 +2,13 @@
 package com.example.securedrive.service;
 
 import com.example.securedrive.dto.DirectoryDto;
+import com.example.securedrive.dto.DirectoryShareDto;
+import com.example.securedrive.dto.DirectoryShareRequestDto;
 import com.example.securedrive.model.Directory;
 import com.example.securedrive.model.User;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public interface DirectoryService {
@@ -29,6 +32,13 @@ public interface DirectoryService {
     // Yeni eklenen silme metodu
     void deleteDirectoryById(Long id, User user);
     List<DirectoryDto> getDirectoriesByUsername(String username);
+
+    void shareDirectory(DirectoryShareRequestDto dto, User owner);
+    void revokeDirectoryShare(Long directoryId, String sharedWithEmail, User owner);
+    void revokeDirectoryShareRecursive(Directory directory, User sharedWithUser) ;
+    List<DirectoryShareDto> getMySharedDirectories(User owner);
+    List<DirectoryShareDto> getSharedDirectories(User user);
+    List<DirectoryShareDto> getMySharedDirectoriesForDirectory(User owner, Long directoryId);
 }
 
 

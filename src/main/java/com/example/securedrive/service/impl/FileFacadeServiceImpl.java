@@ -3,29 +3,30 @@ package com.example.securedrive.service.impl;
 
 import com.azure.spring.cloud.core.implementation.factory.credential.UsernamePasswordCredentialBuilderFactory;
 import com.example.securedrive.dto.*;
-import com.example.securedrive.exception.UnauthorizedAccessException;
+import com.example.securedrive.mapper.FileShareMapper;
 import com.example.securedrive.mapper.UserMapper;
 import com.example.securedrive.model.*;
 import com.example.securedrive.repository.FileRepository;
 import com.example.securedrive.repository.FileShareRepository;
 import com.example.securedrive.repository.FileVersionRepository;
 import com.example.securedrive.repository.UserRepository;
-import com.example.securedrive.security.AESUtil;
-import com.example.securedrive.security.DeltaUtil;
-import com.example.securedrive.security.HashUtil;
+import com.example.securedrive.service.util.AESUtil;
+import com.example.securedrive.service.util.BinaryDeltaUtil;
+import com.example.securedrive.service.util.DeltaUtil;
+import com.example.securedrive.service.util.HashUtil;
 import com.example.securedrive.security.KeyVaultService;
 import com.example.securedrive.service.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ByteArrayResource;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
-import java.io.FileNotFoundException;
+
 import java.nio.charset.StandardCharsets;
-import java.nio.file.AccessDeniedException;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
+
 
 @Service
 public class FileFacadeServiceImpl implements FileFacadeService {
@@ -41,9 +42,11 @@ public class FileFacadeServiceImpl implements FileFacadeService {
     private final FileRepository fileRepository;
     private final UserRepository userRepository;
     private final UserMapper userMapper;
+    private final FileShareMapper fileShareMapper;
 
     private static final Logger logger = LoggerFactory.getLogger(FileFacadeServiceImpl.class);
     private final UsernamePasswordCredentialBuilderFactory usernamePasswordCredentialBuilderFactory;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     public FileFacadeServiceImpl(AzureBlobStorageImpl azureBlobStorage,
                                  UserManagementService userManagementService,
@@ -55,7 +58,9 @@ public class FileFacadeServiceImpl implements FileFacadeService {
                                  FileVersionRepository fileVersionRepository,
                                  FileRepository fileRepository,
                                  UserRepository userRepository,
-                                 UserMapper userMapper, UsernamePasswordCredentialBuilderFactory usernamePasswordCredentialBuilderFactory) {
+                                 UserMapper userMapper,
+                                 UsernamePasswordCredentialBuilderFactory usernamePasswordCredentialBuilderFactory,
+                                 FileShareMapper fileShareMapper) {
         this.azureBlobStorage = azureBlobStorage;
         this.userManagementService = userManagementService;
         this.fileManagementService = fileManagementService;
@@ -68,23 +73,21 @@ public class FileFacadeServiceImpl implements FileFacadeService {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
         this.usernamePasswordCredentialBuilderFactory = usernamePasswordCredentialBuilderFactory;
+        this.fileShareMapper = fileShareMapper;
     }
-
     @Override
     public void revokeShare(FileRevokeShareRequestDto dto, Authentication authentication) {
-
         UserDto authenticatedUser = userMapper.toUserDTO(authentication);
 
+        // Yetki kontrolü
         if (!authenticatedUser.getUsername().equals(dto.getUsername()) && !authenticatedUser.hasRole("ROLE_ADMIN")) {
             throw new SecurityException("Bu kullanıcı için paylaşımı iptal etme yetkiniz yok.");
         }
 
         User owner = userManagementService.findByUsername(dto.getUsername())
                 .orElseThrow(() -> new NoSuchElementException("Kullanıcı bulunamadı."));
-
         User sharedWithUser = userManagementService.findByEmail(dto.getSharedWithEmail())
                 .orElseThrow(() -> new NoSuchElementException("Paylaşım yapılan kullanıcı bulunamadı."));
-
         File file = fileManagementService.findById(dto.getFileId())
                 .orElseThrow(() -> new NoSuchElementException("Dosya bulunamadı."));
 
@@ -92,16 +95,18 @@ public class FileFacadeServiceImpl implements FileFacadeService {
         if (!file.getUser().equals(owner)) {
             throw new SecurityException("Bu dosyanın sahibi değilsiniz.");
         }
-        FileShare fileShare = fileShareRepository.findByFileAndSharedWithUser(file, sharedWithUser)
+
+        // Versiyon bazlı paylaşımı iptal et
+        FileShare fileShare = fileShareRepository.findByFileAndSharedWithUserAndVersion(file, sharedWithUser, dto.getVersion())
                 .orElseThrow(() -> new NoSuchElementException("Paylaşımı iptal etmek için gerekli bilgiler bulunamadı."));
 
         fileShareRepository.delete(fileShare);
     }
 
+
     @Override
     public void shareFile(FileShareRequestDto dto, Authentication authentication) {
-
-        // Extract details from DTO
+        // DTO'dan detayları çıkar
         String username = dto.getUsername();
         Long fileId = dto.getFileId();
         String sharedWithEmail = dto.getSharedWithEmail();
@@ -109,6 +114,7 @@ public class FileFacadeServiceImpl implements FileFacadeService {
 
         UserDto authenticatedUser = userMapper.toUserDTO(authentication);
 
+        // Yetki kontrolü
         if (authenticatedUser.getUsername() == null) {
             throw new SecurityException("Authenticated user's username could not be determined.");
         }
@@ -116,15 +122,25 @@ public class FileFacadeServiceImpl implements FileFacadeService {
             throw new SecurityException("Bu kullanıcı için dosya paylaşma yetkiniz yok.");
         }
 
-        User user = userManagementService.findByUsername(username)
+        User owner = userManagementService.findByUsername(username)
                 .orElseThrow(() -> new NoSuchElementException("Kullanıcı bulunamadı."));
         User sharedWithUser = userManagementService.findByEmail(sharedWithEmail)
                 .orElseThrow(() -> new NoSuchElementException("Paylaşım yapılacak kullanıcı bulunamadı."));
-        File file = fileManagementService.findByIdAndUser(fileId, user)
+        File file = fileManagementService.findByIdAndUser(fileId, owner)
                 .orElseThrow(() -> new NoSuchElementException("Dosya bulunamadı."));
 
-        fileManagementService.shareFileWithUser(file, user, sharedWithUser, version);
+        fileManagementService.shareFileWithUser(file, owner, sharedWithUser, version);
     }
+
+    @Override
+    public int getRemainingShares(Long fileId) {
+        // FileShare nesnelerini çek
+        List<FileShare> fileShares = fileShareRepository.findByFileId(fileId);
+
+        // Kalan paylaşım sayısını döndür
+        return fileShares.size(); // Toplam paylaşım sayısını hesapla
+    }
+
 
     @Override
     public FileDownloadSharedResponseDto downloadSharedFile(FileDownloadSharedRequestDto dto) throws Exception {
@@ -163,7 +179,7 @@ public class FileFacadeServiceImpl implements FileFacadeService {
 
         // Dosya tipini kontrol et
         String fileNameLower = fileName.toLowerCase();
-        boolean isBinary = fileNameLower.matches(".*\\.(jpg|png|mp4|docx?|xlsx|pdf|pptx)$");
+        boolean isBinary = fileNameLower.matches(".*\\.(jpg|png|mp4|docx?|xlsx|pdf|pptx|mkv)$");
 
         byte[] originalData;
 
@@ -175,20 +191,10 @@ public class FileFacadeServiceImpl implements FileFacadeService {
 
         if (isBinary) {
             // Binary dosya işlemleri
-            String versionedFilePath = String.format(
-                    "%s/versions/%s/%s",
-                    file.getPath(),
-                    version,
-                    fileName
-            );
-
-            if (!azureBlobStorage.checkBlobExists(versionedFilePath)) {
-                throw new RuntimeException("Blob not found: " + versionedFilePath);
-            }
-
-            byte[] base64EncodedData = azureBlobStorage.read(new Storage(versionedFilePath, null));
-            byte[] encryptedData = Base64.getDecoder().decode(base64EncodedData);
-            originalData = AESUtil.decrypt(encryptedData, encryptionKey);
+            // Reconstruct the content by applying deltas
+            String reconstructedContentBase64 = fileVersionManagementService.reconstructFileContent(file, version, sharedWithUser);
+            // Decode Base64 to get byte[]
+            originalData = Base64.getDecoder().decode(reconstructedContentBase64);
         } else {
             // Metin dosya işlemleri
             String reconstructedContent = fileVersionManagementService.reconstructFileContent(file, version, owner);
@@ -199,6 +205,7 @@ public class FileFacadeServiceImpl implements FileFacadeService {
 
         return new FileDownloadSharedResponseDto(originalData, fileName, resource);
     }
+
 
 
     @Override
@@ -228,7 +235,6 @@ public class FileFacadeServiceImpl implements FileFacadeService {
             logger.info("Dosya kontrolü tamamlandı.");
 
             String fileHash = HashUtil.calculateHash(dto.getFile().getBytes());
-            logger.info("Hesaplanan dosya hash'i: {}", fileHash);
 
             if (userFile != null) {
                 Optional<FileVersion> duplicateVersion = userFile.getVersions().stream()
@@ -319,27 +325,19 @@ public class FileFacadeServiceImpl implements FileFacadeService {
         logger.info("Dosya doğrulandı: {}", file.getFileName());
 
         String fileName = file.getFileName();
-        boolean isBinary = fileName.toLowerCase().matches(".*\\.(jpg|png|mp4|docx?|xlsx|pdf|pptx)$");
+        boolean isBinary = fileName.toLowerCase().matches(".*\\.(jpg|png|mp4|docx?|xlsx|pdf|pptx|mkv)$");
 
         byte[] originalData;
 
         if (isBinary) {
-            String versionedFilePath = String.format("%s/versions/%s/%s", file.getPath(), dto.getVersionNumber(), fileName);
-            logger.info("Binary dosya yolu: {}", versionedFilePath);
-
-            byte[] base64EncodedData = azureBlobStorage.read(new Storage(versionedFilePath, null));
-            logger.info("Azure Blob'dan veri okundu. Boyut: {}", base64EncodedData.length);
-
-            byte[] encryptedData = Base64.getDecoder().decode(base64EncodedData);
-            String encryptionKey = keyVaultService.getEncryptionKeyFromKeyVault(user.getUsername());
-            logger.info("Şifreleme anahtarı alındı: {}", encryptionKey);
-
-            originalData = AESUtil.decrypt(encryptedData, encryptionKey);
-            logger.info("Şifre çözme işlemi tamamlandı. Boyut: {}", originalData.length);
+            // Binary dosya işlemleri
+            // Reconstruct the content by applying deltas up to the specified version
+            String reconstructedContentBase64 = fileVersionManagementService.reconstructFileContent(file, dto.getVersionNumber(), user);
+            // Decode Base64 to get byte[]
+            originalData = Base64.getDecoder().decode(reconstructedContentBase64);
         } else {
+            // Metin dosya işlemleri
             String reconstructedContent = fileVersionManagementService.reconstructFileContent(file, dto.getVersionNumber(), user);
-            logger.info("Yeniden oluşturulan içerik: {}", reconstructedContent);
-
             originalData = reconstructedContent.getBytes(StandardCharsets.UTF_8);
         }
 
@@ -351,10 +349,9 @@ public class FileFacadeServiceImpl implements FileFacadeService {
         byte[] fileData = dto.getFile().getBytes();
         String fileHash = HashUtil.calculateHash(fileData);
 
-        logger.info("Dosya ismi: {}, Dosya hash'i: {}", fileNameLower, fileHash);
 
         // Binary veya metin dosya ayrımı
-        boolean isBinaryFile = fileNameLower.matches(".*\\.(jpg|png|mp4|docx?|xlsx|pdf|pptx)$");
+        boolean isBinaryFile = fileNameLower.matches(".*\\.(jpg|png|mp4|docx?|xlsx|pdf|pptx|mkv)$");
 
         if (isBinaryFile) {
             // Binary dosya işlemleri
@@ -365,19 +362,53 @@ public class FileFacadeServiceImpl implements FileFacadeService {
         }
     }
 
-    // Binary dosyaları işleme
     private void processBinaryFile(byte[] fileData, String aesKey, String uniqueFilePath, File userFile, String versionNumber, String fileHash) throws Exception {
-        byte[] encryptedData = AESUtil.encrypt(fileData, aesKey);
-        logger.info("Şifrelenmiş veri uzunluğu: {}", encryptedData.length);
+        List<FileVersion> versions = fileVersionManagementService.getAllVersions(userFile);
+        byte[] previousData = null;
+        String deltaPath = null;
 
-        String versionedFilePath = uniqueFilePath + "/versions/" + versionNumber + "/" + userFile.getFileName();
-        saveBlobToAzure(versionedFilePath, encryptedData);
+        if (!versions.isEmpty()) { // İlk versiyon değilse
+            FileVersion previousVersion = versions.get(versions.size() - 1);
+            String previousFilePath = String.format("%s/versions/%s/%s",
+                    userFile.getPath(),
+                    previousVersion.getVersionNumber(),
+                    userFile.getFileName());
 
-        FileVersion version = fileVersionManagementService.createVersion(userFile, versionNumber, null);
+            if (azureBlobStorage.checkBlobExists(previousFilePath)) {
+                byte[] previousEncryptedDataBase64 = azureBlobStorage.read(new Storage(previousFilePath, null));
+                byte[] previousEncryptedData = Base64.getDecoder().decode(previousEncryptedDataBase64);
+                previousData = AESUtil.decrypt(previousEncryptedData, aesKey);
+            }
+        }
+
+        if (versionNumber.equals("v1")) {
+            // İlk versiyon: Tam şifrelenmiş dosyayı kaydet
+            byte[] encryptedData = AESUtil.encrypt(fileData, aesKey);
+            logger.info("Şifrelenmiş veri uzunluğu: {}", encryptedData.length);
+
+            String versionedFilePath = uniqueFilePath + "/versions/" + versionNumber + "/" + userFile.getFileName();
+            saveBlobToAzure(versionedFilePath, encryptedData);
+        } else {
+            // Sonraki versiyonlar: Sadece delta.json kaydet
+            if (previousData != null) {
+                // BinaryDeltaUtil ile delta hesaplama
+                List<BinaryDeltaUtil.DeltaCommand> deltaCommands = BinaryDeltaUtil.calculateDelta(previousData, fileData);
+                if (!deltaCommands.isEmpty()) {
+                    // Delta komutlarını JSON olarak kaydet
+                    deltaPath = uniqueFilePath + "/versions/" + versionNumber + "/delta.json";
+                    saveBinaryDeltaCommands(deltaCommands, deltaPath);
+                }
+            }
+        }
+
+        // Yeni versiyonu oluştur ve delta yolunu ekle
+        FileVersion version = fileVersionManagementService.createVersion(userFile, versionNumber, deltaPath);
         version.setHash(fileHash);
         version.setSize((long) fileData.length);
         fileVersionManagementService.saveFileVersion(version);
     }
+
+
 
     // Metin dosyalarını işleme
     private void processTextFile(byte[] fileData, String aesKey, String uniqueFilePath, File userFile, String versionNumber, String fileHash) throws Exception {
@@ -438,6 +469,23 @@ public class FileFacadeServiceImpl implements FileFacadeService {
         }
         path.append(fileName);
         return path.toString();
+    }
+
+
+    private void saveBinaryDeltaCommands(List<BinaryDeltaUtil.DeltaCommand> deltaCommands, String deltaPath) throws Exception {
+        // Serialize deltaCommands to JSON
+        String json = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(deltaCommands);
+
+        // Optionally compress the JSON (e.g., GZIP). Bu örnekte sıkıştırma yapılmamıştır.
+        byte[] jsonData = json.getBytes(StandardCharsets.UTF_8);
+
+        // Encode JSON data to Base64
+        byte[] base64EncodedData = Base64.getEncoder().encode(jsonData);
+
+        // Save Base64-encoded JSON to Azure Blob Storage
+        azureBlobStorage.write(new Storage(deltaPath, base64EncodedData));
+
+        logger.info("Delta komutları başarıyla kaydedildi: {}", deltaPath);
     }
 }
 

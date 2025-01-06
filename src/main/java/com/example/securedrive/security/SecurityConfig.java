@@ -1,6 +1,5 @@
 package com.example.securedrive.security;
 
-import com.example.securedrive.config.B2CConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;

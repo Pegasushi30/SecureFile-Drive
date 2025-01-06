@@ -35,7 +35,7 @@ public class User implements UserDetails {
 
     // Kullanıcının dosyalarıyla ilişki
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<File> files;
+    private List<File> files = new ArrayList<>();
 
     @ManyToMany
     @JoinTable(
@@ -44,6 +44,14 @@ public class User implements UserDetails {
             inverseJoinColumns = @JoinColumn(name = "contact_id")
     )
     private Set<User> contacts = new HashSet<>();
+
+    // Dizin paylaşımları - Dizin sahibi olarak
+    @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<DirectoryShare> ownedDirectoryShares = new ArrayList<>();
+
+    // Dizin paylaşımları - Paylaşılan kullanıcı olarak
+    @OneToMany(mappedBy = "sharedWithUser", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<DirectoryShare> sharedDirectoryShares = new ArrayList<>();
 
     // UserDetails metodları
 
@@ -83,5 +91,19 @@ public class User implements UserDetails {
     @Override
     public boolean isEnabled() {
         return true;
+    }
+    // equals ve hashCode metodları sadece ID'ye göre override edilmeli
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        User user = (User) o;
+        return Objects.equals(id, user.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 }

@@ -57,7 +57,7 @@ main {
 /* Başlıklar */
 h1, h2, h3 {
     color: #ffffff; /* Beyaz renk, kontrast için */
-    margin-bottom: 20px;
+    font-size: 18px;
     text-align: center;
     font-weight: normal; /* Daha ince bir yazı tipi */
 }
@@ -292,7 +292,7 @@ nav .logo:hover {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
-    align-items: flex-start;
+    align-items: stretch; /* Tüm kolonların aynı yükseklikte olması için */
     margin: 40px auto;
     max-width: 1200px;
     gap: 20px;
@@ -302,7 +302,11 @@ nav .logo:hover {
 .left-column {
     flex: 1;
     max-width: 400px;
+    display: flex; /* İçerik hizalaması için flexbox */
+    flex-direction: column;
+    justify-content: space-between; /* İçeriklerin üst ve alt hizalamasını sağlar */
 }
+
 
 /* Profil Container */
 .user-profile-container {
@@ -312,7 +316,10 @@ nav .logo:hover {
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
     text-align: center;
     color: #333;
+    width: 100%; /* Mobilde tam genişlik */
+    box-sizing: border-box; /* Padding dahil genişlik hesaplama */
 }
+
 
 /* Profil Fotoğrafı */
 .profile-picture img {
@@ -370,7 +377,8 @@ nav .logo:hover {
     flex: 2;
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 20px; /* Bölümler arasındaki boşluk */
+    height: 100%; /* Sol kolon ile eşit yükseklik için */
 }
 
 /* Bölüm Kartları */
@@ -380,7 +388,8 @@ nav .logo:hover {
     border-radius: 15px;
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
     color: #333;
-    text-align: center; /* Yazılar ortalanır */
+    text-align: center;
+    margin-bottom: 0; /* Bölümlerin altındaki gereksiz boşluğu kaldır */
 }
 
 .section h3 {
@@ -593,11 +602,18 @@ nav .logo:hover {
     .main-layout {
         flex-direction: column;
         align-items: center;
+        gap: 20px; /* Daha düzenli görünüm için boşluk */
     }
 
     .left-column,
     .right-column {
-        max-width: 100%;
+        max-width: 100%; /* Tam genişlik */
+        width: 100%; /* Tüm kutuların aynı genişlikte olması için */
+    }
+
+    .user-profile-container {
+        max-width: 100%; /* Kullanıcı bilgileri kutusunu genişlet */
+        margin-bottom: 20px; /* Diğer kutulardan ayırmak için boşluk */
     }
 }
 
@@ -605,8 +621,9 @@ nav .logo:hover {
 
 
 
+
 /* Dizin ve Dosya Kutuları */
-.directory-container, .directory-create-container, .file-container, .user-info-container {
+.directory-container, .file-container, .user-info-container {
     border: 1px solid #ddd;
     border-radius: 10px;
     padding: 20px;
@@ -616,6 +633,7 @@ nav .logo:hover {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     text-align: left;
 }
+
 
 /* Navigasyon Bağlantıları (Kutular) - Diğer Sayfalardaki Navigation Links */
 .navigation-links {
@@ -789,9 +807,8 @@ li.file-card {
     margin-bottom: 10px;
 }
 
-.file-header h2 {
+.file-header h3 {
     margin: 0;
-    font-size: 1.5rem;
     text-align: center;
     flex: none;
 }
@@ -846,37 +863,7 @@ footer {
     font-size: 0.9rem;
 }
 
-/* "Paylaşılan Dosyalar" Sayfasına Özel Stiller */
-.shared-files-page .content-wrapper {
-    max-width: 1000px;
-    margin: 0 auto;
-    padding: 0;
-}
-.shared-files-page .file-details span:first-child {
-    color: #1e3c72;
-    font-weight: bold;
-    transition: color 0.3s ease;
-}
 
-.shared-files-page .file-details span:first-child:hover {
-    color: #0056b3;
-}
-
-.shared-files-page .file-list ul {
-    list-style-type: none;
-    padding: 0;
-    margin: 0;
-}
-
-.shared-files-page .version-label {
-    color: #495057;
-    font-style: italic;
-}
-
-.shared-files-page .owner-label {
-    color: #495057;
-    font-style: italic;
-}
 
 .shared-files-page .file-item {
     background-color: #ffffff;
@@ -890,41 +877,7 @@ footer {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.shared-files-page .file-details {
-    text-align: left;
-}
 
-.shared-files-page .file-details span {
-    display: block;
-    margin-bottom: 5px;
-    font-size: 16px;
-}
-
-.shared-files-page .download-btn {
-    background: linear-gradient(90deg, rgba(0, 123, 255, 0.9), rgba(0, 86, 179, 0.9));
-    color: white;
-    padding: 12px 24px;
-    font-size: 16px;
-    font-weight: bold;
-    border: none;
-    border-radius: 50px;
-    text-decoration: none;
-    display: inline-block;
-    text-align: center;
-    cursor: pointer;
-    transition: background 0.3s ease, box-shadow 0.3s ease;
-}
-
-.shared-files-page .download-btn:hover {
-    background: linear-gradient(90deg, rgba(0, 86, 179, 0.9), rgba(0, 65, 134, 0.9));
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
-}
-
-.shared-files-page .download-btn:active {
-    background: linear-gradient(90deg, rgba(0, 65, 134, 0.9), rgba(0, 48, 98, 0.9));
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-    transform: scale(0.96);
-}
 
 
 /* Dizin Öğesi Stili */
@@ -945,11 +898,11 @@ footer {
     margin-bottom: 10px; /* Alt boşluk */
 }
 
-.directory-header h2 {
+.directory-header h3 {
     margin: 0; /* Varsayılan marjları sıfırlar */
-    font-size: 1.5rem; /* Yazı boyutunu düzenler */
     text-align: center; /* Yazıyı ortalar */
     flex: none; /* Esnek davranışı kaldırır */
+    color: #0056b3;
 }
 
 /* Slider Container */
@@ -1000,6 +953,42 @@ footer {
 .small-slider input:checked + .slider:before {
     transform: translateX(25px); /* Slider dairesini sağa kaydır */
 }
+
+/* Arama Alanı */
+.file-search-container {
+    margin: 20px 0;
+    text-align: center;
+}
+
+.file-search-container h2 {
+    margin-bottom: 10px;
+    color: #0056b3;
+}
+
+.search-bar {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin: 10px 0;
+}
+
+.search-bar input {
+    padding: 10px 15px;
+    width: 50%;
+    font-size: 1rem;
+    border: 2px solid #ccc;
+    border-radius: 25px;
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+.search-bar input:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 8px rgba(0, 123, 255, 0.5);
+}
+
+
 
 /* Custom File Input */
 .custom-file-container {
@@ -1101,10 +1090,8 @@ button:active {
 button[type="submit"] {
     background: linear-gradient(90deg, rgba(0, 123, 255, 0.9), rgba(0, 86, 179, 0.9)); /* Şeffaf gradient */
     color: white;
-    border-radius: 50px;
+    border-radius: 30px;
     padding: 0.8rem 2rem;
-    font-size: 1.1rem;
-    font-weight: bold;
     transition: background 0.3s ease, box-shadow 0.3s ease;
 }
 
@@ -1121,10 +1108,8 @@ button[type="submit"]:active {
 button.delete {
     background: linear-gradient(90deg, rgba(220, 53, 69, 0.9), rgba(176, 42, 55, 0.9));
     color: white;
-    border-radius: 50px;
+    border-radius: 30px;
     padding: 0.8rem 2rem;
-    font-size: 1.1rem;
-    font-weight: bold;
     transition: background 0.3s ease, box-shadow 0.3s ease;
 }
 
@@ -1345,40 +1330,5 @@ select {
     display: none; /* Alt çizgi tamamen devre dışı */
 }
 
-
-/* Arama Alanı */
-.file-search-container {
-    margin: 20px 0;
-    text-align: center;
-}
-
-.file-search-container h2 {
-    font-size: 1.5rem;
-    margin-bottom: 10px;
-    color: #0056b3;
-}
-
-.search-bar {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 10px;
-    margin: 10px 0;
-}
-
-.search-bar input {
-    padding: 10px 15px;
-    width: 50%;
-    font-size: 1rem;
-    border: 2px solid #ccc;
-    border-radius: 25px;
-    outline: none;
-    transition: all 0.3s ease;
-}
-
-.search-bar input:focus {
-    border-color: #007bff;
-    box-shadow: 0 0 8px rgba(0, 123, 255, 0.5);
-}
 
 
