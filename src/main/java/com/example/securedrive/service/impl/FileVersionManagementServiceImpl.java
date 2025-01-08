@@ -1,4 +1,3 @@
-// com/example/securedrive/service/impl/FileVersionManagementServiceImpl.java
 package com.example.securedrive.service.impl;
 
 import com.example.securedrive.exception.AzureBlobStorageException;
@@ -13,8 +12,6 @@ import com.example.securedrive.service.util.DeltaUtil;
 import com.example.securedrive.security.KeyVaultService;
 import com.example.securedrive.service.FileVersionManagementService;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -26,17 +23,15 @@ import java.util.List;
 
 @Service
 public class FileVersionManagementServiceImpl implements FileVersionManagementService {
-
     private final FileVersionRepository fileVersionRepository;
-    private final AzureBlobStorageImpl azureBlobStorage;
+    private final AzureBlobStorageServiceImpl azureBlobStorage;
     private final KeyVaultService keyVaultService;
     private final ObjectMapper objectMapper = new ObjectMapper();
-    private static final Logger logger = LoggerFactory.getLogger(FileVersionManagementServiceImpl.class);
 
     @Autowired
     public FileVersionManagementServiceImpl(
             FileVersionRepository fileVersionRepository,
-            AzureBlobStorageImpl azureBlobStorage,
+            AzureBlobStorageServiceImpl azureBlobStorage,
             KeyVaultService keyVaultService
     ) {
         this.fileVersionRepository = fileVersionRepository;
@@ -100,10 +95,8 @@ public class FileVersionManagementServiceImpl implements FileVersionManagementSe
         boolean isBinary = fileNameLower.matches(".*\\.(jpg|png|mp4|docx?|xlsx|pdf|pptx|mkv)$");
 
         if (isBinary) {
-            // Binary dosya işlemleri
             byte[] contentBytes = decryptedData;
 
-            // Tüm versiyonların deltalarını uygula (sadece delta.json varsa)
             for (int i = 1; i < versions.size(); i++) {
                 FileVersion version = versions.get(i);
                 String deltaPath = version.getDeltaPath();
@@ -122,23 +115,16 @@ public class FileVersionManagementServiceImpl implements FileVersionManagementSe
                 }
 
                 byte[] deltaData = Base64.getDecoder().decode(deltaBase64Data);
-
-                // Delta komutlarını JSON'dan deserialize et
                 List<BinaryDeltaUtil.DeltaCommand> deltaCommands = Arrays.asList(
                         objectMapper.readValue(deltaData, BinaryDeltaUtil.DeltaCommand[].class)
                 );
-
-                // BinaryDeltaUtil ile delta uygulama
                 contentBytes = BinaryDeltaUtil.applyDelta(contentBytes, deltaCommands);
             }
 
-            return Base64.getEncoder().encodeToString(contentBytes); // İkili veriyi Base64 ile encode ederek döndür
+            return Base64.getEncoder().encodeToString(contentBytes);
         } else {
-            // Metin dosya işlemleri
             String initialContent = new String(decryptedData, StandardCharsets.UTF_8);
             content.append(initialContent);
-
-            // Tüm versiyonların deltalarını uygula
             for (int i = 1; i < versions.size(); i++) {
                 FileVersion version = versions.get(i);
                 String deltaPath = version.getDeltaPath();
@@ -216,13 +202,9 @@ public class FileVersionManagementServiceImpl implements FileVersionManagementSe
                 }
 
                 byte[] deltaData = Base64.getDecoder().decode(deltaBase64Data);
-
-                // Delta komutlarını JSON'dan deserialize et
                 List<BinaryDeltaUtil.DeltaCommand> deltaCommands = Arrays.asList(
                         objectMapper.readValue(deltaData, BinaryDeltaUtil.DeltaCommand[].class)
                 );
-
-                // BinaryDeltaUtil ile delta uygulama
                 contentBytes = BinaryDeltaUtil.applyDelta(contentBytes, deltaCommands);
 
                 if (version.getVersionNumber().equals(versionNumber)) {
@@ -232,7 +214,6 @@ public class FileVersionManagementServiceImpl implements FileVersionManagementSe
 
             return Base64.getEncoder().encodeToString(contentBytes); // İkili veriyi Base64 ile encode ederek döndür
         } else {
-            // Metin dosya işlemleri
             String initialContent = new String(decryptedData, StandardCharsets.UTF_8);
             content.append(initialContent);
 
@@ -247,17 +228,13 @@ public class FileVersionManagementServiceImpl implements FileVersionManagementSe
                 if (!azureBlobStorage.checkBlobExists(deltaPath)) {
                     throw new AzureBlobStorageException("Delta blob not found at path: " + deltaPath);
                 }
-
                 byte[] deltaBase64Data = azureBlobStorage.read(new Storage(deltaPath, null));
                 if (deltaBase64Data == null) {
                     throw new Exception("Failed to read delta blob for version: " + version.getVersionNumber());
                 }
-
                 byte[] deltaData = Base64.getDecoder().decode(deltaBase64Data);
                 String delta = new String(deltaData, StandardCharsets.UTF_8);
-
                 content = new StringBuilder(DeltaUtil.applyDelta(content.toString(), delta));
-
                 if (version.getVersionNumber().equals(versionNumber)) {
                     break;
                 }

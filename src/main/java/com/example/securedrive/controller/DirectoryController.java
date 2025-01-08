@@ -175,14 +175,11 @@ public class DirectoryController {
             @RequestParam("sharedWithUserEmail") String sharedWithEmail,
             Authentication authentication) {
 
-        // Paylaşan kişinin kullanıcı adını al
         String username = authentication.getName();
 
-        // Kullanıcı doğrulaması yap
         User owner = userManagementService.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // DTO oluştur ve servis metodu çağır
         DirectoryShareRequestDto dto = new DirectoryShareRequestDto();
         dto.setDirectoryId(directoryId);
         dto.setUsername(username);
@@ -199,14 +196,11 @@ public class DirectoryController {
             @RequestParam("sharedWithUserEmail") String sharedWithUserEmail,
             Authentication authentication) {
 
-        // Paylaşan kişinin kullanıcı adını al
         String username = authentication.getName();
 
-        // Kullanıcı doğrulaması yap
         User owner = userManagementService.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // Servis metodunu çağır
         directoryService.revokeDirectoryShare(directoryId, sharedWithUserEmail, owner);
 
         return new ModelAndView("redirect:/directories");
@@ -215,15 +209,12 @@ public class DirectoryController {
     @GetMapping("/shared-with-me")
     public ModelAndView getSharedDirectories(Authentication authentication) {
 
-        // Kullanıcı doğrulaması yap
         String username = authentication.getName();
         User user = userManagementService.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // Paylaşılan dizinleri getir
         List<DirectoryShareDto> sharedDirectories = directoryService.getSharedDirectories(user);
 
-        // Paylaşılan dizinleri model ve view'a ekle
         ModelAndView modelAndView = new ModelAndView("shared_directories");
         modelAndView.addObject("sharedDirectories", sharedDirectories);
         return modelAndView;

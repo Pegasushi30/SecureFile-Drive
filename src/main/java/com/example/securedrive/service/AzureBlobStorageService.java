@@ -4,7 +4,7 @@ import com.example.securedrive.exception.AzureBlobStorageException;
 import com.example.securedrive.model.Storage;
 
 
-public interface IAzureBlobStorage {
+public interface AzureBlobStorageService {
 
     void write(Storage storage) throws AzureBlobStorageException;
     byte[] read(Storage storage) throws AzureBlobStorageException;

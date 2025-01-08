@@ -2,7 +2,7 @@ package com.example.securedrive.service.impl;
 
 import com.example.securedrive.exception.AzureBlobStorageException;
 import com.example.securedrive.model.Storage;
-import com.example.securedrive.service.IAzureBlobStorage;
+import com.example.securedrive.service.AzureBlobStorageService;
 import com.azure.storage.blob.BlobClient;
 import com.azure.storage.blob.BlobContainerClient;
 import com.azure.storage.blob.models.BlobStorageException;
@@ -15,13 +15,13 @@ import java.io.ByteArrayOutputStream;
 
 @Service
 @Slf4j
-public class AzureBlobStorageImpl implements IAzureBlobStorage {
+public class AzureBlobStorageServiceImpl implements AzureBlobStorageService {
 
 
     private final BlobContainerClient blobContainerClient;
 
     @Autowired
-    public AzureBlobStorageImpl(BlobContainerClient blobContainerClient) {
+    public AzureBlobStorageServiceImpl(BlobContainerClient blobContainerClient) {
         this.blobContainerClient = blobContainerClient;
     }
 
@@ -40,7 +40,6 @@ public class AzureBlobStorageImpl implements IAzureBlobStorage {
             } else {
                 throw new AzureBlobStorageException("Storage has no data to upload");
             }
-
             log.info("Successfully uploaded blob to path: {}", path);
         } catch (BlobStorageException e) {
             throw new AzureBlobStorageException(e.getServiceMessage());
@@ -54,7 +53,7 @@ public class AzureBlobStorageImpl implements IAzureBlobStorage {
         try {
             if (StringUtils.isBlank(path)) {
                 log.warn("Invalid path provided for existence check: {}", path);
-                return false; // Boş path için false dön, dosya yok kabul et
+                return false;
             }
 
             BlobClient blobClient = blobContainerClient.getBlobClient(path);

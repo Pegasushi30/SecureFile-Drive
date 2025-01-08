@@ -36,7 +36,7 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authz -> authz
-                        .requestMatchers("/", "/home", "/upload", "/files", "/css/**", "/js/**", "/favicon.ico").permitAll()
+                        .requestMatchers("/", "/home", "/upload", "/files", "/css/**", "/js/**", "/favicon.ico", "/password-reset-callback").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )

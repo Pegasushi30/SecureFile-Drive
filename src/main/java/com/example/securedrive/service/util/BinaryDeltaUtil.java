@@ -20,7 +20,7 @@ import java.util.zip.CRC32;
  * ----------------------------------------------------
  * 1) Dynamic block size (based on file size)
  * 2) Rolling Hash (CRC32) + strong hash (SHA-256) for "coarse matching"
- * 3) Suffix Array (SA-IS) for "fine" matching (longest match)
+ * 3) Suffix Automaton for "fine" matching (longest match)
  * 4) Merge consecutive delta commands
  * 5) Use built-in java.util.zip.CRC32
  * 6) Proper identical file handling
@@ -81,8 +81,9 @@ public class BinaryDeltaUtil {
 
     /**
      * Main function: Calculate delta.
-     * 1) Rolling-hash-based coarse diff
-     * 2) Suffix Array (SA-IS) for fine matching
+     * 0) Pre-check: Are files identical?
+     * 1) Coarse matching (CRC32 + SHA-256)
+     * 2) Suffix Automaton for fine matching
      * 3) Merge delta commands
      * Important Addition:
      * If original and modified byte arrays are identical,
@@ -112,11 +113,9 @@ public class BinaryDeltaUtil {
             System.out.println(cmd);
         }
 
-        // 2) Suffix Array (SA-IS) for fine matching
-        // SuffixArray sınıfınızı burada implement etmeniz gerekmektedir.
-        // Bu örnekte, SuffixArray sınıfı bir placeholder olarak kabul edilmiştir.
-        SuffixArray suffixArray = new SuffixArray(original);
-        List<DeltaCommand> fineDelta = refineWithSuffixArray(suffixArray, coarseDelta);
+        // 2) Suffix Automaton for fine matching
+        SuffixAutomaton suffixAutomaton = new SuffixAutomaton(original);
+        List<DeltaCommand> fineDelta = refineWithSuffixAutomaton(suffixAutomaton, coarseDelta, modified);
 
         // Log fine delta commands
         for (DeltaCommand cmd : fineDelta) {
@@ -132,6 +131,7 @@ public class BinaryDeltaUtil {
         }
         return merged;
     }
+
 
     /**
      * Coarse matching using CRC32 and SHA-256 block-based indexing with Multithreading.
@@ -243,37 +243,38 @@ public class BinaryDeltaUtil {
     }
 
     /**
-     * Refine coarse delta commands with Suffix Array to find longer matches.
+     * Refine coarse delta commands with Suffix Automaton to find longer matches.
      * This method processes the LITERAL data sequentially without overlapping.
      *
-     * @param suffixArray Suffix Array built from original file
-     * @param coarseDelta Coarse delta commands
+     * @param suffixAutomaton Suffix Automaton built from original file
+     * @param coarseDelta     Coarse delta commands
+     * @param modified        The modified byte array
      * @return List of refined DeltaCommand
      */
-    private static List<DeltaCommand> refineWithSuffixArray(SuffixArray suffixArray, List<DeltaCommand> coarseDelta) {
+    private static List<DeltaCommand> refineWithSuffixAutomaton(SuffixAutomaton suffixAutomaton, List<DeltaCommand> coarseDelta, byte[] modified) {
         List<DeltaCommand> refined = new ArrayList<>();
 
         for (DeltaCommand cmd : coarseDelta) {
             if (cmd.type() == CommandType.COPY) {
                 refined.add(cmd);
             } else {
-                // LITERAL: try to find longer matches using suffix array
+                // LITERAL: try to find longer matches using suffix automaton
                 byte[] data = cmd.data();
                 int current = 0;
                 int last = 0;
 
                 while (current < data.length) {
-                    SuffixArray.MatchResult match = suffixArray.findLongestMatch(data, current);
-                    if (match.length() > 4) { // Minimum match length threshold
+                    SuffixAutomaton.MatchResult match = suffixAutomaton.findLongestMatch(data, current);
+                    if (match.getLength() > 4) { // Minimum match length threshold
                         if (current > last) {
                             // Add LITERAL for data from 'last' to 'current'
                             byte[] litData = slice(data, last, current - last);
                             refined.add(new DeltaCommand(CommandType.LITERAL, 0, litData.length, litData));
                         }
                         // Add COPY command
-                        refined.add(new DeltaCommand(CommandType.COPY, match.offset(), match.length(), null));
+                        refined.add(new DeltaCommand(CommandType.COPY, match.getOffset(), match.getLength(), null));
                         // Move forward
-                        current += match.length();
+                        current += match.getLength();
                         last = current;
                     } else {
                         current++;
@@ -290,6 +291,8 @@ public class BinaryDeltaUtil {
 
         return refined;
     }
+
+
 
     /**
      * Merge consecutive delta commands (COPY-COPY or LITERAL-LITERAL).
@@ -380,60 +383,8 @@ public class BinaryDeltaUtil {
     }
 
     /* ======================================================
-     * Helper Classes and Functions (SuffixArray, CRC32, Hash, Slice, Hex Conversion)
+     * Helper Classes and Functions (CRC32, Hash, Slice, Hex Conversion)
      * ====================================================== */
-
-    /**
-     * Placeholder for the SuffixArray class.
-     * Gerçek implementasyonunuzu buraya eklemelisiniz.
-     */
-    private static class SuffixArray {
-        private final byte[] data;
-
-        public SuffixArray(byte[] data) {
-            this.data = data;
-            // Suffix Array'nın inşasını burada gerçekleştirin
-        }
-
-        /**
-         * Find the longest match in the original data for the data starting at position in the new data.
-         *
-         * @param newData     Yeni veri
-         * @param startPosNew Yeni veride aramaya başlanacak konum
-         * @return MatchResult uzun eşleşme bilgisi
-         */
-        public MatchResult findLongestMatch(byte[] newData, int startPosNew) {
-            // Bu metodun implementasyonunu yapmalısınız.
-            // Örneğin, SA-IS algoritmasını kullanarak en uzun eşleşmeyi bulun.
-            // Bu örnekte, basit bir eşleşme algoritması kullanılmıştır.
-            int maxLength = 0;
-            int offset = -1;
-
-            for (int i = 0; i < data.length; i++) {
-                int length = 0;
-                while (startPosNew + length < newData.length &&
-                        i + length < data.length &&
-                        newData[startPosNew + length] == data[i + length] &&
-                        length < MAX_BLOCK_SIZE) {
-                    length++;
-                }
-                if (length > maxLength) {
-                    maxLength = length;
-                    offset = i;
-                }
-                if (maxLength == MAX_BLOCK_SIZE) {
-                    break; // Maksimum eşleşme boyutuna ulaşıldı
-                }
-            }
-
-            return new MatchResult(offset, maxLength);
-        }
-
-        /**
-         * Match result record.
-         */
-        public record MatchResult(int offset, int length) {}
-    }
 
     /**
      * Calculate CRC32 using java.util.zip.CRC32.
@@ -493,14 +444,14 @@ public class BinaryDeltaUtil {
 
 
     // =======================
-    // Yardımcı Metodlar
+    // Helper Methods
     // =======================
     /**
-     * İkili dosyayı yükler.
+     * Load a binary file.
      *
-     * @param filePath İkili dosyanın yolu
-     * @return İkili dosya içeriği
-     * @throws IOException Dosya okuma hatası
+     * @param filePath Path to the binary file
+     * @return Binary file content
+     * @throws IOException File read error
      */
     public static byte[] loadBinaryFile(String filePath) throws IOException {
         System.out.println("Loading binary file: " + filePath);
@@ -508,11 +459,11 @@ public class BinaryDeltaUtil {
     }
 
     /**
-     * İkili dosyayı kaydeder.
+     * Save a binary file.
      *
-     * @param data     İkili dosya içeriği
-     * @param filePath Kaydedilecek dosyanın yolu
-     * @throws IOException Dosya yazma hatası
+     * @param data     Binary file content
+     * @param filePath Path to save the binary file
+     * @throws IOException File write error
      */
     public static void saveBinaryFile(byte[] data, String filePath) throws IOException {
         Path outputPath = Path.of(filePath);
@@ -521,19 +472,18 @@ public class BinaryDeltaUtil {
     }
 
     /**
-     * Delta komutlarını JSON formatında kaydeder.
+     * Save delta commands in JSON format.
      *
-     * @param deltaCommands Delta komutları listesi
-     * @param filePath      Kaydedilecek delta dosyasının yolu
-     * @throws IOException Dosya yazma hatası
+     * @param deltaCommands List of DeltaCommand
+     * @param filePath      Path to save the delta file
+     * @throws IOException File write error
      */
     public static void saveBinaryDeltaCommands(List<DeltaCommand> deltaCommands, String filePath) throws IOException {
         Path deltaPath = Path.of(filePath);
         Files.createDirectories(deltaPath.getParent());
 
-        // Delta komutlarını JSON formatında serialize edin
+        // Serialize delta commands to JSON format
         String json = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(deltaCommands);
         Files.writeString(deltaPath, json, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
     }
-
 }

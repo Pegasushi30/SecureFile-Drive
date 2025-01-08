@@ -20,7 +20,6 @@ import org.springframework.web.servlet.ModelAndView;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.NoSuchElementException;
 
 
 @RestController
@@ -59,7 +58,6 @@ public class AzureBlobController {
             response.put("remainingShares", remainingShares);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            e.printStackTrace(); // Hata detaylarını logla
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", e.getMessage()));
         }

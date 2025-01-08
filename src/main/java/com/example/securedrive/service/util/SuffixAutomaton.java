@@ -1,5 +1,7 @@
 package com.example.securedrive.service.util;
 
+import lombok.Getter;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -13,10 +15,10 @@ public class SuffixAutomaton {
      * State class represents a state in the suffix automaton.
      */
     private static class State {
-        int len; // Maximum length of the substring ending at this state
-        int link; // Suffix link
-        Map<Byte, Integer> next; // Transitions (character to state)
-        int firstPos; // The first ending position of the substring in the original string
+        int len;
+        int link;
+        Map<Integer, Integer> next;
+        int firstPos;
 
         State(int len, int link, int firstPos) {
             this.len = len;
@@ -26,9 +28,9 @@ public class SuffixAutomaton {
         }
     }
 
-    private final State[] st; // Array of states
-    private int size; // Number of states
-    private int last; // The index of the state representing the entire string
+    private final State[] st;
+    private int size;
+    private int last;
 
     /**
      * Constructs the suffix automaton for the given data.
@@ -36,7 +38,6 @@ public class SuffixAutomaton {
      * @param data The original byte array to build the automaton from.
      */
     public SuffixAutomaton(byte[] data) {
-        // Maximum number of states is 2 * n + 2
         st = new State[2 * data.length + 2];
         st[0] = new State(0, -1, -1);
         size = 1;
@@ -50,29 +51,30 @@ public class SuffixAutomaton {
     /**
      * Extends the automaton with a new character.
      *
-     * @param c   The new character to add.
+     * @param c   The new character to add (treated as unsigned).
      * @param pos The current position in the original string.
      */
     private void extend(byte c, int pos) {
+        int uc = c & 0xFF;
         int curr = size++;
         st[curr] = new State(st[last].len + 1, 0, pos);
         int p = last;
-        while (p != -1 && !st[p].next.containsKey(c)) {
-            st[p].next.put(c, curr);
+        while (p != -1 && !st[p].next.containsKey(uc)) {
+            st[p].next.put(uc, curr);
             p = st[p].link;
         }
         if (p == -1) {
             st[curr].link = 0;
         } else {
-            int q = st[p].next.get(c);
+            int q = st[p].next.get(uc);
             if (st[p].len + 1 == st[q].len) {
                 st[curr].link = q;
             } else {
                 int clone = size++;
                 st[clone] = new State(st[p].len + 1, st[q].link, st[q].firstPos);
                 st[clone].next.putAll(st[q].next);
-                while (p != -1 && st[p].next.get(c) == q) {
-                    st[p].next.put(c, clone);
+                while (p != -1 && st[p].next.get(uc) == q) {
+                    st[p].next.put(uc, clone);
                     p = st[p].link;
                 }
                 st[q].link = clone;
@@ -83,11 +85,11 @@ public class SuffixAutomaton {
     }
 
     /**
-     * Find the longest match for the substring starting at modPos in the modified data.
+     * Finds the longest match in the original data for the modified data starting at modPos.
      *
-     * @param modified The modified byte array to match.
-     * @param modPos   The starting position in the modified array.
-     * @return MatchResult containing the offset and length of the match.
+     * @param modified The modified data as byte array.
+     * @param modPos   The starting position in the modified data.
+     * @return MatchResult containing the offset in the original data and the length of the match.
      */
     public MatchResult findLongestMatch(byte[] modified, int modPos) {
         if (modPos < 0 || modPos >= modified.length) {
@@ -95,37 +97,46 @@ public class SuffixAutomaton {
         }
 
         int currentState = 0;
-        int currentLength = 0;
+        int matchLength = 0;
         int bestLength = 0;
         int bestOffset = -1;
 
         for (int i = modPos; i < modified.length; i++) {
-            byte c = modified[i];
+            int c = modified[i] & 0xFF;
             if (st[currentState].next.containsKey(c)) {
                 currentState = st[currentState].next.get(c);
-                currentLength++;
-                if (currentLength > bestLength) {
-                    bestLength = currentLength;
-                    bestOffset = st[currentState].firstPos - bestLength + 1;
+                matchLength++;
+                if (matchLength > bestLength) {
+                    bestLength = matchLength;
+                    bestOffset = st[currentState].firstPos - matchLength + 1;
                 }
             } else {
-                while (currentState != -1 && !st[currentState].next.containsKey(c)) {
-                    currentState = st[currentState].link;
-                }
-                if (currentState == -1) {
-                    currentState = 0;
-                    currentLength = 0;
-                } else {
-                    currentLength = st[currentState].len + 1;
-                    currentState = st[currentState].next.get(c);
-                    if (currentLength > bestLength) {
-                        bestLength = currentLength;
-                        bestOffset = st[currentState].firstPos - bestLength + 1;
-                    }
-                }
+                break;
             }
         }
 
         return new MatchResult(bestOffset, bestLength);
+    }
+
+    /**
+     * Match result class.
+     */
+    @Getter
+    public static class MatchResult {
+        private final int offset;
+        private final int length;
+
+        public MatchResult(int offset, int length) {
+            this.offset = offset;
+            this.length = length;
+        }
+
+        @Override
+        public String toString() {
+            return "MatchResult{" +
+                    "offset=" + offset +
+                    ", length=" + length +
+                    '}';
+        }
     }
 }

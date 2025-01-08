@@ -2,7 +2,6 @@ package com.example.securedrive.service.impl;
 
 import com.example.securedrive.dto.DirectoryDto;
 import com.example.securedrive.dto.DirectoryShareDto;
-import com.example.securedrive.dto.DirectoryShareEmailDto;
 import com.example.securedrive.dto.DirectoryShareRequestDto;
 import com.example.securedrive.exception.AzureBlobStorageException;
 import com.example.securedrive.exception.DirectoryNotFoundException;
@@ -10,8 +9,8 @@ import com.example.securedrive.mapper.DirectoryMapper;
 import com.example.securedrive.model.*;
 import com.example.securedrive.repository.*;
 import com.example.securedrive.security.AzureBlobSASTokenGenerator;
+import com.example.securedrive.service.AzureBlobStorageService;
 import com.example.securedrive.service.DirectoryService;
-import com.example.securedrive.service.IAzureBlobStorage;
 import com.example.securedrive.service.UserManagementService;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
@@ -29,7 +28,7 @@ public class DirectoryServiceImpl implements DirectoryService {
     private static final Logger logger = LoggerFactory.getLogger(DirectoryServiceImpl.class);
 
     private final DirectoryRepository directoryRepository;
-    private final IAzureBlobStorage azureBlobStorage;
+    private final AzureBlobStorageService azureBlobStorageService;
     private final FileRepository fileRepository;
     private final FileVersionRepository fileVersionRepository;
     private final DirectoryMapper directoryMapper;
@@ -41,7 +40,7 @@ public class DirectoryServiceImpl implements DirectoryService {
 
     @Autowired
     public DirectoryServiceImpl(DirectoryRepository directoryRepository,
-                                IAzureBlobStorage azureBlobStorage,
+                                AzureBlobStorageService azureBlobStorageService,
                                 FileRepository fileRepository,
                                 FileVersionRepository fileVersionRepository,
                                 DirectoryMapper directoryMapper,
@@ -51,7 +50,7 @@ public class DirectoryServiceImpl implements DirectoryService {
                                 AzureBlobSASTokenGenerator azureBlobSASTokenGenerator,
                                 UserRepository userRepository) {
         this.directoryRepository = directoryRepository;
-        this.azureBlobStorage = azureBlobStorage;
+        this.azureBlobStorageService = azureBlobStorageService;
         this.fileRepository = fileRepository;
         this.fileVersionRepository = fileVersionRepository;
         this.directoryMapper = directoryMapper;
@@ -84,11 +83,11 @@ public class DirectoryServiceImpl implements DirectoryService {
         }
 
         try {
-            azureBlobStorage.createDirectory(path);
+            azureBlobStorageService.createDirectory(path);
             logger.info("Directory created with marker at path: {}", path);
         } catch (AzureBlobStorageException e) {
-            logger.error("Blob Storage dizin oluşturulurken hata oluştu: {}", e.getMessage());
-            throw new RuntimeException("Blob Storage dizin oluşturulurken hata oluştu: " + e.getMessage());
+            logger.error("Error for directory creation in Blob Storage: {}", e.getMessage());
+            throw new RuntimeException("Error for file creation in Blob Storage: " + e.getMessage());
         }
     }
 
@@ -117,7 +116,6 @@ public class DirectoryServiceImpl implements DirectoryService {
         return directoryRepository.findById(id);
     }
 
-    // DTO bazlı metotlar
     @Override
     public List<DirectoryDto> getRootDirectoriesAsDto(User user) {
         return getRootDirectories(user).stream().map(directoryMapper::toDto).collect(Collectors.toList());
@@ -137,7 +135,6 @@ public class DirectoryServiceImpl implements DirectoryService {
         return directoryMapper.toDto(directory);
     }
 
-    // Yeni eklenen DTO bazlı metot
     @Override
     public DirectoryDto createDirectory(DirectoryDto directoryDto) {
         Directory directory = new Directory();
@@ -151,28 +148,25 @@ public class DirectoryServiceImpl implements DirectoryService {
                     .orElseThrow(() -> new DirectoryNotFoundException("Parent directory not found"));
             directory.setParentDirectory(parentDirectory);
         }
-
         saveDirectory(directory);
         return directoryMapper.toDto(directory);
     }
 
-    // Yeni eklenen silme metodu
     @Override
-    @Transactional // Sadece bu metod @Transactional
+    @Transactional
     public void deleteDirectoryById(Long id, User user) {
         Directory directory = findByIdAndUser(id, user)
                 .orElseThrow(() -> new DirectoryNotFoundException("Directory not found or not authorized"));
-        deleteDirectory(directory); // Bu çağrı artık @Transactional kapsamındadır
+        deleteDirectory(directory);
     }
 
-    // Private silme metodu, @Transactional kaldırıldı
     public void deleteDirectory(Directory directory) {
         List<Directory> subDirectories = directory.getSubDirectories();
         for (Directory subDirectory : subDirectories) {
             try {
                 deleteDirectory(subDirectory);
             } catch (Exception e) {
-                logger.error("Alt dizin silinirken hata: {} - {}", subDirectory.getId(), e.getMessage());
+                logger.error("Error for subdirectory deletion: {} - {}", subDirectory.getId(), e.getMessage());
             }
         }
 
@@ -182,15 +176,15 @@ public class DirectoryServiceImpl implements DirectoryService {
                 fileVersionRepository.deleteAllByFile(file);
                 fileRepository.delete(file);
             } catch (Exception e) {
-                logger.error("Dosya silinirken hata: {} - {}", file.getId(), e.getMessage());
+                logger.error("Error for file deletion: {} - {}", file.getId(), e.getMessage());
             }
         }
 
         try {
             directoryRepository.delete(directory);
-            logger.info("Directory silindi: {}", directory.getId());
+            logger.info("File deleted successfully: {}", directory.getId());
         } catch (Exception e) {
-            logger.error("Dizin silinirken hata: {} - {}", directory.getId(), e.getMessage());
+            logger.error("Error for file deletion: {} - {}", directory.getId(), e.getMessage());
         }
     }
 
@@ -198,8 +192,8 @@ public class DirectoryServiceImpl implements DirectoryService {
     public List<DirectoryDto> getDirectoriesByUsername(String username) {
         User user = userManagementService.findByUsername(username)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
-        List<Directory> directories = getUserDirectories(user); // Mevcut metot
-        return directories.stream().map(directoryMapper::toDto).toList(); // DTO dönüşümü
+        List<Directory> directories = getUserDirectories(user);
+        return directories.stream().map(directoryMapper::toDto).toList();
     }
 
     @Override
@@ -213,46 +207,34 @@ public class DirectoryServiceImpl implements DirectoryService {
 
         User sharedWithUser = userManagementService.findByEmail(dto.getSharedWithUserEmail())
                 .orElseThrow(() -> new RuntimeException("User not found with email: " + dto.getSharedWithUserEmail()));
-
-        // Recursive paylaşım
         shareDirectoryRecursive(directory, sharedWithUser, owner, dto.getUsername());
     }
 
     private void shareDirectoryRecursive(Directory directory, User sharedWithUser, User owner, String username) {
-        // Ana dizini paylaş
         DirectoryShare directoryShare = new DirectoryShare();
         directoryShare.setDirectory(directory);
         directoryShare.setOwner(owner);
         directoryShare.setSharedWithUser(sharedWithUser);
         directoryShare.setSharedPath("directories/" + username + "/" + directory.getName());
         directoryShareRepository.save(directoryShare);
-
-        // Dizin altındaki dosyaları paylaş
         for (File file : directory.getFiles()) {
             shareFileWithSasTokens(file, sharedWithUser, owner);
         }
-
-        // Alt dizinler için recursive paylaşım
         for (Directory subDirectory : directory.getSubDirectories()) {
             shareDirectoryRecursive(subDirectory, sharedWithUser, owner, username);
         }
     }
 
     private void shareFileWithSasTokens(File file, User sharedWithUser, User owner) {
-        // Dosyanın tüm versiyonları için SAS URL oluştur ve paylaşımı kaydet
         for (FileVersion version : file.getVersions()) {
             String versionPath = String.format("%s/versions/%s/%s", file.getPath(), version.getVersionNumber(), file.getFileName());
             String sasUrl = azureBlobSASTokenGenerator.getBlobUrl(versionPath);
-
-            // Her versiyon için ayrı bir paylaşım oluştur
             Optional<FileShare> existingShare = fileShareRepository.findByFileAndSharedWithUserAndVersion(file, sharedWithUser, version.getVersionNumber());
             FileShare fileShare;
             if (existingShare.isPresent()) {
-                // Eğer bu versiyon için paylaşım varsa, sadece SAS URL'yi güncelle
                 fileShare = existingShare.get();
                 fileShare.setSasUrl(sasUrl);
             } else {
-                // Eğer paylaşım yoksa, yeni bir paylaşım oluştur
                 fileShare = new FileShare();
                 fileShare.setFile(file);
                 fileShare.setOwner(owner);
@@ -260,12 +242,8 @@ public class DirectoryServiceImpl implements DirectoryService {
                 fileShare.setSasUrl(sasUrl);
                 fileShare.setVersion(version.getVersionNumber());
             }
-
-            // Paylaşımı kaydet
             fileShareRepository.save(fileShare);
         }
-
-        // Sahip kullanıcının iletişim listesine paylaşımı yapılan kullanıcıyı ekle
         owner.getContacts().add(sharedWithUser);
         userRepository.save(owner);
     }
@@ -283,30 +261,22 @@ public class DirectoryServiceImpl implements DirectoryService {
 
         User sharedWithUser = userManagementService.findByEmail(sharedWithEmail)
                 .orElseThrow(() -> new RuntimeException("User not found with email: " + sharedWithEmail));
-
-        // Recursive paylaşımı iptal et
         revokeDirectoryShareRecursive(directory, sharedWithUser);
     }
 
     @Override
     public void revokeDirectoryShareRecursive(Directory directory, User sharedWithUser) {
-        // Ana dizin paylaşımını kaldır
         directoryShareRepository.findByDirectoryAndSharedWithUser(directory, sharedWithUser)
                 .ifPresent(directoryShareRepository::delete);
-
-        // Dizin altındaki dosya paylaşımlarını kaldır
         for (File file : directory.getFiles()) {
             revokeFileSharesForAllVersions(file, sharedWithUser);
         }
-
-        // Alt dizinler için recursive paylaşım iptali
         for (Directory subDirectory : directory.getSubDirectories()) {
             revokeDirectoryShareRecursive(subDirectory, sharedWithUser);
         }
     }
 
     private void revokeFileSharesForAllVersions(File file, User sharedWithUser) {
-        // Dosyanın tüm versiyonları için paylaşımı kaldır
         for (FileVersion version : file.getVersions()) {
             fileShareRepository.findByFileAndSharedWithUserAndVersion(file, sharedWithUser, version.getVersionNumber())
                     .ifPresent(fileShareRepository::delete);
@@ -316,43 +286,22 @@ public class DirectoryServiceImpl implements DirectoryService {
     public List<DirectoryShareDto> getSharedDirectories(User user) {
         List<DirectoryShare> sharedDirectories = directoryShareRepository.findBySharedWithUserId(user.getId());
 
-        logger.debug("Paylaşılan dizin sayısı: {}", sharedDirectories.size());
-
-        sharedDirectories.forEach(share -> {
-            logger.debug("Share ID: {}, Directory ID: {}, Directory Name: {}, Shared With: {}",
-                    share.getId(),
-                    share.getDirectory() != null ? share.getDirectory().getId() : "null",
-                    share.getDirectory() != null ? share.getDirectory().getName() : "null",
-                    share.getSharedWithUser() != null ? share.getSharedWithUser().getEmail() : "null");
-        });
-
         return sharedDirectories.stream()
                 .map(share -> new DirectoryShareDto(
                         share.getId(),
                         share.getDirectory().getId(),
                         share.getDirectory().getName(),
                         share.getSharedWithUser().getEmail(),
-                        share.getOwner().getEmail(),
+                        share.getDirectory().getUser().getEmail(),
                         share.getSharedPath()
                 ))
                 .collect(Collectors.toList());
     }
 
+
     @Override
-    // Yeni metod: Kullanıcının paylaştığı dizinleri getirir
     public List<DirectoryShareDto> getMySharedDirectories(User owner) {
         List<DirectoryShare> sharedDirectories = directoryShareRepository.findByOwner(owner);
-
-        // Loglama ekleyin
-        logger.debug("Paylaşılan dizin sayısı: {}", sharedDirectories.size());
-
-        sharedDirectories.forEach(share -> {
-            logger.debug("Share ID: {}, Directory ID: {}, Directory Name: {}, Shared With: {}",
-                    share.getId(),
-                    share.getDirectory() != null ? share.getDirectory().getId() : "null",
-                    share.getDirectory() != null ? share.getDirectory().getName() : "null",
-                    share.getSharedWithUser() != null ? share.getSharedWithUser().getEmail() : "null");
-        });
 
         return sharedDirectories.stream()
                 .map(share -> new DirectoryShareDto(
@@ -381,7 +330,7 @@ public class DirectoryServiceImpl implements DirectoryService {
                         share.getDirectory().getId(),
                         share.getDirectory().getName(),
                         share.getSharedWithUser().getEmail(),
-                        share.getOwner().getEmail(),
+                        directory.getUser().getEmail(),
                         share.getSharedPath()
                 ))
                 .collect(Collectors.toList());

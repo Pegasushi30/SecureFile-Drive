@@ -104,25 +104,22 @@ public class FileManagementServiceImpl implements FileManagementService {
         FileShare fileShare;
         if (existingShare.isPresent()) {
             fileShare = existingShare.get();
-            fileShare.setSasUrl(sasUrl); // Mevcut paylaşımı güncelle
+            fileShare.setSasUrl(sasUrl);
         } else {
             fileShare = new FileShare();
             fileShare.setFile(file);
             fileShare.setOwner(owner);
             fileShare.setSharedWithUser(sharedWithUser);
             fileShare.setSasUrl(sasUrl);
-            fileShare.setVersion(versionNumber); // Versiyon bilgisini ekle
+            fileShare.setVersion(versionNumber);
         }
 
         fileShareRepository.save(fileShare);
-
-        // Kullanıcıyı sahibin bağlantılarına ekle
         owner.getContacts().add(sharedWithUser);
         userRepository.save(owner);
     }
 
 
-    // DTO bazlı ek metotlar
     @Override
     public List<FileDto> getUserFilesInRootDirectoryAsDto(User user) {
         return getUserFilesInRootDirectory(user).stream().map(fileMapper::toDto).collect(Collectors.toList());
@@ -137,8 +134,8 @@ public class FileManagementServiceImpl implements FileManagementService {
     public List<FileDto> getFilesByUsername(String username) {
         User user = userManagementService.findByUsername(username)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
-        List<File> files = getFilesByUser(user); // Mevcut metot
-        return files.stream().map(fileMapper::toDto).toList(); // DTO dönüşümü
+        List<File> files = getFilesByUser(user);
+        return files.stream().map(fileMapper::toDto).toList();
     }
 
     @Override
@@ -146,18 +143,16 @@ public class FileManagementServiceImpl implements FileManagementService {
         User user = userManagementService.findByUsername(username)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
         List<FileShare> fileShares = fileShareRepository.findAllBySharedWithUser(user);
-        return fileShares.stream().map(fileShareMapper::toDto).toList(); // DTO dönüşümü
+        return fileShares.stream().map(fileShareMapper::toDto).toList();
     }
 
     @Override
     public long getTotalStorage(String username) {
-        // Kullanıcının toplam depolama kapasitesi
-        return 10L * 1024 * 1024 * 1024; // Örnek: 10 GB
+        return 10L * 1024 * 1024 * 1024;
     }
 
     @Override
     public long getUsedStorage(String username) {
-        // Kullanıcının kullandığı toplam depolama
         List<FileVersion> allVersions = fileVersionRepository.findAllByUsername(username);
         return allVersions.stream().mapToLong(FileVersion::getSize).sum();
     }
@@ -188,8 +183,8 @@ public class FileManagementServiceImpl implements FileManagementService {
                             ownerUsername,
                             directoryId,
                             List.of(versionDto),
-                            List.of(),   // boş liste (null yerine de koyabilirsiniz)
-                            null         // fileSharesJson de yoksa null
+                            List.of(),
+                            null
                     );
 
                 })

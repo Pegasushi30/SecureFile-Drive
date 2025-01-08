@@ -4,32 +4,31 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Delta hesaplama ve uygulama işlemleri için yardımcı sınıf.
+ * Delta calculation for text files.
  */
 public class DeltaUtil {
 
     /**
-     * Veriyi normalize eder ve satırlara böler.
+     * Normalizes the data and splits it into lines.
      *
-     * @param data Metin
-     * @return Satır dizisi
+     * @param data Text
+     * @return Array of lines
      */
     private static String[] splitLines(String data) {
         if (data == null) {
             throw new IllegalArgumentException("Veri null olamaz.");
         }
-        // Tüm satır sonu karakterlerini normalize et ve baş/sondaki boşlukları temizle
         String normalized = data.replaceAll("\\r?\\n", "\n").trim();
         return normalized.split("\n");
     }
 
 
     /**
-     * İki metin arasındaki delta'yı hesaplar.
+     * Calculates the delta between two texts.
      *
-     * @param oldData Eski veri
-     * @param newData Yeni veri
-     * @return Delta çıktısı
+     * @param oldData Old data
+     * @param newData New data
+     * @return Delta output
      */
     public static String calculateDelta(String oldData, String newData) {
         String[] oldLines = splitLines(oldData);
@@ -41,24 +40,19 @@ public class DeltaUtil {
 
         while (oldIndex < oldLines.length || newIndex < newLines.length) {
             if (oldIndex >= oldLines.length) {
-                // Eski veri bitti, geriye kalan tüm newLines ekleniyor
                 delta.add("A:" + lineNumber + ":" + newLines[newIndex]);
                 newIndex++;
                 lineNumber++;
             } else if (newIndex >= newLines.length) {
-                // Yeni veri bitti, geriye kalan tüm oldLines siliniyor
                 delta.add("R:" + lineNumber + ":" + oldLines[oldIndex]);
                 oldIndex++;
-                // lineNumber aynı kalır (silme işleminde)
             } else if (!oldLines[oldIndex].equals(newLines[newIndex])) {
-                // Satırlar farklı, önce ekle, sonra sil
                 delta.add("A:" + lineNumber + ":" + newLines[newIndex]);
                 delta.add("R:" + lineNumber + ":" + oldLines[oldIndex]);
                 oldIndex++;
                 newIndex++;
                 lineNumber++;
             } else {
-                // Satırlar aynı, ilerle
                 oldIndex++;
                 newIndex++;
                 lineNumber++;
@@ -68,11 +62,11 @@ public class DeltaUtil {
     }
 
     /**
-     * Delta uygulayarak yeni veriyi oluşturur.
+     * Reconstructs new data by applying the delta.
      *
-     * @param oldData Eski veri
-     * @param delta   Delta verisi
-     * @return Yeni veri
+     * @param oldData Old data
+     * @param delta   Delta data
+     * @return New data
      */
     public static String applyDelta(String oldData, String delta) {
         String[] oldLines = splitLines(oldData);
@@ -99,21 +93,17 @@ public class DeltaUtil {
             String content = parts[2];
 
             switch (command) {
-                case "A": { // Satır Ekleme
-                    // Eklenecek konuma kadar eski satırları ekle
+                case "A": {
                     while (resultLines.size() < lineNumber && oldIndex < oldLines.length) {
                         resultLines.add(oldLines[oldIndex++]);
                     }
-                    // Yeni satırı ekle
                     resultLines.add(content);
                     break;
                 }
-                case "R": { // Satır Silme
-                    // Silinecek konuma kadar eski satırları ekle
+                case "R": {
                     while (resultLines.size() < lineNumber && oldIndex < oldLines.length) {
                         resultLines.add(oldLines[oldIndex++]);
                     }
-                    // Eski satırı atla (sil)
                     if (oldIndex >= oldLines.length) {
                         throw new IllegalStateException("Silinmeye çalışılan satır numarası geçersiz: " + lineNumber);
                     }
@@ -129,8 +119,6 @@ public class DeltaUtil {
             }
             deltaIndex++;
         }
-
-        // Geriye kalan eski satırları ekle
         while (oldIndex < oldLines.length) {
             resultLines.add(oldLines[oldIndex++]);
         }

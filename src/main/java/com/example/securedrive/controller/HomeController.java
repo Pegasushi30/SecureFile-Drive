@@ -154,7 +154,7 @@ public class HomeController {
             // Paylaşan e-posta adresine ve dizin yoluna göre gruplama
             Map<String, Map<String, List<FileShareDto>>> groupedShares = sharedFiles.stream()
                     .collect(Collectors.groupingBy(
-                            FileShareDto::ownerEmail, // Sahibi maili ile grupla
+                            FileShareDto::ownerEmail,
                             Collectors.groupingBy(FileShareDto::directoryPath)
                     ));
 
