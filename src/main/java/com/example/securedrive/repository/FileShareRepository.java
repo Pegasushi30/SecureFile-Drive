@@ -11,7 +11,6 @@ import java.util.Optional;
 
 @Repository
 public interface FileShareRepository extends JpaRepository<FileShare, Long> {
-    Optional<FileShare> findByFileAndSharedWithUser(File file, User sharedWithUser);
     List<FileShare> findAllBySharedWithUser(User sharedWithUser);
     Optional<FileShare> findByFileAndSharedWithUserAndVersion(File file, User sharedWithUser, String version);
     List<FileShare> findByFileId(Long fileId);

@@ -5,14 +5,10 @@ import com.example.securedrive.dto.DirectoryDto;
 import com.example.securedrive.dto.DirectoryShareDto;
 import com.example.securedrive.dto.DirectoryShareRequestDto;
 import com.example.securedrive.dto.FileDto;
-import com.example.securedrive.model.Directory;
 import com.example.securedrive.model.User;
-import com.example.securedrive.repository.DirectoryRepository;
 import com.example.securedrive.service.DirectoryService;
 import com.example.securedrive.service.FileManagementService;
 import com.example.securedrive.service.UserManagementService;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
@@ -20,12 +16,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+
 
 @Controller
 @RequestMapping("/directories")
@@ -34,16 +26,13 @@ public class DirectoryController {
     private final UserManagementService userManagementService;
     private final DirectoryService directoryService;
     private final FileManagementService fileManagementService;
-    private  final DirectoryRepository directoryRepository;
      private static final Logger logger = LoggerFactory.getLogger(DirectoryController.class);
     public DirectoryController(UserManagementService userManagementService,
                                DirectoryService directoryService,
-                               FileManagementService fileManagementService,
-                               DirectoryRepository directoryRepository) {
+                               FileManagementService fileManagementService) {
         this.userManagementService = userManagementService;
         this.directoryService = directoryService;
         this.fileManagementService = fileManagementService;
-        this.directoryRepository = directoryRepository;
     }
 
     @GetMapping

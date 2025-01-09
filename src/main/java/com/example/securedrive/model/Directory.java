@@ -20,22 +20,20 @@ public class Directory {
     @Column(nullable = false)
     private String name;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_directory_id")
     private Directory parentDirectory;
 
     @OneToMany(mappedBy = "parentDirectory", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<Directory> subDirectories;
+    private List<Directory> subDirectories = new ArrayList<>();
 
     @OneToMany(mappedBy = "directory", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<File> files;
+    private List<File> files = new ArrayList<>();
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     @OneToMany(mappedBy = "directory", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<DirectoryShare> directoryShares = new ArrayList<>();
-
 }
-

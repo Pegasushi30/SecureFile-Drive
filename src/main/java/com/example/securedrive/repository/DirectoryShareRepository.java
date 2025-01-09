@@ -12,13 +12,8 @@ import java.util.Optional;
 
 @Repository
 public interface DirectoryShareRepository extends JpaRepository<DirectoryShare, Long> {
-    List<DirectoryShare> findBySharedWithUser(User sharedWithUser);
     Optional<DirectoryShare> findByDirectoryAndSharedWithUser(Directory directory, User sharedWithUser);
     List<DirectoryShare> findBySharedWithUserId(Long userId);
-
-    // Yeni metod: Kullanıcı sahibi olduğu paylaşımları bulur
     List<DirectoryShare> findByOwner(User owner);
-
-    // Find directories shared by a specific owner
     List<DirectoryShare> findByDirectoryAndOwner(Directory directory, User owner);
 }

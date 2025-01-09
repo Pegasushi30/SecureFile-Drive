@@ -153,18 +153,19 @@ public class FileManagementServiceImpl implements FileManagementService {
 
     @Override
     public long getUsedStorage(String username) {
-        List<FileVersion> allVersions = fileVersionRepository.findAllByUsername(username);
+        List<FileVersion> allVersions = fileVersionRepository.findByFile_Directory_User_Username(username);
         return allVersions.stream().mapToLong(FileVersion::getSize).sum();
     }
+
     @Override
     public List<FileDto> getLastUploadedFiles(String username, int limit) {
         Pageable pageable = PageRequest.of(0, limit);
-        List<FileVersion> versions = fileVersionRepository.findTopVersionsByUsername(username, pageable);
+        List<FileVersion> versions = fileVersionRepository.findByFile_Directory_User_UsernameOrderByTimestampDesc(username, pageable);
 
         return versions.stream()
                 .map(version -> {
                     File file = version.getFile();
-                    String ownerUsername = file.getUser().getUsername();
+                    String ownerUsername = file.getDirectory() != null ? file.getDirectory().getUser().getUsername() : "Unknown";
                     Long directoryId = file.getDirectory() != null ? file.getDirectory().getId() : null;
 
                     FileVersionDto versionDto = new FileVersionDto(
@@ -186,14 +187,14 @@ public class FileManagementServiceImpl implements FileManagementService {
                             List.of(),
                             null
                     );
-
                 })
                 .collect(Collectors.toList());
     }
+
     @Override
     public List<FileVersionDto> getLastUploadedFileVersions(String username, int limit) {
         Pageable pageable = PageRequest.of(0, limit);
-        List<FileVersion> versions = fileVersionRepository.findTopVersionsByUsername(username, pageable);
+        List<FileVersion> versions = fileVersionRepository.findByFile_Directory_User_UsernameOrderByTimestampDesc(username, pageable);
 
         return versions.stream()
                 .map(version -> new FileVersionDto(
@@ -210,7 +211,7 @@ public class FileManagementServiceImpl implements FileManagementService {
     @Override
     public List<FileVersionDto> getLastAccessedFileVersions(String username, int limit) {
         Pageable pageable = PageRequest.of(0, limit);
-        List<FileVersion> versions = fileVersionRepository.findLastAccessedByUsername(username, pageable);
+        List<FileVersion> versions = fileVersionRepository.findByFile_Directory_User_UsernameOrderByLastAccessedDesc(username, pageable);
 
         return versions.stream()
                 .map(version -> new FileVersionDto(

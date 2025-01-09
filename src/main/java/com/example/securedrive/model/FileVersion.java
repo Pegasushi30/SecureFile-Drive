@@ -21,7 +21,7 @@ public class FileVersion {
     private Long id;
 
     // Dosya ilişkisi
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "file_id", nullable = false)
     private File file;
 
