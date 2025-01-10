@@ -1,135 +1,12 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="">
+<html xmlns:th="http://www.thymeleaf.org" lang="tr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Paylaşılan Dosyalar</title>
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" integrity="sha512-Fo3rlrZj/k7ujTTX5p2eNp9B+5PS4rKZBBP1Y1+6qFXB8uM76fGgGvK3zMpnUjpu7bbFbfA4Zm+Q95Fh+Wg+w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <style>
-        /* Genel Ayarlar */
-        .shared-files-page .content-wrapper {
-            max-width: 1000px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f9f9f9;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-        }
 
-        /* Dizin Başlıkları */
-        .section-title, .directory-title {
-            font-size: 18px;
-            color: #0056b3;
-            display: flex;
-            justify-content: left;
-            align-items: center;
-            cursor: pointer;
-            padding: 10px;
-            gap:10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            background-color: #f1f1f1;
-            transition: background-color 0.3s ease, color 0.3s ease;
-        }
-
-        .directory-title:hover {
-            background-color: #e3e3e3;
-        }
-
-        .directory-title i {
-            color: #0056b3;
-            margin-left: 10px;
-        }
-
-        /* Grid Düzeni (Dosyalar Soldan Başlasın) */
-        .file-grid {
-            display: none; /* Varsayılan olarak gizlenir */
-            flex-wrap: wrap;
-            gap: 15px;
-            margin-top: 10px;
-            padding-left: 20px; /* Hafif iç boşluk */
-            justify-content: flex-start; /* Soldan hizalama */
-        }
-
-        /* Dosya Kartı */
-        .file-card {
-            background-color: #ffffff;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            padding: 10px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: space-between;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-            width: 150px; /* Kompakt genişlik */
-            text-align: center; /* İçerik merkezde */
-        }
-
-        .file-card:hover {
-            transform: scale(1.02);
-            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
-        }
-
-        /* Dosya Detayları */
-        .file-card .file-details {
-            font-size: 14px;
-            margin-bottom: 8px;
-        }
-
-        .file-card .file-details span {
-            display: block;
-            color: #333;
-            font-weight: 400;
-        }
-
-        .shared-files-page .file-details span:first-child {
-            color: #1e3c72;
-            font-weight: bold;
-            transition: color 0.3s ease;
-        }
-
-        .shared-files-page .file-details span:first-child:hover {
-            color: #0056b3;
-        }
-
-        /* İndirme Butonu */
-        .file-card .download-btn {
-            background: linear-gradient(90deg, rgba(0, 123, 255, 0.9), rgba(0, 86, 179, 0.9));
-            color: white;
-            padding: 5px 10px;
-            font-size: 12px;
-            border-radius: 5px;
-            text-decoration: none;
-            display: inline-block;
-            text-align: center;
-            transition: background 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .file-card .download-btn:hover {
-            background: linear-gradient(90deg, rgba(0, 86, 179, 0.9), rgba(0, 65, 134, 0.9));
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
-        }
-
-        .file-card .download-btn:active {
-            background: linear-gradient(90deg, rgba(0, 65, 134, 0.9), rgba(0, 48, 98, 0.9));
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-            transform: scale(0.96);
-        }
-
-        /* Mobil Uyumluluk */
-        @media (max-width: 768px) {
-            .file-grid {
-                flex-direction: column; /* Mobilde dikey hizalama */
-            }
-
-            .file-card {
-                width: 100%; /* Mobilde tam genişlik */
-            }
-        }
-    </style>
 </head>
 <body class="shared-files-page">
 
@@ -163,6 +40,22 @@
 
 <main>
     <h1>Size Paylaşılan Dosyalar</h1>
+
+    <!-- İki Ayrı Arama Çubuğu -->
+    <div class="file-search-container">
+        <!-- Gönderici E-postası Arama -->
+        <div class="search-box">
+            <i class="fas fa-user"></i>
+            <input type="text" id="emailSearch" placeholder="Gönderici e-postası ara..." oninput="filterFiles()" />
+        </div>
+
+        <!-- Dosya Adı Arama -->
+        <div class="search-box">
+            <i class="fas fa-file-alt"></i>
+            <input type="text" id="fileSearch" placeholder="Dosya adı ara..." oninput="filterFiles()" />
+        </div>
+    </div>
+
     <div class="content-wrapper" id="shared-files-container">
         <!-- Eğer hiç paylaşım yoksa -->
         <p th:if="${#maps.isEmpty(groupedShares)}" class="no-files-message">Paylaşılan dosyanız bulunmamaktadır.</p>
@@ -192,6 +85,14 @@
         </div>
     </div>
 </main>
+
+<footer>
+    <p>&copy; 2024 SecureFile Drive. Tüm Hakları Saklıdır.</p>
+</footer>
+
+<!-- JavaScript Dosyalarını Bağlayın -->
+<script src="/js/navigationToggleHandler.js"></script>
+<script src="/js/filterFilesHandler.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         const directoryTitles = document.querySelectorAll('.directory-title');
@@ -207,9 +108,5 @@
         });
     });
 </script>
-<footer>
-    <p>&copy; 2024 SecureFile Drive. Tüm Hakları Saklıdır.</p>
-</footer>
-<script src="/js/navigationToggleHandler.js"></script>
 </body>
 </html>

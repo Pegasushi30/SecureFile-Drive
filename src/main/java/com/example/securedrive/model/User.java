@@ -23,7 +23,6 @@ public class User implements UserDetails {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Azure AD veya B2C'den gelen kullanıcı kimliği (oid veya sub)
     @Column(nullable = false, unique = true)
     private String username;
 
@@ -33,7 +32,6 @@ public class User implements UserDetails {
     @Enumerated(EnumType.STRING)
     private Role role;
 
-    // Kullanıcının dosyalarıyla ilişki
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     private List<File> files = new ArrayList<>();
 
@@ -45,15 +43,11 @@ public class User implements UserDetails {
     )
     private Set<User> contacts = new HashSet<>();
 
-    // Dizin paylaşımları - Dizin sahibi olarak
     @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     private List<DirectoryShare> ownedDirectoryShares = new ArrayList<>();
 
-    // Dizin paylaşımları - Paylaşılan kullanıcı olarak
     @OneToMany(mappedBy = "sharedWithUser", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     private List<DirectoryShare> sharedDirectoryShares = new ArrayList<>();
-
-    // UserDetails metodları
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -62,7 +56,6 @@ public class User implements UserDetails {
 
     @Override
     public String getPassword() {
-        // Kullanılmadığı için null dönebilir
         return null;
     }
 
@@ -70,8 +63,6 @@ public class User implements UserDetails {
     public String getUsername() {
         return username;
     }
-
-    // Diğer UserDetails metodları
 
     @Override
     public boolean isAccountNonExpired() {
@@ -93,7 +84,6 @@ public class User implements UserDetails {
         return true;
     }
 
-    // equals ve hashCode metodları sadece ID'ye göre override edilmeli
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

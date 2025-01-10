@@ -11,12 +11,17 @@ import com.example.securedrive.service.FileManagementService;
 import com.example.securedrive.service.UserManagementService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
 @Controller
@@ -180,20 +185,30 @@ public class DirectoryController {
     }
 
     @PostMapping("/revoke-share")
-    public ModelAndView revokeDirectoryShare(
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> revokeDirectoryShare(
             @RequestParam("directoryId") Long directoryId,
             @RequestParam("sharedWithUserEmail") String sharedWithUserEmail,
             Authentication authentication) {
+        try {
+            String username = authentication.getName();
 
-        String username = authentication.getName();
+            User owner = userManagementService.findByUsername(username)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
 
-        User owner = userManagementService.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+            directoryService.revokeDirectoryShare(directoryId, sharedWithUserEmail, owner);
 
-        directoryService.revokeDirectoryShare(directoryId, sharedWithUserEmail, owner);
+            // Yanıtı oluşturun
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "Paylaşım başarıyla iptal edildi!");
 
-        return new ModelAndView("redirect:/directories");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", e.getMessage()));
+        }
     }
+
 
     @GetMapping("/shared-with-me")
     public ModelAndView getSharedDirectories(Authentication authentication) {

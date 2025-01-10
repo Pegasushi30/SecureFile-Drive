@@ -13,8 +13,6 @@ import com.example.securedrive.service.util.DeltaUtil;
 import com.example.securedrive.security.KeyVaultService;
 import com.example.securedrive.service.FileVersionManagementService;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -31,7 +29,6 @@ public class FileVersionManagementServiceImpl implements FileVersionManagementSe
     private final AzureBlobStorageServiceImpl azureBlobStorage;
     private final KeyVaultService keyVaultService;
     private final ObjectMapper objectMapper = new ObjectMapper();
-    private static final Logger logger = LoggerFactory.getLogger(FileVersionManagementServiceImpl.class);
 
     @Autowired
     public FileVersionManagementServiceImpl(
@@ -229,13 +226,11 @@ public class FileVersionManagementServiceImpl implements FileVersionManagementSe
                     break;
                 }
             }
-
             return Base64.getEncoder().encodeToString(contentBytes); // İkili veriyi Base64 ile encode ederek döndür
         } else {
             // Metin dosya işlemleri
             String initialContent = new String(decryptedData, StandardCharsets.UTF_8);
             content.append(initialContent);
-
             for (int i = 1; i < versions.size(); i++) {
                 FileVersion version = versions.get(i);
                 String deltaPath = version.getDeltaPath();
@@ -243,26 +238,20 @@ public class FileVersionManagementServiceImpl implements FileVersionManagementSe
                 if (deltaPath == null) {
                     throw new Exception("Delta path is null for version: " + version.getVersionNumber());
                 }
-
                 if (!azureBlobStorage.checkBlobExists(deltaPath)) {
                     throw new AzureBlobStorageException("Delta blob not found at path: " + deltaPath);
                 }
-
                 byte[] deltaBase64Data = azureBlobStorage.read(new Storage(deltaPath, null));
                 if (deltaBase64Data == null) {
                     throw new Exception("Failed to read delta blob for version: " + version.getVersionNumber());
                 }
-
                 byte[] deltaData = Base64.getDecoder().decode(deltaBase64Data);
                 String delta = new String(deltaData, StandardCharsets.UTF_8);
-
                 content = new StringBuilder(DeltaUtil.applyDelta(content.toString(), delta));
-
                 if (version.getVersionNumber().equals(versionNumber)) {
                     break;
                 }
             }
-
             return content.toString();
         }
     }

@@ -68,27 +68,22 @@ public class AzureBlobController {
 
     @PostMapping("/share")
     @PreAuthorize("hasRole('ROLE_ADMIN') or #username == authentication.name")
-    public ModelAndView shareFile(
+    public ResponseEntity<Map<String, Object>> shareFile(
             @RequestParam("username") String username,
             @RequestParam("fileId") Long fileId,
             @RequestParam("sharedWithEmail") String sharedWithEmail,
-            @RequestParam(value = "directoryId", required = false) Long directoryId,
             @RequestParam("version") String version,
             Authentication authentication) {
-
-        ModelAndView modelAndView = new ModelAndView();
 
         try {
             FileShareRequestDto dto = new FileShareRequestDto(username, fileId, sharedWithEmail, version);
             fileFacadeService.shareFile(dto, authentication);
 
-            modelAndView.setViewName(directoryId == null ? "redirect:/directories" : "redirect:/directories/" + directoryId);
+            String redirectUrl = "/directories"; // Varsayılan yönlendirme
+            return ResponseEntity.ok(Map.of("message", "Dosya başarıyla paylaşıldı.", "redirectUrl", redirectUrl));
         } catch (Exception e) {
-            modelAndView.setViewName("error");
-            modelAndView.addObject("message", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
         }
-
-        return modelAndView;
     }
 
 
@@ -199,27 +194,27 @@ public class AzureBlobController {
 
     @DeleteMapping("/delete/{username}/{fileId}")
     @PreAuthorize("hasRole('ROLE_ADMIN') or #username == authentication.name")
-    public ModelAndView deleteSpecificVersion(
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> deleteSpecificVersionAjax(
             @PathVariable("username") String username,
             @PathVariable("fileId") Long fileId,
             @RequestParam("versionNumber") String versionNumber,
             Authentication authentication) {
-        ModelAndView modelAndView = new ModelAndView();
-        if (!authentication.getName().equals(username) && authentication.getAuthorities().stream()
-                .noneMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"))) {
-            modelAndView.setViewName("error");
-            modelAndView.addObject("message", "Bu kullanıcı için dosya silme yetkiniz yok.");
-            return modelAndView;
+        try {
+            FileDeleteSpecificVersionRequestDto dto = new FileDeleteSpecificVersionRequestDto(username, fileId, versionNumber);
+            String result = fileFacadeService.deleteSpecificVersion(dto);
+            if (result.startsWith("Dosya ve versiyon başarıyla silindi")) {
+                return ResponseEntity.ok(Map.of("message", "Dosya başarıyla silindi."));
+            } else {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(Map.of("error", result));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", e.getMessage()));
         }
-        FileDeleteSpecificVersionRequestDto dto = new FileDeleteSpecificVersionRequestDto(username, fileId, versionNumber);
-        String result = fileFacadeService.deleteSpecificVersion(dto);
-        if (result.startsWith("Dosya ve versiyon başarıyla silindi")) {
-            modelAndView.setViewName("redirect:/directories?username=" + username);
-        } else {
-            modelAndView.setViewName("error");
-            modelAndView.addObject("message", result);
-        }
-        return modelAndView;
     }
+
+
 
 }

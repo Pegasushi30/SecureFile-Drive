@@ -20,24 +20,23 @@ public class FileVersion {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Dosya ilişkisi
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "file_id", nullable = false)
     private File file;
 
     @Column(nullable = false)
-    private String hash; // Dosya hash değeri
+    private String hash;
 
     @Column(nullable = false)
-    private String versionNumber; // Versiyon numarası
+    private String versionNumber;
 
     @Column(nullable = false)
-    private LocalDateTime timestamp; // Versiyon oluşturulma zamanı
+    private LocalDateTime timestamp;
 
-    private String deltaPath; // Delta dosyasının yolu (v1 için null)
+    private String deltaPath;
 
     @Column(nullable = false)
-    private Long size; // Dosyanın byte cinsinden boyutu
+    private Long size;
 
     @Column
     private LocalDateTime lastAccessed;

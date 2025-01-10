@@ -13,7 +13,6 @@ public class UserMapper {
 
     public UserDto toUserDTO(Authentication authentication) {
         if (authentication.getPrincipal() instanceof DefaultOidcUser oidcUser) {
-            // Username resolution with fallbacks
             String username = oidcUser.getPreferredUsername();
             if (username == null) {
                 username = oidcUser.getAttribute("sub");
@@ -26,10 +25,8 @@ public class UserMapper {
                 throw new IllegalArgumentException("Username could not be resolved from OIDC token");
             }
 
-            // Email resolution with fallbacks
             String email = resolveEmail(oidcUser);
 
-            // Display name resolution with fallback
             String displayName = oidcUser.getFullName();
             if (displayName == null) {
                 displayName = oidcUser.getAttribute("name");
@@ -38,12 +35,10 @@ public class UserMapper {
                 }
             }
 
-            // Roles extraction
             List<String> roles = oidcUser.getAuthorities().stream()
                     .map(GrantedAuthority::getAuthority)
                     .toList();
 
-            // Return UserDto
             return new UserDto(username, email, displayName, roles);
         }
 
@@ -57,11 +52,10 @@ public class UserMapper {
             email = oidcUser.getAttribute("email");
         }
 
-        // Fallback to "emails" array attribute
         if (email == null) {
             List<String> emails = oidcUser.getAttribute("emails");
             if (emails != null && !emails.isEmpty()) {
-                email = emails.get(0); // First email from the list
+                email = emails.get(0);
             }
         }
 

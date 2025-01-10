@@ -9,7 +9,6 @@ public class Storage {
         this.data = data;
     }
 
-    // Getter ve Setter metotları
     public String getFullPath() {
         return fullPath;
     }

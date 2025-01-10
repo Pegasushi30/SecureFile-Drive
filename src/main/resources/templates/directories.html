@@ -7,168 +7,11 @@
     <link rel="stylesheet" href="/css/style.css">
     <script src="https://cdn.jsdelivr.net/npm/@hotwired/stimulus/dist/stimulus.umd.js"></script>
 
-    <style>
-    .delete-icon-btn {
-        display: none; /* Varsayılan olarak gizli */
-        border: none;
-        border-radius: 50%; /* Tamamen daire */
-        width: 35px; /* Daire genişliği */
-        height: 35px; /* Daire yüksekliği */
-        font-size: 20px; /* "×" sembolü boyutu */
-        line-height: 35px; /* Dikey ortalama */
-        text-align: center; /* Yatay ortalama */
-        cursor: pointer;
-        margin-left: 10px;
-        padding: 0;
-        color: white; /* Yazı rengi beyaz */
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Hafif gölge efekti */
-        transition: background-color 0.3s ease, transform 0.2s ease;
-    }
-    /* Aktif Silme Modu */
-    .delete-mode-active .directory-item .delete-icon-btn {
-        display: inline-flex; /* Flex düzeni */
-        align-items: center; /* İçeriği dikey ortala */
-        justify-content: center; /* İçeriği yatay ortala */
-    }
-    /* Odaklanma Efekti */
-    .delete-icon-btn:focus {
-        outline: none; /* Dış çerçeve kaldır */
-    }
-    .directory-actions {
-        display: flex;
-        flex-direction: row;
-        justify-content: space-between;
-        gap: 20px;
-        margin: 0 auto;
-        max-width: 940px; /* Reduce max-width for better alignment */
-    }
-
-
-    .directory-share-form {
-        flex: 1;
-        background-color: #ffffff;
-        padding: 20px;
-        border-radius: 10px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        box-sizing: border-box;
-        color: #333; /* Metin rengini siyah yapmak için */
-        text-align: left; /* İçeriği sola hizalamak için */
-    }
-
-    .directory-create-container{
-        flex: 1;
-        background-color: #ffffff;
-        padding: 20px;
-        border-radius: 10px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        box-sizing: border-box;
-        color: #333; /* Metin rengini siyah yapmak için */
-        text-align: left; /* İçeriği sola hizalamak için */
-    }
-
-    .directory-create-container h2,
-    .directory-share-form h3 {
-        color: #0056b3;
-        font-size: 18px; /* Adjusted for consistent heading size */
-        margin-bottom: 10px;
-    }
-
-
-    .shared-directories-table {
-        background-color: #ffffff;
-        padding: 20px;
-        border-radius: 10px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        box-sizing: border-box;
-        color: #333; /* Metin rengini siyah yapmak için */
-        text-align: left; /* İçeriği sola hizalamak için */
-        max-width: 940px; /* Reduce width for consistency */
-        margin: 20px auto; /* Center the table horizontally */
-    }
-
-    .shared-directories-table h3 {
-        color: #0056b3; /* Fix heading color */
-        font-size: 18px; /* Keep consistent heading size */
-        margin-bottom: 10px;
-        text-align: center;
-    }
-
-    /* Tablo Stilleri */
-    .shared-directories-table table {
-        width: 100%; /* Tam genişlik kullanılır */
-        border-collapse: separate; /* Yuvarlatılmış köşeler için gerekli */
-        border-spacing: 0; /* Hücreler arasındaki boşluğu sıfırla */
-        border-radius: 10px; /* Tablo köşelerini yuvarlat */
-        overflow: hidden; /* Yuvarlatılmış köşelerin dışına taşmasını önle */
-        background-color: #ffffff; /* Arka plan rengi */
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Hafif gölge */
-    }
-
-    /* Tablonun başlık hücreleri */
-    .shared-directories-table th {
-        background-color: #0056b3;
-        color: #ffffff;
-        padding: 12px;
-        font-weight: bold;
-        text-align: left;
-    }
-
-    /* İlk satırın üst köşelerini yuvarla */
-    .shared-directories-table th:first-child {
-        border-top-left-radius: 10px;
-    }
-
-    .shared-directories-table th:last-child {
-        border-top-right-radius: 10px;
-    }
-
-    /* Tablo gövdesi hücreleri */
-    .shared-directories-table td {
-        padding: 12px;
-        border: 1px solid #ddd;
-        text-align: left;
-        font-weight: normal;
-    }
-
-    /* Son satırın alt köşelerini yuvarla */
-    .shared-directories-table tr:last-child td:first-child {
-        border-bottom-left-radius: 10px;
-    }
-
-    .shared-directories-table tr:last-child td:last-child {
-        border-bottom-right-radius: 10px;
-    }
-
-    /* Alternatif satır renkleri */
-    .shared-directories-table tr:nth-child(even) {
-        background-color: #f2f2f2;
-    }
-
-    /* Responsive Düzenlemeler */
-    @media (max-width: 1024px) {
-        .directory-actions {
-            flex-direction: column;
-            gap: 15px; /* Add gap for mobile view */
-        }
-    }
-
-    @media (max-width: 768px) {
-        .directory-create-container,
-        .directory-share-form,
-        .shared-directories-table {
-            width: 100%; /* Use full width on small screens */
-        }
-
-        .shared-directories-table table,
-        .shared-directories-table th,
-        .shared-directories-table td {
-            font-size: 14px;
-        }
-    }
-</style>
-
+    <!-- CSRF Meta Etiketleri -->
+    <meta th:name="_csrf" th:content="${_csrf.token}" />
+    <meta th:name="_csrf_header" th:content="${_csrf.headerName}" />
 </head>
-<body>
+<body data-username="${username}">
 <nav>
     <div class="nav-left">
         <img src="/images/SFD_Icon.png" alt="Logo" class="nav-icon">
@@ -200,14 +43,8 @@
 <!-- Arka Plan Karartma -->
 <div class="drawer-overlay" id="drawer-overlay" onclick="toggleDrawer()"></div>
 
-
 <main>
     <h1>Ana Dizin</h1>
-
-    <!-- Başarı veya Hata Mesajları -->
-    <div th:if="${message}" class="success-message" th:text="${message}"></div>
-    <div th:if="${error}" class="error-message" th:text="${error}"></div>
-
 
     <!-- Yeni Dizin Oluştur ve Dizin Paylaşımı Bölümleri -->
     <div class="directory-actions">
@@ -258,7 +95,7 @@
                 <td th:text="${share.directoryName}">Dizin Adı</td>
                 <td th:text="${share.sharedWithUserEmail}">Paylaşılan E-posta</td>
                 <td>
-                    <form th:action="@{/directories/revoke-share}" method="post">
+                    <form th:action="@{/directories/revoke-share}" method="post" class="revoke-form">
                         <input type="hidden" name="directoryId" th:value="${share.directoryId}" />
                         <input type="hidden" name="sharedWithUserEmail" th:value="${share.sharedWithUserEmail}" />
                         <button type="submit" class="revoke-button">İptal Et</button>
@@ -268,8 +105,6 @@
             </tbody>
         </table>
     </div>
-
-
 
     <!-- Dizinler -->
     <div class="directory-container">
@@ -301,9 +136,6 @@
             </li>
         </ul>
     </div>
-
-
-
 
     <!-- Dosya Listesi -->
     <div class="file-container">
@@ -348,7 +180,8 @@
                                name="sharedWithEmail" required />
 
                         <label th:for="'shareVersion_' + ${file.id}">Versiyon:</label>
-                        <select name="version" th:id="'shareVersion_' + ${file.id}">
+                        <select name="version" th:id="'shareVersion_' + ${file.id}" required>
+                            <option value="" disabled selected>Versiyon Seçiniz...</option>
                             <option th:each="ver : ${file.versions}"
                                     th:value="${ver.versionNumber}"
                                     th:text="${ver.versionNumber}">
@@ -358,7 +191,7 @@
                     </form>
 
                     <div th:if="${file.fileShares.size() > 0}">
-                        <form th:action="@{/files/revoke-share}" th:method="post" th:id="'revoke-form-' + ${file.id}" class="revoke-form">
+                        <form th:action="@{/files/revoke-share}" method="post" th:id="'revoke-form-' + ${file.id}" class="revoke-form">
                             <input type="hidden" name="fileId" th:value="${file.id}" />
                             <input type="hidden" name="username" th:value="${username}" />
 
@@ -367,8 +200,7 @@
                             <select
                                     th:id="'revokeVersion_' + ${file.id}"
                                     name="version"
-                                    required
-                                    th:attr="onchange='onVersionChange(' + ${file.id} + ')'">
+                                    required>
                                 <option value="" disabled selected>Versiyon Seçiniz...</option>
                                 <option th:each="share : ${file.fileShares}"
                                         th:value="${share.version}"
@@ -383,13 +215,15 @@
                                     name="sharedWithEmail"
                                     required>
                                 <option value="" disabled selected>Email Seçiniz...</option>
+                                <option th:each="share : ${file.fileShares}"
+                                        th:value="${share.sharedWithUserEmail}"
+                                        th:text="${share.sharedWithUserEmail}">
+                                </option>
                             </select>
 
                             <button type="submit" class="revoke-btn">Paylaşımı İptal Et</button>
                         </form>
                     </div>
-
-
 
 
                     <!-- Dosya İndir -->
@@ -409,6 +243,7 @@
                     <form th:action="@{'/files/delete/' + ${username} + '/' + ${file.id}}"
                           method="post" class="delete-form">
                         <input type="hidden" name="_method" value="delete" />
+                        <input type="hidden" name="username" th:value="${username}" /> <!-- Username'i formdan al -->
                         <label th:for="'deleteVersionNumber_' + ${file.id}">Versiyon:</label>
                         <select name="versionNumber" th:id="'deleteVersionNumber_' + ${file.id}">
                             <option th:each="ver : ${file.versions}"
@@ -416,7 +251,7 @@
                                     th:text="${ver.versionNumber}">
                             </option>
                         </select>
-                        <button type="submit" class="delete-btn">Sil</button>
+                        <button type="submit" class="delete-btn" data-file-id="${file.id}">Sil</button>
                     </form>
                 </div>
             </li>
@@ -447,111 +282,13 @@
     </li>
 </div>
 
+<!-- JavaScript Dosyaları -->
 <script src="/js/deleteModeHandler.js"></script>
 <script src="/js/navigationToggleHandler.js"></script>
 <script src="/js/filterFilesHandler.js"></script>
 <script src="/js/fileToggleHandler.js"></script>
-<script>
-    /**
-     * Versiyon seçilince sadece o versiyona ait e-postaları listele
-     */
-    function onVersionChange(fileId) {
-        // 1) İlgili <li> veya <form> elementini bul
-        const fileCard = document.getElementById(`file-${fileId}`);
-        if (!fileCard) return;
-
-        // 2) data-file-shares-json attribute'undan JSON string'i al
-        const sharesJson = fileCard.getAttribute('data-file-shares-json');
-        let fileShares = [];
-        try {
-            fileShares = JSON.parse(sharesJson);
-        } catch (e) {
-            console.error("JSON parse error:", e);
-            return;
-        }
-
-        // 3) Seçilen versiyon değerini al
-        const versionSelect = document.getElementById(`revokeVersion_${fileId}`);
-        const selectedVersion = versionSelect.value;
-
-        // 4) E-posta dropdown'unu temizle, varsayılan option ekle
-        const emailDropdown = document.getElementById(`sharedEmailDropdown_${fileId}`);
-        emailDropdown.innerHTML = '<option value="" disabled selected>Email Seçiniz...</option>';
-
-        // 5) "Tüm Versiyonlar" seçeneği
-        if (selectedVersion === 'ALL') {
-            // Bütün paylaşımlardaki e-postaları getir
-            // Tekrar etmesin diye Set kullanabiliriz
-            const allEmails = fileShares.map(share => share.sharedWithUserEmail);
-            const uniqueEmails = [...new Set(allEmails)];
-            uniqueEmails.forEach(email => {
-                const opt = document.createElement("option");
-                opt.value = email;
-                opt.textContent = email;
-                emailDropdown.appendChild(opt);
-            });
-            return;
-        }
-
-        // 6) Sadece seçili versiyona ait e-postaları ekle
-        fileShares.forEach(share => {
-            if (share.version === selectedVersion) {
-                const opt = document.createElement("option");
-                opt.value = share.sharedWithUserEmail;
-                opt.textContent = share.sharedWithUserEmail;
-                emailDropdown.appendChild(opt);
-            }
-        });
-    }
-</script>
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const revokeForms = document.querySelectorAll('.revoke-form');
-
-        revokeForms.forEach(form => {
-            form.addEventListener('submit', function (e) {
-                e.preventDefault(); // Formun varsayılan davranışını engelle
-
-                const formData = new FormData(this); // Form verilerini al
-                const actionUrl = this.getAttribute('action'); // Formun action URL'si
-
-                // Debug: Form verilerini kontrol edin
-                for (let [key, value] of formData.entries()) {
-                    console.log(`${key}: ${value}`);
-                }
-
-                fetch(actionUrl, {
-                    method: 'POST',
-                    body: formData
-                })
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error('Paylaşım iptali başarısız oldu!');
-                        }
-                        return response.json(); // Sunucudan JSON bekleniyor
-                    })
-                    .then(data => {
-                        console.log("Backend yanıtı:", data);
-
-                        // UI'de paylaşım bilgisini güncelle
-                        alert('Paylaşım başarıyla iptal edildi!');
-                        const fileCard = this.closest('.file-card');
-                        const shareContainer = fileCard.querySelector('.revoke-form').parentElement;
-
-                        // Eğer başka paylaşım yoksa ilgili bölümü gizle
-                        if (data.remainingShares === 0) {
-                            shareContainer.style.display = 'none';
-                        }
-                    })
-                    .catch(error => {
-                        console.error(error);
-                        alert('Bir hata oluştu: ' + error.message);
-                    });
-            });
-        });
-    });
-
-
-</script>
+<script src="/js/revokeShareHandler.js"></script>
+<script src="/js/deleteFileHandler.js"></script>
+<script src="/js/shareFileHandler.js"></script>
 </body>
 </html>

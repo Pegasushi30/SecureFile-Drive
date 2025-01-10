@@ -3,33 +3,20 @@ package com.example.securedrive.service.util;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Delta calculation for text files.
- */
+
 public class DeltaUtil {
 
-    /**
-     * Normalizes the data and splits it into lines.
-     *
-     * @param data Text
-     * @return Array of lines
-     */
+
     private static String[] splitLines(String data) {
         if (data == null) {
-            throw new IllegalArgumentException("Veri null olamaz.");
+            throw new IllegalArgumentException("Data cannot be null");
         }
         String normalized = data.replaceAll("\\r?\\n", "\n").trim();
         return normalized.split("\n");
     }
 
 
-    /**
-     * Calculates the delta between two texts.
-     *
-     * @param oldData Old data
-     * @param newData New data
-     * @return Delta output
-     */
+
     public static String calculateDelta(String oldData, String newData) {
         String[] oldLines = splitLines(oldData);
         String[] newLines = splitLines(newData);
@@ -61,13 +48,7 @@ public class DeltaUtil {
         return String.join("\n", delta);
     }
 
-    /**
-     * Reconstructs new data by applying the delta.
-     *
-     * @param oldData Old data
-     * @param delta   Delta data
-     * @return New data
-     */
+
     public static String applyDelta(String oldData, String delta) {
         String[] oldLines = splitLines(oldData);
         String[] deltaLines = splitLines(delta);
@@ -80,12 +61,12 @@ public class DeltaUtil {
             String deltaLine = deltaLines[deltaIndex];
             if (deltaLine.isBlank()) {
                 deltaIndex++;
-                continue; // Boş satırları atla
+                continue;
             }
 
             String[] parts = deltaLine.split(":", 3);
             if (parts.length < 3) {
-                throw new IllegalArgumentException("Geçersiz delta formatı: " + deltaLine);
+                throw new IllegalArgumentException("Invalid delta format " + deltaLine);
             }
 
             String command = parts[0];
@@ -105,17 +86,17 @@ public class DeltaUtil {
                         resultLines.add(oldLines[oldIndex++]);
                     }
                     if (oldIndex >= oldLines.length) {
-                        throw new IllegalStateException("Silinmeye çalışılan satır numarası geçersiz: " + lineNumber);
+                        throw new IllegalStateException("The line number being attempted to delete is invalid: " + lineNumber);
                     }
                     String removedLine = oldLines[oldIndex++];
                     if (!removedLine.equals(content)) {
-                        throw new IllegalStateException("Delta ve veri uyumsuz: "
-                                + "Silinmesi gereken: " + content + ", Silinen: " + removedLine);
+                        throw new IllegalStateException("Delta and data mismatch: "
+                                + "To be deleted: " + content + ", Deleted: " + removedLine);
                     }
                     break;
                 }
                 default:
-                    throw new IllegalArgumentException("Bilinmeyen delta komutu: " + command);
+                    throw new IllegalArgumentException("Unknown delta command: " + command);
             }
             deltaIndex++;
         }

@@ -5,15 +5,9 @@ import lombok.Getter;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Suffix Automaton implementation for efficient string matching.
- * This class allows building a suffix automaton from a byte array and
- * finding the longest match for a substring within the original data.
- */
+
 public class SuffixAutomaton {
-    /**
-     * State class represents a state in the suffix automaton.
-     */
+
     private static class State {
         int len;
         int link;
@@ -32,11 +26,6 @@ public class SuffixAutomaton {
     private int size;
     private int last;
 
-    /**
-     * Constructs the suffix automaton for the given data.
-     *
-     * @param data The original byte array to build the automaton from.
-     */
     public SuffixAutomaton(byte[] data) {
         st = new State[2 * data.length + 2];
         st[0] = new State(0, -1, -1);
@@ -48,12 +37,7 @@ public class SuffixAutomaton {
         }
     }
 
-    /**
-     * Extends the automaton with a new character.
-     *
-     * @param c   The new character to add (treated as unsigned).
-     * @param pos The current position in the original string.
-     */
+
     private void extend(byte c, int pos) {
         int uc = c & 0xFF;
         int curr = size++;
@@ -84,13 +68,7 @@ public class SuffixAutomaton {
         last = curr;
     }
 
-    /**
-     * Finds the longest match in the original data for the modified data starting at modPos.
-     *
-     * @param modified The modified data as byte array.
-     * @param modPos   The starting position in the modified data.
-     * @return MatchResult containing the offset in the original data and the length of the match.
-     */
+
     public MatchResult findLongestMatch(byte[] modified, int modPos) {
         if (modPos < 0 || modPos >= modified.length) {
             return new MatchResult(-1, 0);
@@ -118,9 +96,6 @@ public class SuffixAutomaton {
         return new MatchResult(bestOffset, bestLength);
     }
 
-    /**
-     * Match result class.
-     */
     @Getter
     public static class MatchResult {
         private final int offset;

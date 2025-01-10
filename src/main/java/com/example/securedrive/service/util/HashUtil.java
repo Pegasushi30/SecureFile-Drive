@@ -17,7 +17,7 @@ public class HashUtil {
             }
             return hexString.toString();
         } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("Hash algoritması bulunamadı: " + e.getMessage(), e);
+            throw new RuntimeException("To be deleted: " + e.getMessage(), e);
         }
     }
 }

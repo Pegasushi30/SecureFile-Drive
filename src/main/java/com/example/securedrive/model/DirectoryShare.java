@@ -21,19 +21,19 @@ public class DirectoryShare {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "directory_id", nullable = false)
-    private Directory directory; // Paylaşılan dizin
+    private Directory directory;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "owner_id", nullable = false)
-    private User owner; // Dizin sahibi
+    private User owner;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "shared_with_user_id", nullable = false)
-    private User sharedWithUser; // Paylaşılan kullanıcı
+    private User sharedWithUser;
 
     @Column(length = 2000)
-    private String sharedPath; // İsteğe bağlı URL veya tanımlayıcı bir yol
+    private String sharedPath;
 
     @Column(nullable = false)
-    private LocalDateTime sharedAt = LocalDateTime.now(); // Paylaşım zamanı
+    private LocalDateTime sharedAt = LocalDateTime.now();
 }

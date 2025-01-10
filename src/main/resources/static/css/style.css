@@ -1348,3 +1348,342 @@ select {
     background-color: #d32f2f;
 }
 
+/* Mevcut style.css içeriği yukarıda yer almaktadır */
+
+/* ------------------------------------------------ */
+/* Yeni Eklenen CSS Kuralları - Paylaşılan Dosyalar Sayfasına Özgü */
+/* ------------------------------------------------ */
+
+.shared-files-page .content-wrapper {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+/* Dizin Başlıkları */
+.shared-files-page .section-title,
+.shared-files-page .directory-title {
+    font-size: 18px;
+    color: #0056b3;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    padding: 10px;
+    gap: 10px;
+    border: 1px solid #ffffff;
+    border-radius: 5px;
+    background-color: #ffffff;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.shared-files-page .directory-title:hover {
+    background-color: #ffffff;
+}
+
+.shared-files-page .directory-title i {
+    color: #0056b3;
+    margin-left: 10px;
+}
+
+/* Grid Düzeni */
+.shared-files-page .file-grid {
+    display: flex; /* Default olarak görünür */
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-top: 10px;
+    padding-left: 20px;
+    justify-content: flex-start;
+}
+
+/* Dosya Kartı */
+.shared-files-page .file-card {
+    background-color: #ffffff;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    width: 150px; /* Masaüstü için genişlik */
+    text-align: center;
+}
+
+.shared-files-page .file-card:hover {
+    transform: scale(1.02);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+}
+
+/* Dosya Detayları */
+.shared-files-page .file-card .file-details {
+    font-size: 14px;
+    margin-bottom: 8px;
+}
+
+.shared-files-page .file-card .file-details span {
+    display: block;
+    color: #333;
+    font-weight: 400;
+}
+
+.shared-files-page .file-details span:first-child {
+    color: #1e3c72;
+    font-weight: bold;
+    transition: color 0.3s ease;
+}
+
+.shared-files-page .file-details span:first-child:hover {
+    color: #0056b3;
+}
+
+/* İndirme Butonu */
+.shared-files-page .file-card .download-btn {
+    background: linear-gradient(90deg, #007BFF, #0056b3); /* Gradient renk */
+    color: white;
+    border-radius: 30px;
+    padding: 0.8rem 2rem;
+    font-size: 0.8rem;
+    font-weight: bold;
+    transition: background 0.3s ease, box-shadow 0.3s ease;
+}
+
+.shared-files-page .file-card .download-btn:hover {
+    background: linear-gradient(90deg, #0056b3, #004a92); /* Hover için koyu ton */
+}
+
+/* Arama Çubuğu Stilleri */
+.shared-files-page .file-search-container {
+    margin: 20px 0;
+    text-align: center;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px; /* Arama çubukları arasındaki boşluk */
+    flex-wrap: wrap; /* Esnek düzen için */
+}
+
+.shared-files-page .file-search-container .search-box {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.shared-files-page .file-search-container .search-box input {
+    width: 250px;
+    max-width: 400px;
+    padding: 10px 15px 10px 40px; /* Sol padding ikona yer açar */
+    font-size: 16px;
+    border: 2px solid #0056b3;
+    border-radius: 25px;
+    outline: none;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.shared-files-page .file-search-container .search-box input::placeholder {
+    color: #999;
+}
+
+.shared-files-page .file-search-container .search-box input:focus {
+    border-color: #ffffff;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+.shared-files-page .file-search-container .search-box .fa-user,
+.shared-files-page .file-search-container .search-box .fa-file-alt {
+    position: absolute;
+    left: 10px;
+    color: #0056b3;
+    font-size: 18px;
+}
+
+/* Responsive Düzenlemeler */
+@media (max-width: 768px) {
+    /* Dosya Grid Mobilde */
+    .shared-files-page .file-grid {
+        flex-direction: column; /* Dikey hizalama */
+        align-items: stretch; /* Kartlar tam genişlik alır */
+        padding-left: 0; /* Sol boşluk kaldır */
+        gap: 15px; /* Kartlar arası boşluk */
+    }
+
+    /* Dosya Kartları Mobilde Tam Genişlik Alır */
+    .shared-files-page .file-card {
+        width: 100%; /* Kartlar tam genişlik alır */
+        max-width: 100%; /* Sınırlama kaldır */
+        box-sizing: border-box; /* Padding'i genişliğe dahil eder */
+        margin: 0 auto; /* Kartı ortalar */
+    }
+
+    /* Kart İçeriği için */
+    .shared-files-page .file-card .file-details {
+        font-size: 16px; /* Daha büyük font */
+        margin-bottom: 12px;
+        text-align: center; /* Ortaya hizalama */
+    }
+
+    /* Arama Çubuğu Mobilde */
+    .shared-files-page .file-search-container .search-box input {
+        width: 80%;
+        max-width: 300px;
+    }
+}
+/* style.css */
+
+/* ... mevcut diğer CSS kodlarınız ... */
+
+/* Yeni Eklenen CSS Kuralları - Paylaşılan Dosyalar Sayfasına Özgü */
+
+/* .delete-icon-btn ve ilgili sınıflar */
+.delete-icon-btn {
+    display: none; /* Varsayılan olarak gizli */
+    border: none;
+    border-radius: 50%; /* Tamamen daire */
+    width: 35px; /* Daire genişliği */
+    height: 35px; /* Daire yüksekliği */
+    font-size: 20px; /* "×" sembolü boyutu */
+    line-height: 35px; /* Dikey ortalama */
+    text-align: center; /* Yatay ortalama */
+    cursor: pointer;
+    margin-left: 10px;
+    padding: 0;
+    color: white; /* Yazı rengi beyaz */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Hafif gölge efekti */
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+/* Aktif Silme Modu */
+.delete-mode-active .directory-item .delete-icon-btn {
+    display: inline-flex; /* Flex düzeni */
+    align-items: center; /* İçeriği dikey ortala */
+    justify-content: center; /* İçeriği yatay ortala */
+}
+
+/* Odaklanma Efekti */
+.delete-icon-btn:focus {
+    outline: none; /* Dış çerçeve kaldır */
+}
+
+.directory-actions {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 20px;
+    margin: 0 auto;
+    max-width: 940px; /* Better alignment */
+}
+
+.directory-share-form, .directory-create-container {
+    flex: 1;
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    box-sizing: border-box;
+    color: #333; /* Metin rengini siyah yapmak için */
+    text-align: left; /* İçeriği sola hizalamak için */
+}
+
+.directory-create-container h2,
+.directory-share-form h3 {
+    color: #0056b3;
+    font-size: 18px; /* Consistent heading size */
+    margin-bottom: 10px;
+}
+
+.shared-directories-table {
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    box-sizing: border-box;
+    color: #333; /* Metin rengini siyah yapmak için */
+    text-align: left; /* İçeriği sola hizalamak için */
+    max-width: 940px; /* Consistent width */
+    margin: 20px auto; /* Center the table horizontally */
+}
+
+.shared-directories-table h3 {
+    color: #0056b3; /* Fix heading color */
+    font-size: 18px; /* Consistent heading size */
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+/* Tablo Stilleri */
+.shared-directories-table table {
+    width: 100%; /* Tam genişlik kullanılır */
+    border-collapse: separate; /* Yuvarlatılmış köşeler için gerekli */
+    border-spacing: 0; /* Hücreler arasındaki boşluğu sıfırla */
+    border-radius: 10px; /* Tablo köşelerini yuvarlat */
+    overflow: hidden; /* Yuvarlatılmış köşelerin dışına taşmasını önle */
+    background-color: #ffffff; /* Arka plan rengi */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Hafif gölge */
+}
+
+/* Tablonun başlık hücreleri */
+.shared-directories-table th {
+    background-color: #0056b3;
+    color: #ffffff;
+    padding: 12px;
+    font-weight: bold;
+    text-align: left;
+}
+
+/* İlk satırın üst köşelerini yuvarla */
+.shared-directories-table th:first-child {
+    border-top-left-radius: 10px;
+}
+
+.shared-directories-table th:last-child {
+    border-top-right-radius: 10px;
+}
+
+/* Tablo gövdesi hücreleri */
+.shared-directories-table td {
+    padding: 12px;
+    border: 1px solid #ddd;
+    text-align: left;
+    font-weight: normal;
+}
+
+/* Son satırın alt köşelerini yuvarla */
+.shared-directories-table tr:last-child td:first-child {
+    border-bottom-left-radius: 10px;
+}
+
+.shared-directories-table tr:last-child td:last-child {
+    border-bottom-right-radius: 10px;
+}
+
+/* Alternatif satır renkleri */
+.shared-directories-table tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+/* Responsive Düzenlemeler */
+@media (max-width: 1024px) {
+    .directory-actions {
+        flex-direction: column;
+        gap: 15px; /* Add gap for mobile view */
+    }
+}
+
+@media (max-width: 768px) {
+    .directory-create-container,
+    .directory-share-form,
+    .shared-directories-table {
+        width: 100%; /* Use full width on small screens */
+    }
+
+    .shared-directories-table table,
+    .shared-directories-table th,
+    .shared-directories-table td {
+        font-size: 14px;
+    }
+}

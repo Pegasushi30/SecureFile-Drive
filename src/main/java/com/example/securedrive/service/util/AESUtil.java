@@ -9,7 +9,6 @@ import java.util.Base64;
 
 public class AESUtil {
 
-    // AES-256 Key üretme fonksiyonu
     public static String generateAESKey() throws NoSuchAlgorithmException {
         KeyGenerator keyGen = KeyGenerator.getInstance("AES");
         keyGen.init(256);
@@ -17,7 +16,6 @@ public class AESUtil {
         return Base64.getEncoder().encodeToString(secretKey.getEncoded());
     }
 
-    // AES-256 ile şifreleme işlemi
     public static byte[] encrypt(byte[] data, String key) throws Exception {
         Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
         SecretKeySpec secretKeySpec = new SecretKeySpec(Base64.getDecoder().decode(key), "AES");
@@ -25,7 +23,6 @@ public class AESUtil {
         return cipher.doFinal(data);
     }
 
-    // AES-256 ile çözme işlemi
     public static byte[] decrypt(byte[] encryptedData, String key) throws Exception {
         Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
         SecretKeySpec secretKeySpec = new SecretKeySpec(Base64.getDecoder().decode(key), "AES");

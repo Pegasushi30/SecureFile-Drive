@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="">
+<html xmlns:th="http://www.thymeleaf.org" lang="tr">
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta charset="UTF-8">
@@ -23,6 +23,26 @@
         .file-table td {
             word-break: break-word;
             white-space: normal;
+        }
+
+        /* Boş Mesajları Stili */
+        .empty-message {
+            text-align: center;
+            font-style: italic;
+            color: #777;
+            padding: 20px;
+        }
+
+        /* Contacts Bölümü Boş Mesajı */
+        .contacts-container .empty-message {
+            padding: 10px 0;
+        }
+
+        /* Dosya Bulunamadığında Tabloyu Şekillsiz Gösterme */
+        .file-table tbody tr.empty-row td {
+            text-align: center;
+            font-style: italic;
+            color: #777;
         }
     </style>
 </head>
@@ -85,26 +105,27 @@
                 <!-- Contacts -->
                 <div class="contacts-container">
                     <h3>Contacts</h3>
-                    <ul class="contact-list">
+                    <ul class="contact-list" th:if="${contacts.size() > 0}">
                         <li th:each="contact : ${contacts}" class="contact-item">
                             <i class="contact-icon">✉️</i>
                             <span class="contact-email" th:text="${contact.email}">email@example.com</span>
                         </li>
                     </ul>
+                    <p th:if="${contacts.size() == 0}" class="empty-message">İletişim bulunmamaktadır.</p>
                 </div>
                 <div class="profile-actions">
                     <a href="/forgot-password" class="reset-password-link">🔑 Şifreyi Sıfırla</a>
                 </div>
             </div>
-
         </div>
 
         <!-- Sağ Kolon -->
         <div class="right-column" style="display: flex; flex-direction: column; gap: 20px;">
             <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                <!-- Son Yüklenen Dosyalar -->
                 <div class="section" style="flex: 1; min-width: 300px;">
                     <h3>Son Yüklenen Dosyalar</h3>
-                    <table class="file-table">
+                    <table class="file-table" th:if="${lastUploadedFiles.size() > 0}">
                         <thead>
                         <tr>
                             <th>Dosya Adı</th>
@@ -120,11 +141,13 @@
                         </tr>
                         </tbody>
                     </table>
+                    <p th:if="${lastUploadedFiles.size() == 0}" class="empty-message">Son yüklenen dosya bulunmamaktadır.</p>
                 </div>
 
+                <!-- Son Erişilen Dosyalar -->
                 <div class="section" style="flex: 1; min-width: 300px;">
                     <h3>Son Erişilen Dosyalar</h3>
-                    <table class="file-table">
+                    <table class="file-table" th:if="${lastAccessedFiles.size() > 0}">
                         <thead>
                         <tr>
                             <th>Dosya Adı</th>
@@ -140,13 +163,15 @@
                         </tr>
                         </tbody>
                     </table>
+                    <p th:if="${lastAccessedFiles.size() == 0}" class="empty-message">Son erişilen dosya bulunmamaktadır.</p>
                 </div>
             </div>
 
+            <!-- Seninle Paylaşılan Dosyalar -->
             <div class="section">
                 <h3>Seninle Paylaşılan Dosyalar</h3>
                 <div class="shared-files-container">
-                    <div th:each="sharedFile : ${sharedFiles}" class="shared-file-card">
+                    <div th:if="${sharedFiles.size() > 0}" th:each="sharedFile : ${sharedFiles}" class="shared-file-card">
                         <div class="file-icon">📁</div>
                         <div class="file-details">
                             <!-- Dosya Adı ve Yönlendirme -->
@@ -156,6 +181,7 @@
                             <span class="file-version" th:text="'Versiyon: ' + ${sharedFile.version}"></span>
                         </div>
                     </div>
+                    <p th:if="${sharedFiles.size() == 0}" class="empty-message">Seninle paylaşılan dosya bulunmamaktadır.</p>
                 </div>
             </div>
         </div>
@@ -169,5 +195,21 @@
 
 <!-- JavaScript -->
 <script src="/js/navigationToggleHandler.js"></script>
+<script src="/js/filterFilesHandler.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const directoryTitles = document.querySelectorAll('.directory-title');
+        directoryTitles.forEach(directoryTitle => {
+            const icon = directoryTitle.querySelector('.toggle-icon');
+            const fileGrid = directoryTitle.nextElementSibling;
+
+            directoryTitle.addEventListener('click', () => {
+                const isOpen = fileGrid.style.display === 'flex';
+                fileGrid.style.display = isOpen ? 'none' : 'flex';
+                icon.className = isOpen ? 'fas fa-plus toggle-icon' : 'fas fa-minus toggle-icon';
+            });
+        });
+    });
+</script>
 </body>
 </html>
