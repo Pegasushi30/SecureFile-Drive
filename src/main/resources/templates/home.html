@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="tr">
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta charset="UTF-8">
-    <title>Kullanıcı Bilgileri</title>
+    <title>User Information</title>
     <link rel="stylesheet" href="/css/style.css">
     <style>
         @media (max-width: 768px) {
@@ -25,7 +25,7 @@
             white-space: normal;
         }
 
-        /* Boş Mesajları Stili */
+        /* Empty Messages Style */
         .empty-message {
             text-align: center;
             font-style: italic;
@@ -33,12 +33,12 @@
             padding: 20px;
         }
 
-        /* Contacts Bölümü Boş Mesajı */
+        /* Contacts Section Empty Message */
         .contacts-container .empty-message {
             padding: 10px 0;
         }
 
-        /* Dosya Bulunamadığında Tabloyu Şekillsiz Gösterme */
+        /* No File Found Row Style */
         .file-table tbody tr.empty-row td {
             text-align: center;
             font-style: italic;
@@ -47,60 +47,60 @@
     </style>
 </head>
 <body>
-<!-- Navigasyon -->
+<!-- Navigation -->
 <nav>
     <div class="nav-left">
         <img src="/images/SFD_Icon.png" alt="Logo" class="nav-icon">
         <a th:href="@{/intro}" class="logo-text">Secure File Drive</a>
     </div>
-    <!-- Hamburger Menü -->
+    <!-- Hamburger Menu -->
     <div class="hamburger-menu" id="hamburger-menu" onclick="toggleDrawer()">
         ☰
     </div>
-    <!-- Normal Navigasyon -->
+    <!-- Normal Navigation -->
     <div class="nav-links">
-        <a th:href="@{/upload}">Dosya Yükle</a>
-        <a th:href="@{/directories}">Tüm Dizinlerim</a>
-        <a th:href="@{/home}">Kullanıcı Bilgilerim</a>
-        <a th:href="@{/shared-files}">Benimle Paylaşılanlar</a>
-        <a th:href="@{/logout}">Çıkış Yap</a>
+        <a th:href="@{/upload}">Upload File</a>
+        <a th:href="@{/directories}">View All Directories</a>
+        <a th:href="@{/home}">My Profile</a>
+        <a th:href="@{/shared-files}">Shared With Me</a>
+        <a th:href="@{/logout}">Logout</a>
     </div>
 </nav>
 
-<!-- Drawer Menü -->
+<!-- Drawer Menu -->
 <div class="drawer-menu" id="drawer">
-    <a th:href="@{/upload}">Dosya Yükle</a>
-    <a th:href="@{/directories}">Tüm Dizinlerim</a>
-    <a th:href="@{/home}">Kullanıcı Bilgilerim</a>
-    <a th:href="@{/shared-files}">Benimle Paylaşılanlar</a>
-    <a th:href="@{/logout}">Çıkış Yap</a>
+    <a th:href="@{/upload}">Upload File</a>
+    <a th:href="@{/directories}">View All Directories</a>
+    <a th:href="@{/home}">My Profile</a>
+    <a th:href="@{/shared-files}">Shared With Me</a>
+    <a th:href="@{/logout}">Logout</a>
 </div>
 
-<!-- Arka Plan Karartma -->
+<!-- Drawer Overlay -->
 <div class="drawer-overlay" id="drawer-overlay" onclick="toggleDrawer()"></div>
 
 <main>
     <div class="main-layout">
-        <!-- Sol Kolon -->
+        <!-- Left Column -->
         <div class="left-column">
             <div class="user-profile-container">
                 <div class="profile-picture">
-                    <img src="/images/UserPpIcon.png" alt="Profil Fotoğrafı">
+                    <img src="/images/UserPpIcon.png" alt="Profile Picture">
                 </div>
-                <!-- Kullanıcı Bilgileri -->
+                <!-- User Information -->
                 <div class="profile-details">
-                    <h3>Kullanıcı Bilgileriniz</h3>
-                    <p><strong>E-posta:</strong> <span th:text="${email}">[E-posta]</span></p>
-                    <p><strong>Kullanıcı Adı:</strong> <span th:text="${displayName}">[Kullanıcı Adı]</span></p>
+                    <h3>Your Information</h3>
+                    <p><strong>Email:</strong> <span th:text="${email}">[Email]</span></p>
+                    <p><strong>Username:</strong> <span th:text="${displayName}">[Username]</span></p>
                 </div>
-                <!-- Kalan Alan -->
+                <!-- Remaining Storage -->
                 <div class="storage-container">
-                    <h3>Kalan Alan</h3>
+                    <h3>Remaining Storage</h3>
                     <div class="storage-bar">
-                        <!-- Kalan yüzdelik 'remainingPercentage' ile dinamik olarak hesaplandı -->
+                        <!-- Remaining percentage dynamically calculated using 'remainingPercentage' -->
                         <div class="storage-fill" th:style="'width:' + ${remainingPercentage} + '%;'"></div>
                     </div>
-                    <p th:text="'Kalan: ' + ${remainingStorage} + ' / ' + ${totalStorage}"></p>
+                    <p th:text="'Remaining: ' + ${remainingStorage} + ' / ' + ${totalStorage}"></p>
                 </div>
                 <!-- Contacts -->
                 <div class="contacts-container">
@@ -111,77 +111,77 @@
                             <span class="contact-email" th:text="${contact.email}">email@example.com</span>
                         </li>
                     </ul>
-                    <p th:if="${contacts.size() == 0}" class="empty-message">İletişim bulunmamaktadır.</p>
+                    <p th:if="${contacts.size() == 0}" class="empty-message">No contacts available.</p>
                 </div>
                 <div class="profile-actions">
-                    <a href="/forgot-password" class="reset-password-link">🔑 Şifreyi Sıfırla</a>
+                    <a href="/forgot-password" class="reset-password-link">🔑 Reset Password</a>
                 </div>
             </div>
         </div>
 
-        <!-- Sağ Kolon -->
+        <!-- Right Column -->
         <div class="right-column" style="display: flex; flex-direction: column; gap: 20px;">
             <div style="display: flex; gap: 20px; flex-wrap: wrap;">
-                <!-- Son Yüklenen Dosyalar -->
+                <!-- Recently Uploaded Files -->
                 <div class="section" style="flex: 1; min-width: 300px;">
-                    <h3>Son Yüklenen Dosyalar</h3>
+                    <h3>Recently Uploaded Files</h3>
                     <table class="file-table" th:if="${lastUploadedFiles.size() > 0}">
                         <thead>
                         <tr>
-                            <th>Dosya Adı</th>
-                            <th>Versiyon</th>
-                            <th>Boyut</th>
+                            <th>File Name</th>
+                            <th>Version</th>
+                            <th>Size</th>
                         </tr>
                         </thead>
                         <tbody>
                         <tr th:each="file : ${lastUploadedFiles}">
-                            <td th:text="${lastUploadedNames[file.id]}">Dosya Adı</td>
-                            <td th:text="${file.versionNumber}">Versiyon</td>
-                            <td th:text="${lastUploadedSizes[file.id]}">Boyut</td>
+                            <td th:text="${lastUploadedNames[file.id]}">File Name</td>
+                            <td th:text="${file.versionNumber}">Version</td>
+                            <td th:text="${lastUploadedSizes[file.id]}">Size</td>
                         </tr>
                         </tbody>
                     </table>
-                    <p th:if="${lastUploadedFiles.size() == 0}" class="empty-message">Son yüklenen dosya bulunmamaktadır.</p>
+                    <p th:if="${lastUploadedFiles.size() == 0}" class="empty-message">No recently uploaded files.</p>
                 </div>
 
-                <!-- Son Erişilen Dosyalar -->
+                <!-- Recently Accessed Files -->
                 <div class="section" style="flex: 1; min-width: 300px;">
-                    <h3>Son Erişilen Dosyalar</h3>
+                    <h3>Recently Accessed Files</h3>
                     <table class="file-table" th:if="${lastAccessedFiles.size() > 0}">
                         <thead>
                         <tr>
-                            <th>Dosya Adı</th>
-                            <th>Versiyon</th>
-                            <th>Boyut</th>
+                            <th>File Name</th>
+                            <th>Version</th>
+                            <th>Size</th>
                         </tr>
                         </thead>
                         <tbody>
                         <tr th:each="file : ${lastAccessedFiles}">
-                            <td th:text="${lastAccessedNames[file.id]}">Dosya Adı</td>
-                            <td th:text="${file.versionNumber}">Versiyon</td>
-                            <td th:text="${lastAccessedSizes[file.id]}">Boyut</td>
+                            <td th:text="${lastAccessedNames[file.id]}">File Name</td>
+                            <td th:text="${file.versionNumber}">Version</td>
+                            <td th:text="${lastAccessedSizes[file.id]}">Size</td>
                         </tr>
                         </tbody>
                     </table>
-                    <p th:if="${lastAccessedFiles.size() == 0}" class="empty-message">Son erişilen dosya bulunmamaktadır.</p>
+                    <p th:if="${lastAccessedFiles.size() == 0}" class="empty-message">No recently accessed files.</p>
                 </div>
             </div>
 
-            <!-- Seninle Paylaşılan Dosyalar -->
+            <!-- Files Shared With You -->
             <div class="section">
-                <h3>Seninle Paylaşılan Dosyalar</h3>
+                <h3>Files Shared With You</h3>
                 <div class="shared-files-container">
                     <div th:if="${sharedFiles.size() > 0}" th:each="sharedFile : ${sharedFiles}" class="shared-file-card">
                         <div class="file-icon">📁</div>
                         <div class="file-details">
-                            <!-- Dosya Adı ve Yönlendirme -->
+                            <!-- File Name with Link -->
                             <a href="https://localhost:8443/shared-files" class="file-name-link">
-                                <span th:text="${sharedFile.fileName}">Dosya Adı</span>
+                                <span th:text="${sharedFile.fileName}">File Name</span>
                             </a>
-                            <span class="file-version" th:text="'Versiyon: ' + ${sharedFile.version}"></span>
+                            <span class="file-version" th:text="'Version: ' + ${sharedFile.version}"></span>
                         </div>
                     </div>
-                    <p th:if="${sharedFiles.size() == 0}" class="empty-message">Seninle paylaşılan dosya bulunmamaktadır.</p>
+                    <p th:if="${sharedFiles.size() == 0}" class="empty-message">No files shared with you.</p>
                 </div>
             </div>
         </div>
@@ -190,7 +190,7 @@
 
 <!-- Footer -->
 <footer>
-    <p>&copy; 2024 Secure File Drive. Tüm Hakları Saklıdır.</p>
+    <p>&copy; 2024 Secure File Drive. All Rights Reserved.</p>
 </footer>
 
 <!-- JavaScript -->

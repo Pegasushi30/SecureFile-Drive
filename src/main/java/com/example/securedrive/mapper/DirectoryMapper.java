@@ -30,10 +30,10 @@ public class DirectoryMapper {
     private DirectoryShareDto toShareDto(DirectoryShare share) {
         return new DirectoryShareDto(
                 share.getId(),
-                share.getDirectory().getId(),                 // directoryId
-                share.getDirectory().getName(),               // directoryName
-                share.getSharedWithUser().getEmail(),         // sharedWithUserEmail
-                share.getOwner().getEmail(),                  // ownerEmail
+                share.getDirectory().getId(),
+                share.getDirectory().getName(),
+                share.getSharedWithUser().getEmail(),
+                share.getOwner().getEmail(),
                 share.getSharedPath()
         );
     }

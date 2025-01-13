@@ -29,7 +29,6 @@ public class CustomOidcUserService extends OidcUserService {
         System.out.println("loadUser çağrıldı!");
         OidcUser oidcUser = super.loadUser(userRequest);
 
-        // Kullanıcı özelliklerini al ve logla
         Map<String, Object> attributes = oidcUser.getAttributes();
         System.out.println("OIDC User Attributes: " + attributes);
 
@@ -52,33 +51,25 @@ public class CustomOidcUserService extends OidcUserService {
             name = "Anonymous";
         }
 
-        // Kullanıcıyı veritabanında ara
         User user = userRepository.findByUsername(oid).orElse(null);
         if (user == null) {
-            // Kullanıcı yoksa oluştur
-            user = createUser(oid, email, name);
+            createUser(oid, email, name);
         }
 
         return oidcUser;
     }
 
-    private User createUser(String oid, String email, String name) {
+    private void createUser(String oid, String email, String name) {
         User newUser = new User();
         newUser.setUsername(oid);
         newUser.setEmail(email);
         newUser.setRole(Role.USER);
-
-        // AES anahtarı oluştur ve Key Vault'a kaydet
         try {
             String encryptionKey = AESUtil.generateAESKey();
-            keyVaultService.saveEncryptionKeyToKeyVault(oid, encryptionKey); // Key Vault'a kaydet
-            System.out.println("AES anahtarı başarıyla oluşturuldu ve Key Vault'a kaydedildi.");
+            keyVaultService.saveEncryptionKeyToKeyVault(oid, encryptionKey);
         } catch (Exception e) {
-            System.err.println("AES anahtarı oluşturulurken hata oluştu: " + e.getMessage());
             throw new RuntimeException("Failed to generate AES key for user: " + oid, e);
         }
-
-        // Kullanıcıyı veritabanına kaydet
-        return userRepository.save(newUser);
+        userRepository.save(newUser);
     }
 }

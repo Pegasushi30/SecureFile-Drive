@@ -29,7 +29,6 @@ public class KeyVaultService {
     public void saveEncryptionKeyToKeyVault(String userId, String encryptionKey) {
         String secretName = "aes-key-" + userId;
         secretClient.setSecret(secretName, encryptionKey);
-        System.out.println("AES anahtarı Key Vault'a başarıyla kaydedildi: " + secretName);
     }
 
     public String getEncryptionKeyFromKeyVault(String userId) {
@@ -37,7 +36,6 @@ public class KeyVaultService {
         try {
             return secretClient.getSecret(secretName).getValue();
         } catch (ResourceNotFoundException e) {
-            System.err.println("AES anahtarı bulunamadı: " + secretName);
             throw new IllegalStateException("Encryption key not found in Key Vault for user: " + userId, e);
         }
     }

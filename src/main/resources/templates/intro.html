@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hakkında - Secure File Drive</title>
+    <title>About - Secure File Drive</title>
     <link rel="stylesheet" href="/css/style.css">
     <style>
         body {
@@ -103,64 +103,64 @@
         <img src="/images/SFD_Icon.png" alt="Logo" class="nav-icon">
         <a th:href="@{/intro}" class="logo-text">Secure File Drive</a>
     </div>
-    <!-- Hamburger Menü -->
+    <!-- Hamburger Menu -->
     <div class="hamburger-menu" id="hamburger-menu" onclick="toggleDrawer()">
         ☰
     </div>
-    <!-- Normal Navigasyon -->
+    <!-- Normal Navigation -->
     <div class="nav-links">
-        <a th:href="@{/upload}">Dosya Yükle</a>
-        <a th:href="@{/directories}">Tüm Dizinlerim</a>
-        <a th:href="@{/home}">Kullanıcı Bilgilerim</a>
-        <a th:href="@{/shared-files}">Benimle Paylaşılanlar</a>
-        <a th:href="@{/logout}">Çıkış Yap</a>
+        <a th:href="@{/upload}">Upload File</a>
+        <a th:href="@{/directories}">All Directories</a>
+        <a th:href="@{/home}">My Profile</a>
+        <a th:href="@{/shared-files}">Shared With Me</a>
+        <a th:href="@{/logout}">Logout</a>
     </div>
 </nav>
 
-<!-- Drawer Menü -->
+<!-- Drawer Menu -->
 <div class="drawer-menu" id="drawer">
-    <a th:href="@{/upload}">Dosya Yükle</a>
-    <a th:href="@{/directories}">Tüm Dizinlerim</a>
-    <a th:href="@{/home}">Kullanıcı Bilgilerim</a>
-    <a th:href="@{/shared-files}">Benimle Paylaşılanlar</a>
-    <a th:href="@{/logout}">Çıkış Yap</a>
+    <a th:href="@{/upload}">Upload File</a>
+    <a th:href="@{/directories}">All Directories</a>
+    <a th:href="@{/home}">My Profile</a>
+    <a th:href="@{/shared-files}">Shared With Me</a>
+    <a th:href="@{/logout}">Logout</a>
 </div>
 
-<!-- Arka Plan Karartma -->
+<!-- Background Overlay -->
 <div class="drawer-overlay" id="drawer-overlay" onclick="toggleDrawer()"></div>
 
 <main class="intro-main">
-    <h1>Secure File Drive Nedir?</h1>
+    <h1>What is Secure File Drive?</h1>
     <p>
-        Secure File Drive ile dosyalarınızı güvenli bir şekilde saklayın ve paylaşın. Güvenlik, verimlilik ve erişilebilirlik bir arada!
+        With Secure File Drive, store and share your files securely. Security, efficiency, and accessibility all in one!
     </p>
     <section class="intro-highlights">
         <div class="highlight">
-            <img src="/images/NetworkSecurity.png" alt="Güvenlik">
-            <h2>Güvenlik</h2>
-            <p>Dosyalarınız AES-256 teknolojisiyle korunur. Sadece sizin erişiminize açık ve güvenli!</p>
+            <img src="/images/NetworkSecurity.png" alt="Security">
+            <h2>Security</h2>
+            <p>Your files are protected with AES-256 technology. Only accessible and secure for you!</p>
         </div>
         <div class="highlight">
-            <img src="/images/EfficiencyWoman.png" alt="Verimlilik">
-            <h2>Verimlilik</h2>
-            <p>Delta Dosya Depolama teknolojisi ile yerden tasarruf edin ve depolama alanınızı optimize edin.</p>
+            <img src="/images/EfficiencyWoman.png" alt="Efficiency">
+            <h2>Efficiency</h2>
+            <p>Save space and optimize your storage with Delta File Storage technology.</p>
         </div>
         <div class="highlight">
-            <img src="/images/AvailabilityTeen.png" alt="Erişilebilirlik">
-            <h2>Erişilebilirlik</h2>
-            <p>Dosyalarınıza her yerden, her cihazdan kolayca erişin. Azure altyapısı ile %100 güvenilir!</p>
+            <img src="/images/AvailabilityTeen.png" alt="Accessibility">
+            <h2>Accessibility</h2>
+            <p>Access your files from anywhere, on any device. 100% reliable with Azure infrastructure!</p>
         </div>
     </section>
 
     <div class="cta-section">
-        <h2>📂 Hemen Başlayın!</h2>
-        <p>Dosyalarınızı güvenle yönetin, paylaşın ve saklayın.</p>
-        <a href="/directories" class="cta-button">Başlayın</a>
+        <h2>📂 Get Started!</h2>
+        <p>Manage, share, and store your files securely.</p>
+        <a href="/directories" class="cta-button">Start Now</a>
     </div>
 </main>
 
 <footer>
-    <p>&copy; 2024 Secure File Drive. Tüm Hakları Saklıdır.</p>
+    <p>&copy; 2024 Secure File Drive. All Rights Reserved.</p>
 </footer>
 <script src="/js/navigationToggleHandler.js"></script>
 </body>

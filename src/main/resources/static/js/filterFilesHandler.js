@@ -18,16 +18,14 @@ function filterFiles() {
             fileCards.forEach(fileCard => {
                 const fileName = fileCard.querySelector('.file-name').innerText.toLowerCase();
 
-                // Hem gönderici e-postası hem de dosya adı için eşleşme kontrolü
                 const senderMatch = emailText.includes(emailQuery);
                 const fileMatch = fileName.includes(fileQuery);
 
-                // Eğer hem gönderici e-postası hem de dosya adı eşleşiyorsa göster
                 if ((emailQuery === "" || senderMatch) && (fileQuery === "" || fileMatch)) {
-                    fileCard.style.display = "flex"; // Eşleşen dosyayı göster
+                    fileCard.style.display = "flex";
                     anyFileMatch = true;
                 } else {
-                    fileCard.style.display = "none"; // Eşleşmeyen dosyayı gizle
+                    fileCard.style.display = "none";
                 }
             });
 
@@ -46,7 +44,6 @@ function filterFiles() {
         }
     });
 
-    // Eğer tüm gruplar gizlenmişse, "hiç paylaşım yok" mesajını göster
     const sharedFilesContainer = document.getElementById('shared-files-container');
     const visibleEmailGroups = sharedFilesContainer.querySelectorAll('.email-group:not([style*="display: none"])');
 

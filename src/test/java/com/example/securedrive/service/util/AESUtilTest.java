@@ -64,7 +64,7 @@ class AESUtilTest {
     @Test
     void testEncryptWithInvalidKey() {
         // Given
-        String invalidKey = "shortkey"; // Invalid key length
+        String invalidKey = "shortkey";
         String originalText = "This is a test message.";
         byte[] originalData = originalText.getBytes();
 

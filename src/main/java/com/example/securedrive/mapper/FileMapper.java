@@ -19,31 +19,23 @@ import java.util.stream.Collectors;
 public class FileMapper {
 
     private final FileShareMapper fileShareMapper;
-    private final DirectoryMapper directoryMapper;
     private final ObjectMapper objectMapper; // JSON dönüşümü için
 
     public FileMapper(FileShareMapper fileShareMapper,
-                      DirectoryMapper directoryMapper,
                       ObjectMapper objectMapper) {
         this.fileShareMapper = fileShareMapper;
-        this.directoryMapper = directoryMapper;
         this.objectMapper = objectMapper;
     }
 
-    /**
-     * Tek DTO: Normal FileDto + fileSharesJson
-     */
+
     public FileDto toDto(File file) {
         if (file == null) return null;
-
-        // Versiyonları dönüştür
         List<FileVersionDto> versions = (file.getVersions() != null)
                 ? file.getVersions().stream()
                 .map(this::toVersionDto)
                 .collect(Collectors.toList())
                 : List.of();
 
-        // file.fileShares -> List<FileShareDto>
         List<FileShareDto> fileShares = (file.getFileShares() != null)
                 ? file.getFileShares().stream()
                 .map(fileShareMapper::toDto)
@@ -66,11 +58,10 @@ public class FileMapper {
                 (file.getDirectory() != null) ? file.getDirectory().getId() : null,
                 versions,
                 fileShares,
-                fileSharesJson  // Burada ekliyoruz
+                fileSharesJson
         );
     }
 
-    // Yardımcı: FileVersion -> FileVersionDto
     private FileVersionDto toVersionDto(FileVersion version) {
         return new FileVersionDto(
                 version.getId(),

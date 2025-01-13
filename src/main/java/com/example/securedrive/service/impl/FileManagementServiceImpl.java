@@ -14,12 +14,14 @@ import com.example.securedrive.repository.UserRepository;
 import com.example.securedrive.security.AzureBlobSASTokenGenerator;
 import com.example.securedrive.service.FileManagementService;
 import com.example.securedrive.service.UserManagementService;
+import com.example.securedrive.service.util.FileSizeUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -93,6 +95,28 @@ public class FileManagementServiceImpl implements FileManagementService {
     public List<File> getFilesByDirectory(Directory directory) {
         return fileRepository.findAllByDirectory(directory);
     }
+    @Override
+    public Map<Long, String> createFileNameMap(List<FileVersionDto> versions) {
+        return versions.stream()
+                .collect(Collectors.toMap(FileVersionDto::id,
+                        f ->getFileNameByVersionId(f.id())));
+    }
+
+    @Override
+    public Map<Long, String> createFileSizeMap(List<FileVersionDto> versions) {
+        return versions.stream()
+                .collect(Collectors.toMap(FileVersionDto::id,
+                        f -> FileSizeUtil.formatSize(f.size())));
+    }
+
+    @Override
+    public Map<String, Map<String, List<FileShareDto>>> groupFileSharesByOwnerAndDirectory(List<FileShareDto> sharedFiles) {
+        return sharedFiles.stream()
+                .collect(Collectors.groupingBy(
+                        FileShareDto::ownerEmail,
+                        Collectors.groupingBy(FileShareDto::directoryPath)
+                ));
+    }
 
     @Override
     public void shareFileWithUser(File file, User owner, User sharedWithUser, String versionNumber) {
@@ -155,40 +179,6 @@ public class FileManagementServiceImpl implements FileManagementService {
     public long getUsedStorage(String username) {
         List<FileVersion> allVersions = fileVersionRepository.findByFile_Directory_User_Username(username);
         return allVersions.stream().mapToLong(FileVersion::getSize).sum();
-    }
-
-    @Override
-    public List<FileDto> getLastUploadedFiles(String username, int limit) {
-        Pageable pageable = PageRequest.of(0, limit);
-        List<FileVersion> versions = fileVersionRepository.findByFile_Directory_User_UsernameOrderByTimestampDesc(username, pageable);
-
-        return versions.stream()
-                .map(version -> {
-                    File file = version.getFile();
-                    String ownerUsername = file.getDirectory() != null ? file.getDirectory().getUser().getUsername() : "Unknown";
-                    Long directoryId = file.getDirectory() != null ? file.getDirectory().getId() : null;
-
-                    FileVersionDto versionDto = new FileVersionDto(
-                            version.getId(),
-                            version.getVersionNumber(),
-                            version.getDeltaPath(),
-                            version.getHash(),
-                            version.getTimestamp(),
-                            version.getSize()
-                    );
-
-                    return new FileDto(
-                            file.getId(),
-                            file.getFileName(),
-                            file.getPath(),
-                            ownerUsername,
-                            directoryId,
-                            List.of(versionDto),
-                            List.of(),
-                            null
-                    );
-                })
-                .collect(Collectors.toList());
     }
 
     @Override

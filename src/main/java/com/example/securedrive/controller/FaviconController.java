@@ -10,6 +10,5 @@ public class FaviconController {
     @RequestMapping("favicon.ico")
     @ResponseBody
     void returnNoFavicon() {
-        // Boş döner, favicon isteği işlenmez
     }
 }

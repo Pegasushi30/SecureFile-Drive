@@ -3,10 +3,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     revokeForms.forEach(form => {
         form.addEventListener('submit', function (e) {
-            e.preventDefault(); // Formun varsayılan davranışını engelle
+            e.preventDefault();
 
-            const formData = new FormData(this); // Form verilerini al
-            const actionUrl = this.getAttribute('action'); // Formun action URL'si
+            const formData = new FormData(this);
+            const actionUrl = this.getAttribute('action');
 
             fetch(actionUrl, {
                 method: 'POST',
@@ -14,45 +14,40 @@ document.addEventListener('DOMContentLoaded', () => {
             })
                 .then(response => {
                     if (!response.ok) {
-                        throw new Error('Paylaşım iptali başarısız oldu!');
+                        throw new Error('Failed to revoke the share!');
                     }
-                    return response.json(); // Backend'den JSON bekleniyor
+                    return response.json();
                 })
                 .then(data => {
-                    console.log("Backend yanıtı:", data);
+                    console.log("Backend response:", data);
 
-                    // UI'de paylaşım bilgisini güncelle
-                    alert('Paylaşım başarıyla iptal edildi!');
+                    alert('Share successfully revoked!');
 
-                    // Formun bulunduğu alana göre işlem yap
                     if (this.closest('.shared-directories-table')) {
-                        // Eğer "Paylaştığınız Dizinler" tablosundaysa
                         const tableRow = this.closest('tr');
                         if (tableRow) {
-                            tableRow.remove(); // Satırı DOM'dan kaldır
+                            tableRow.remove();
                         }
 
                         const sharedDirectoriesTable = document.querySelector('.shared-directories-table');
                         const tableBody = sharedDirectoriesTable.querySelector('tbody');
                         if (!tableBody || tableBody.children.length === 0) {
-                            sharedDirectoriesTable.style.display = 'none'; // Tablonun tamamını gizle
+                            sharedDirectoriesTable.style.display = 'none';
                         }
                     } else if (this.closest('.file-card')) {
-                        // Eğer dosyalarla ilgili bir alandaysa
                         const fileCard = this.closest('.file-card');
                         const shareContainer = fileCard.querySelector('.revoke-form').parentElement;
 
-                        // Eğer başka paylaşım yoksa ilgili bölümü gizle
                         if (data.remainingShares === 0) {
                             shareContainer.style.display = 'none';
                         }
                     } else {
-                        console.warn('Tanımsız bir alan için işlem yapılmadı.');
+                        console.warn('No specific action taken for this area.');
                     }
                 })
                 .catch(error => {
                     console.error(error);
-                    alert('Bir hata oluştu: ' + error.message);
+                    alert('An error occurred: ' + error.message);
                 });
         });
     });

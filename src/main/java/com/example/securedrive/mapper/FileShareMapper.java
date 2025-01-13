@@ -11,11 +11,11 @@ public class FileShareMapper {
     public FileShareDto toDto(FileShare fileShare) {
         if (fileShare == null) return null;
 
-        String fileName = fileShare.getFile() != null ? fileShare.getFile().getFileName() : "Bilinmeyen Dosya";
-        String ownerEmail = fileShare.getOwner() != null ? fileShare.getOwner().getEmail() : "Bilinmeyen Sahip";
+        String fileName = fileShare.getFile() != null ? fileShare.getFile().getFileName() : "Unknown file";
+        String ownerEmail = fileShare.getOwner() != null ? fileShare.getOwner().getEmail() : "Unknown owner";
 
         Directory directory = fileShare.getFile() != null ? fileShare.getFile().getDirectory() : null;
-        String directoryName = directory != null ? directory.getName() : "Ana Dizin";
+        String directoryName = directory != null ? directory.getName() : "Main Directory";
         String directoryPath = directory != null ? buildDirectoryPath(directory) : "/";
 
         return new FileShareDto(
@@ -30,7 +30,6 @@ public class FileShareMapper {
         );
     }
 
-    // Rekürsif olarak dizin yolunu oluştur
     private String buildDirectoryPath(Directory directory) {
         if (directory == null) return "/";
         StringBuilder pathBuilder = new StringBuilder();

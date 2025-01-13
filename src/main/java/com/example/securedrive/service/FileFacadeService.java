@@ -1,12 +1,9 @@
-// com/example/securedrive/service/FileFacadeService.java
 package com.example.securedrive.service;
 
 import com.example.securedrive.dto.*;
-import com.example.securedrive.model.FileShare;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.security.core.Authentication;
 
-import java.util.List;
 
 
 public interface FileFacadeService {

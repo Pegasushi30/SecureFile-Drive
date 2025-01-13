@@ -71,26 +71,23 @@ public class FileFacadeServiceImpl implements FileFacadeService {
     public void revokeShare(FileRevokeShareRequestDto dto, Authentication authentication) {
         UserDto authenticatedUser = userMapper.toUserDTO(authentication);
 
-        // Yetki kontrolü
         if (!authenticatedUser.getUsername().equals(dto.getUsername()) && !authenticatedUser.hasRole("ROLE_ADMIN")) {
-            throw new SecurityException("Bu kullanıcı için paylaşımı iptal etme yetkiniz yok.");
+            throw new SecurityException("You are not authorized to revoke this share.");
         }
 
         User owner = userManagementService.findByUsername(dto.getUsername())
-                .orElseThrow(() -> new NoSuchElementException("Kullanıcı bulunamadı."));
+                .orElseThrow(() -> new NoSuchElementException("User not found."));
         User sharedWithUser = userManagementService.findByEmail(dto.getSharedWithEmail())
-                .orElseThrow(() -> new NoSuchElementException("Paylaşım yapılan kullanıcı bulunamadı."));
+                .orElseThrow(() -> new NoSuchElementException("User to revoke share not found."));
         File file = fileManagementService.findById(dto.getFileId())
-                .orElseThrow(() -> new NoSuchElementException("Dosya bulunamadı."));
+                .orElseThrow(() -> new NoSuchElementException("File not found."));
 
-        // Sahiplik kontrolü
         if (!file.getUser().equals(owner)) {
-            throw new SecurityException("Bu dosyanın sahibi değilsiniz.");
+            throw new SecurityException("You do not own this file.");
         }
 
-        // Versiyon bazlı paylaşımı iptal et
         FileShare fileShare = fileShareRepository.findByFileAndSharedWithUserAndVersion(file, sharedWithUser, dto.getVersion())
-                .orElseThrow(() -> new NoSuchElementException("Paylaşımı iptal etmek için gerekli bilgiler bulunamadı."));
+                .orElseThrow(() -> new NoSuchElementException("Required details for revoking share not found."));
 
         fileShareRepository.delete(fileShare);
     }
@@ -108,15 +105,15 @@ public class FileFacadeServiceImpl implements FileFacadeService {
             throw new SecurityException("Authenticated user's username could not be determined.");
         }
         if (!authenticatedUser.getUsername().equals(username) && !authenticatedUser.hasRole("ROLE_ADMIN")) {
-            throw new SecurityException("Bu kullanıcı için dosya paylaşma yetkiniz yok.");
+            throw new SecurityException("You are not authorized to share this file.");
         }
 
         User owner = userManagementService.findByUsername(username)
-                .orElseThrow(() -> new NoSuchElementException("Kullanıcı bulunamadı."));
+                .orElseThrow(() -> new NoSuchElementException("User not found."));
         User sharedWithUser = userManagementService.findByEmail(sharedWithEmail)
-                .orElseThrow(() -> new NoSuchElementException("Paylaşım yapılacak kullanıcı bulunamadı."));
+                .orElseThrow(() -> new NoSuchElementException("User to share with not found."));
         File file = fileManagementService.findByIdAndUser(fileId, owner)
-                .orElseThrow(() -> new NoSuchElementException("Dosya bulunamadı."));
+                .orElseThrow(() -> new NoSuchElementException("File not found."));
 
         fileManagementService.shareFileWithUser(file, owner, sharedWithUser, version);
     }
@@ -176,31 +173,32 @@ public class FileFacadeServiceImpl implements FileFacadeService {
 
 
 
+
     @Override
     public String uploadFile(FileUploadRequestDto dto) {
         try {
             User currentUser = userManagementService.findByUsername(dto.getUsername())
-                    .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı: " + dto.getUsername()));
-            logger.info("Kullanıcı doğrulandı: {}", currentUser.getUsername());
+                    .orElseThrow(() -> new RuntimeException("User not found: " + dto.getUsername()));
+            logger.info("User verified: {}", currentUser.getUsername());
 
             String aesKey = resolveOrCreateAESKey(dto.getUsername());
 
             Directory directory = null;
             if (dto.getDirectoryId() != null) {
                 directory = directoryService.findByIdAndUser(dto.getDirectoryId(), currentUser)
-                        .orElseThrow(() -> new RuntimeException("Dizin bulunamadı."));
-                logger.info("Dizin bulundu: {}", directory.getName());
+                        .orElseThrow(() -> new RuntimeException("Directory not found."));
+                logger.info("Directory found: {}", directory.getName());
             }
 
             String uniqueFilePath = (directory != null)
                     ? String.format("uploads/%s/%s", dto.getUsername(), getDirectoryPath(directory, dto.getFile().getOriginalFilename()))
                     : String.format("uploads/%s/%s", dto.getUsername(), dto.getFile().getOriginalFilename());
-            logger.info("Benzersiz dosya yolu oluşturuldu: {}", uniqueFilePath);
+            logger.info("Unique file path created: {}", uniqueFilePath);
 
             File userFile = (directory != null)
                     ? fileManagementService.findByFileNameUserAndDirectory(dto.getFile().getOriginalFilename(), currentUser, directory)
                     : fileManagementService.findByFileNameAndUserDirectoryNull(dto.getFile().getOriginalFilename(), currentUser);
-            logger.info("Dosya kontrolü tamamlandı.");
+            logger.info("File check completed.");
 
             String fileHash = HashUtil.calculateHash(dto.getFile().getBytes());
 
@@ -210,8 +208,8 @@ public class FileFacadeServiceImpl implements FileFacadeService {
                         .findFirst();
                 if (duplicateVersion.isPresent()) {
                     String existingVersion = duplicateVersion.get().getVersionNumber();
-                    logger.warn("Aynı dosya zaten mevcut: {} - Versiyon: {}", dto.getFile().getOriginalFilename(), existingVersion);
-                    return String.format("Bu dosya bu dizinde zaten mevcut. Mevcut versiyon: %s", existingVersion);
+                    logger.warn("Duplicate file already exists: {} - Version: {}", dto.getFile().getOriginalFilename(), existingVersion);
+                    return String.format("This file already exists in this directory. Existing version: %s", existingVersion);
                 }
             } else {
                 userFile = new File();
@@ -220,21 +218,21 @@ public class FileFacadeServiceImpl implements FileFacadeService {
                 userFile.setUser(currentUser);
                 userFile.setDirectory(directory);
                 fileManagementService.saveFile(userFile);
-                logger.info("Yeni dosya oluşturuldu: {}", dto.getFile().getOriginalFilename());
+                logger.info("New file created: {}", dto.getFile().getOriginalFilename());
             }
 
             String versionNumber = (dto.getVersionNumber() != null)
                     ? dto.getVersionNumber()
                     : fileVersionManagementService.generateNextVersion(userFile);
-            logger.info("Versiyon numarası oluşturuldu: {}", versionNumber);
+            logger.info("Version number generated: {}", versionNumber);
 
             processFile(dto, aesKey, uniqueFilePath, userFile, versionNumber);
 
-            return "Dosya başarıyla yüklendi. Versiyon: " + versionNumber;
+            return "File uploaded successfully. Version: " + versionNumber;
 
         } catch (Exception e) {
-            logger.error("Dosya yükleme sırasında hata oluştu: {}", e.getMessage(), e);
-            return "Dosya yükleme başarısız: " + e.getMessage();
+            logger.error("Error occurred during file upload: {}", e.getMessage(), e);
+            return "File upload failed: " + e.getMessage();
         }
     }
 
@@ -243,19 +241,19 @@ public class FileFacadeServiceImpl implements FileFacadeService {
     public String deleteSpecificVersion(FileDeleteSpecificVersionRequestDto dto) {
         Optional<User> userOptional = userRepository.findByUsername(dto.getUsername());
         if (userOptional.isEmpty()) {
-            return "Kullanıcı bulunamadı.";
+            return "User not found.";
         }
         User user = userOptional.get();
 
         Optional<File> fileOptional = fileRepository.findByIdAndUser(dto.getFileId(), user);
         if (fileOptional.isEmpty()) {
-            return "Dosya bulunamadı.";
+            return "File not found.";
         }
         File file = fileOptional.get();
 
         FileVersion versionToDelete = fileVersionRepository.findByFileAndVersionNumber(file, dto.getVersionNumber());
         if (versionToDelete == null) {
-            return "Versiyon bulunamadı.";
+            return "Version not found.";
         }
 
         try {
@@ -276,21 +274,22 @@ public class FileFacadeServiceImpl implements FileFacadeService {
             if (fileVersionRepository.findAllByFile(file).isEmpty()) {
                 fileRepository.delete(file);
             }
-            return "Dosya ve versiyon başarıyla silindi.";
+            return "File and version deleted successfully.";
         } catch (Exception e) {
-            return "Dosya silme işlemi başarısız oldu: " + e.getMessage();
+            return "File deletion failed: " + e.getMessage();
         }
     }
+
 
     @Override
     public ByteArrayResource downloadSpecificVersion(FileDownloadSpecificVersionRequestDto dto) throws Exception {
         User user = userManagementService.findByUsername(dto.getUsername())
-                .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı: " + dto.getUsername()));
-        logger.info("Kullanıcı doğrulandı: {}", user.getUsername());
+                .orElseThrow(() -> new RuntimeException("User not found: " + dto.getUsername()));
+        logger.info("User verified: {}", user.getUsername());
 
         File file = fileManagementService.findByIdAndUser(dto.getFileId(), user)
-                .orElseThrow(() -> new RuntimeException("Dosya bulunamadı: " + dto.getFileId()));
-        logger.info("Dosya doğrulandı: {}", file.getFileName());
+                .orElseThrow(() -> new RuntimeException("File not found: " + dto.getFileId()));
+        logger.info("File verified: {}", file.getFileName());
 
         String fileName = file.getFileName();
         boolean isBinary = fileName.toLowerCase().matches(".*\\.(jpg|png|mp4|docx?|xlsx|pdf|pptx|mkv)$");
@@ -298,13 +297,9 @@ public class FileFacadeServiceImpl implements FileFacadeService {
         byte[] originalData;
 
         if (isBinary) {
-            // Binary dosya işlemleri
-            // Reconstruct the content by applying deltas up to the specified version
             String reconstructedContentBase64 = fileVersionManagementService.reconstructFileContent(file, dto.getVersionNumber(), user);
-            // Decode Base64 to get byte[]
             originalData = Base64.getDecoder().decode(reconstructedContentBase64);
         } else {
-            // Metin dosya işlemleri
             String reconstructedContent = fileVersionManagementService.reconstructFileContent(file, dto.getVersionNumber(), user);
             originalData = reconstructedContent.getBytes(StandardCharsets.UTF_8);
         }
@@ -317,15 +312,14 @@ public class FileFacadeServiceImpl implements FileFacadeService {
         byte[] fileData = dto.getFile().getBytes();
         String fileHash = HashUtil.calculateHash(fileData);
 
-
-        // Binary veya metin dosya ayrımı
+        // Determine whether the file is binary or text
         boolean isBinaryFile = fileNameLower.matches(".*\\.(jpg|png|mp4|docx?|xlsx|pdf|pptx|mkv)$");
 
         if (isBinaryFile) {
-            // Binary dosya işlemleri
+            // Process binary file
             processBinaryFile(fileData, aesKey, uniqueFilePath, userFile, versionNumber, fileHash);
         } else {
-            // Metin dosyası işlemleri
+            // Process text file
             processTextFile(fileData, aesKey, uniqueFilePath, userFile, versionNumber, fileHash);
         }
     }
@@ -335,7 +329,7 @@ public class FileFacadeServiceImpl implements FileFacadeService {
         byte[] previousData = null;
         String deltaPath = null;
 
-        if (!versions.isEmpty()) { // İlk versiyon değilse
+        if (!versions.isEmpty()) { // If not the first version
             FileVersion previousVersion = versions.get(versions.size() - 1);
             String previousFilePath = String.format("%s/versions/%s/%s",
                     userFile.getPath(),
@@ -351,17 +345,15 @@ public class FileFacadeServiceImpl implements FileFacadeService {
 
         if (versionNumber.equals("v1")) {
             byte[] encryptedData = AESUtil.encrypt(fileData, aesKey);
-            logger.info("Şifrelenmiş veri uzunluğu: {}", encryptedData.length);
+            logger.info("Encrypted data length: {}", encryptedData.length);
 
             String versionedFilePath = uniqueFilePath + "/versions/" + versionNumber + "/" + userFile.getFileName();
             saveBlobToAzure(versionedFilePath, encryptedData);
         } else {
-            // Sonraki versiyonlar: Sadece delta.json kaydet
+            // Subsequent versions: Save only delta.json
             if (previousData != null) {
-                // BinaryDeltaUtil ile delta hesaplama
                 List<BinaryDeltaUtil.DeltaCommand> deltaCommands = BinaryDeltaUtil.calculateDelta(previousData, fileData);
                 if (!deltaCommands.isEmpty()) {
-                    // Delta komutlarını JSON olarak kaydet
                     deltaPath = uniqueFilePath + "/versions/" + versionNumber + "/delta.json";
                     saveBinaryDeltaCommands(deltaCommands, deltaPath);
                 }
@@ -376,13 +368,12 @@ public class FileFacadeServiceImpl implements FileFacadeService {
 
 
 
-    // Metin dosyalarını işleme
     private void processTextFile(byte[] fileData, String aesKey, String uniqueFilePath, File userFile, String versionNumber, String fileHash) throws Exception {
         String newContent = new String(fileData, StandardCharsets.UTF_8);
-        logger.info("Yeni içerik: {}", newContent);
+        logger.info("New content: {}", newContent);
 
         if (versionNumber.equals("v1")) {
-            // İlk versiyon: Şifreleyip kaydet
+            // First version: Encrypt and save
             byte[] encryptedData = AESUtil.encrypt(newContent.getBytes(StandardCharsets.UTF_8), aesKey);
             String versionedFilePath = uniqueFilePath + "/versions/" + versionNumber + "/" + userFile.getFileName();
             saveBlobToAzure(versionedFilePath, encryptedData);
@@ -392,9 +383,9 @@ public class FileFacadeServiceImpl implements FileFacadeService {
             version.setSize((long) fileData.length);
             fileVersionManagementService.saveFileVersion(version);
         } else {
-            // Son içerik al ve delta hesapla
+            // Retrieve latest content and calculate delta
             String latestContent = fileVersionManagementService.getLatestContent(userFile, userFile.getUser());
-            logger.info("Son içerik: {}", latestContent);
+            logger.info("Latest content: {}", latestContent);
 
             String delta = DeltaUtil.calculateDelta(latestContent, newContent);
             String deltaPath = uniqueFilePath + "/versions/" + versionNumber + "/delta";
@@ -411,9 +402,9 @@ public class FileFacadeServiceImpl implements FileFacadeService {
 
     private void saveBlobToAzure(String path, byte[] data) throws Exception {
         String base64EncodedData = Base64.getEncoder().encodeToString(data);
-        logger.info("Azure Blob yazma işlemi başlatıldı. Path: {}, Veri boyutu: {}", path, data.length);
+        logger.info("Starting Azure Blob write operation. Path: {}, Data size: {}", path, data.length);
         azureBlobStorage.write(new Storage(path, base64EncodedData.getBytes(StandardCharsets.UTF_8)));
-        logger.info("Blob başarıyla yazıldı: {}", path);
+        logger.info("Blob successfully written: {}", path);
     }
 
     private String resolveOrCreateAESKey(String username) throws NoSuchAlgorithmException {
@@ -421,7 +412,7 @@ public class FileFacadeServiceImpl implements FileFacadeService {
         if (aesKey == null || aesKey.isEmpty()) {
             aesKey = AESUtil.generateAESKey();
             keyVaultService.saveEncryptionKeyToKeyVault(username, aesKey);
-            logger.info("Kullanıcı için yeni AES anahtarı oluşturuldu: {}", username);
+            logger.info("New AES key created for user: {}", username);
         }
         return aesKey;
     }
@@ -442,7 +433,7 @@ public class FileFacadeServiceImpl implements FileFacadeService {
         // Serialize deltaCommands to JSON
         String json = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(deltaCommands);
 
-        // Optionally compress the JSON (e.g., GZIP). Bu örnekte sıkıştırma yapılmamıştır.
+        // Convert JSON to bytes
         byte[] jsonData = json.getBytes(StandardCharsets.UTF_8);
 
         // Encode JSON data to Base64
@@ -451,7 +442,7 @@ public class FileFacadeServiceImpl implements FileFacadeService {
         // Save Base64-encoded JSON to Azure Blob Storage
         azureBlobStorage.write(new Storage(deltaPath, base64EncodedData));
 
-        logger.info("Delta komutları başarıyla kaydedildi: {}", deltaPath);
+        logger.info("Delta commands successfully saved: {}", deltaPath);
     }
 }
 

@@ -59,6 +59,6 @@ public class UserMapper {
             }
         }
 
-        return email != null ? email : "E-posta bulunamadı";
+        return email != null ? email : "Email address not resolved";
     }
 }

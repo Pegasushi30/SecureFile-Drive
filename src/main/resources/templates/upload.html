@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="">
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dosya Yükleme</title>
+    <title>File Upload</title>
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
@@ -12,75 +12,75 @@
         <img src="/images/SFD_Icon.png" alt="Logo" class="nav-icon">
         <a th:href="@{/intro}" class="logo-text">Secure File Drive</a>
     </div>
-    <!-- Hamburger Menü -->
+    <!-- Hamburger Menu -->
     <div class="hamburger-menu" id="hamburger-menu" onclick="toggleDrawer()">
         ☰
     </div>
-    <!-- Normal Navigasyon -->
+    <!-- Normal Navigation -->
     <div class="nav-links">
-        <a th:href="@{/upload}">Dosya Yükle</a>
-        <a th:href="@{/directories}">Tüm Dizinlerim</a>
-        <a th:href="@{/home}">Kullanıcı Bilgilerim</a>
-        <a th:href="@{/shared-files}">Benimle Paylaşılanlar</a>
-        <a th:href="@{/logout}">Çıkış Yap</a>
+        <a th:href="@{/upload}">Upload File</a>
+        <a th:href="@{/directories}">View All Directories</a>
+        <a th:href="@{/home}">My Profile</a>
+        <a th:href="@{/shared-files}">Shared With Me</a>
+        <a th:href="@{/logout}">Logout</a>
     </div>
 </nav>
 
-<!-- Drawer Menü -->
+<!-- Drawer Menu -->
 <div class="drawer-menu" id="drawer">
-    <a th:href="@{/upload}">Dosya Yükle</a>
-    <a th:href="@{/directories}">Tüm Dizinlerim</a>
-    <a th:href="@{/home}">Kullanıcı Bilgilerim</a>
-    <a th:href="@{/shared-files}">Benimle Paylaşılanlar</a>
-    <a th:href="@{/logout}">Çıkış Yap</a>
+    <a th:href="@{/upload}">Upload File</a>
+    <a th:href="@{/directories}">View All Directories</a>
+    <a th:href="@{/home}">My Profile</a>
+    <a th:href="@{/shared-files}">Shared With Me</a>
+    <a th:href="@{/logout}">Logout</a>
 </div>
 
-<!-- Arka Plan Karartma -->
+<!-- Drawer Overlay -->
 <div class="drawer-overlay" id="drawer-overlay" onclick="toggleDrawer()"></div>
 <main>
-    <h1>Dosya Yükle</h1>
+    <h1>Upload File</h1>
 
-    <!-- Hata Mesajı -->
+    <!-- Error Message -->
     <div th:if="${errorMessage != null}" class="error-message">
         <p th:text="${errorMessage}"></p>
     </div>
 
-    <!-- Dosya Yükleme Formu -->
+    <!-- File Upload Form -->
     <div class="file-upload-container">
-        <img src="/images/FileUploadIcon.png" alt="Dosya Yükleme Gösterimi" class="file-upload-icon">
+        <img src="/images/FileUploadIcon.png" alt="File Upload Illustration" class="file-upload-icon">
 
         <form id="fileUploadForm" th:action="@{/files/upload}" method="post" enctype="multipart/form-data">
-            <!-- Gizli Username Alanı -->
+            <!-- Hidden Username Field -->
             <input type="hidden" name="username" th:value="${username}" />
 
-            <!-- Masaüstü için Drag and Drop Alanı -->
+            <!-- Drag and Drop Area for Desktop -->
             <div class="drag-drop-area desktop-only" id="dragDropArea">
-                <p>Dosyalarınızı buraya sürükleyip bırakın veya tıklayın</p>
+                <p>Drag and drop your files here or click to select</p>
                 <input id="file-desktop" type="file" name="file" class="custom-file-input" />
-                <span id="file-chosen">Henüz dosya seçilmedi</span>
+                <span id="file-chosen">No file selected</span>
             </div>
 
-            <!-- Mobil için Sadece Dosya Seçme Alanı -->
+            <!-- File Selection for Mobile -->
             <div class="mobile-only">
-                <label for="file-mobile" class="mobile-file-label">Dosya Seç</label>
+                <label for="file-mobile" class="mobile-file-label">Choose File</label>
                 <input id="file-mobile" type="file" name="file" class="custom-file-input" />
             </div>
 
-            <!-- Dizini Seçme Alanı -->
-            <label for="directory">Dosyanın Yükleneceği Dizini Seçin:</label>
+            <!-- Directory Selection -->
+            <label for="directory">Select Directory to Upload File:</label>
             <select name="directoryId" id="directory">
-                <option value="">Ana Dizin</option>
+                <option value="">Root Directory</option>
                 <option th:each="dir : ${directories}" th:value="${dir.id}" th:text="${dir.name}"></option>
             </select>
 
-            <!-- Yükle Butonu -->
-            <button type="submit">Yükle</button>
+            <!-- Upload Button -->
+            <button type="submit">Upload</button>
         </form>
     </div>
 </main>
 
 <footer>
-    <p>&copy; 2024 SecureFile Drive. Tüm Hakları Saklıdır.</p>
+    <p>&copy; 2024 SecureFile Drive. All Rights Reserved.</p>
 </footer>
 
 <script src="/js/dragDropHandler.js"></script>

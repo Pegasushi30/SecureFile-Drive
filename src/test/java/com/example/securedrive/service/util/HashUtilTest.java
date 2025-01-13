@@ -9,11 +9,10 @@ public class HashUtilTest {
 
     @Test
     public void testCalculateHash_HelloWorld_Debug() {
-        // Arrange
+        // Given
         String input = "hello world";
         String expectedHash = "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9";
 
-        // Debug: Byte'ları yazdır
         byte[] inputBytes = input.getBytes(StandardCharsets.UTF_8);
         System.out.println("Bytes length: " + inputBytes.length);
         for (byte b : inputBytes) {
@@ -21,26 +20,25 @@ public class HashUtilTest {
         }
         System.out.println();
 
-        // Act
+        // When
         String actualHash = HashUtil.calculateHash(inputBytes);
 
-        // Assert
+        // Then
         Assertions.assertEquals(expectedHash, actualHash, "SHA-256 hash mismatch for input 'hello world'");
     }
 
 
     @Test
     public void testCalculateHash_EmptyString() {
-        // Arrange
+        // Given
         String input = "";
-        // Boş stringin SHA-256 değeri (64 karakterlik hex):
         String expectedHash = "e3b0c44298fc1c149afbf4c8996fb924" +
                 "27ae41e4649b934ca495991b7852b855";
 
-        // Act
+        // When
         String actualHash = HashUtil.calculateHash(input.getBytes(StandardCharsets.UTF_8));
 
-        // Assert
+        // Then
         Assertions.assertEquals(expectedHash, actualHash);
     }
 }

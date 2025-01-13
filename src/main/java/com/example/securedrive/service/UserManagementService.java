@@ -1,4 +1,3 @@
-// com/example/securedrive/service/UserManagementService.java
 package com.example.securedrive.service;
 
 import com.example.securedrive.model.User;

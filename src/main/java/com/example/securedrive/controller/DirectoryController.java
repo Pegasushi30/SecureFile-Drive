@@ -9,8 +9,6 @@ import com.example.securedrive.model.User;
 import com.example.securedrive.service.DirectoryService;
 import com.example.securedrive.service.FileManagementService;
 import com.example.securedrive.service.UserManagementService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -31,7 +29,7 @@ public class DirectoryController {
     private final UserManagementService userManagementService;
     private final DirectoryService directoryService;
     private final FileManagementService fileManagementService;
-     private static final Logger logger = LoggerFactory.getLogger(DirectoryController.class);
+
     public DirectoryController(UserManagementService userManagementService,
                                DirectoryService directoryService,
                                FileManagementService fileManagementService) {
@@ -47,20 +45,9 @@ public class DirectoryController {
             String username = authentication.getName();
             User user = userManagementService.findByUsername(username)
                     .orElseThrow(() -> new RuntimeException("User not found"));
-
-            logger.debug("Authenticated User ID: {}, Email: {}", user.getId(), user.getEmail());
-
-            // Kök dizinler
             List<DirectoryDto> directories = directoryService.getRootDirectoriesAsDto(user);
-
-            // root dosyalar (FileDto listesi)
             List<FileDto> files = fileManagementService.getUserFilesInRootDirectoryAsDto(user);
-
-            // Kullanıcının paylaştığı dizinler
             List<DirectoryShareDto> mySharedDirectories = directoryService.getMySharedDirectories(user);
-            logger.debug("Paylaşılan dizinler (sizin paylaştığınız): {}", mySharedDirectories);
-
-            // Model'e ekle
             modelAndView.addObject("directories", directories);
             modelAndView.addObject("files", files);
             modelAndView.addObject("username", username);
@@ -80,28 +67,18 @@ public class DirectoryController {
         String username = authentication.getName();
         User user = userManagementService.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-
-        // Dizin bilgileri
         DirectoryDto currentDirectory = directoryService.getDirectoryByIdAsDto(directoryId, user);
         List<DirectoryDto> subdirectories = directoryService.getSubDirectoriesAsDto(user, directoryId);
-
-        // Seçili dizindeki dosyalar
         List<FileDto> files = fileManagementService.getFilesByDirectoryAsDto(
                 directoryService.getDirectoryById(directoryId)
                         .orElseThrow(() -> new RuntimeException("Directory not found"))
         );
-
-        // root dosyalar
         List<FileDto> rootFiles = fileManagementService.getUserFilesInRootDirectoryAsDto(user);
-
-        // Bu dizin için paylaşılan dizinler
         List<DirectoryShareDto> mySharedDirectories =
                 directoryService.getMySharedDirectoriesForDirectory(user, directoryId);
-
-        // Modele ekle
         modelAndView.addObject("currentDirectory", currentDirectory);
         modelAndView.addObject("subDirectories", subdirectories);
-        modelAndView.addObject("files", files);                 // <-- FileDto listesi
+        modelAndView.addObject("files", files);
         modelAndView.addObject("mySharedDirectories", mySharedDirectories);
         modelAndView.addObject("rootFiles", rootFiles);
         modelAndView.addObject("username", username);
@@ -115,17 +92,10 @@ public class DirectoryController {
             @RequestParam(value = "parentDirectoryId", required = false) Long parentDirectoryId,
             Authentication authentication,
             RedirectAttributes redirectAttributes) {
-
         String username = authentication.getName();
-
         DirectoryDto directoryDto = new DirectoryDto(null, name, parentDirectoryId, username, List.of(),List.of());
-
-        // Directory oluşturmak için DTO kullanın
-        DirectoryDto createdDirectory = directoryService.createDirectory(directoryDto);
-        logger.info("User '{}' created directory with ID {} and name '{}'", username, createdDirectory.id(), createdDirectory.name());
-        // Flash attribute ekleyerek mesajı yönlendirmeye koruyun
+        directoryService.createDirectory(directoryDto);
         redirectAttributes.addFlashAttribute("message", "Dizin başarıyla oluşturuldu.");
-
         if (parentDirectoryId != null) {
             return "redirect:/directories/" + parentDirectoryId;
         } else {
@@ -136,26 +106,18 @@ public class DirectoryController {
     @DeleteMapping("/delete/{id}")
     public ModelAndView deleteDirectory(@PathVariable Long id, Authentication authentication) {
         ModelAndView modelAndView;
-
         String username = authentication.getName();
         User user = userManagementService.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-
         try {
-            // Silinecek dizinin üst dizin ID'sini al
             DirectoryDto directoryDto = directoryService.getDirectoryByIdAsDto(id, user);
             Long parentDirectoryId = directoryDto.parentDirectoryId();
-
-            // Service üzerinden silme işlemi gerçekleştirin
             directoryService.deleteDirectoryById(id, user);
-
-            // Silme sonrası yönlendirme
             modelAndView = new ModelAndView(parentDirectoryId != null
                     ? "redirect:/directories/" + parentDirectoryId
                     : "redirect:/directories");
             modelAndView.addObject("message", "Dizin başarıyla silindi.");
         } catch (RuntimeException e) {
-            // Hata durumunda yönlendirme ve mesaj
             modelAndView = new ModelAndView("redirect:/directories");
             modelAndView.addObject("error", "Dizin silinirken bir hata oluştu: " + e.getMessage());
         }
@@ -168,19 +130,14 @@ public class DirectoryController {
             @RequestParam("directoryId") Long directoryId,
             @RequestParam("sharedWithUserEmail") String sharedWithEmail,
             Authentication authentication) {
-
         String username = authentication.getName();
-
         User owner = userManagementService.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-
         DirectoryShareRequestDto dto = new DirectoryShareRequestDto();
         dto.setDirectoryId(directoryId);
         dto.setUsername(username);
         dto.setSharedWithUserEmail(sharedWithEmail);
-
         directoryService.shareDirectory(dto, owner);
-
         return new ModelAndView("redirect:/directories");
     }
 
@@ -192,16 +149,11 @@ public class DirectoryController {
             Authentication authentication) {
         try {
             String username = authentication.getName();
-
             User owner = userManagementService.findByUsername(username)
                     .orElseThrow(() -> new RuntimeException("User not found"));
-
             directoryService.revokeDirectoryShare(directoryId, sharedWithUserEmail, owner);
-
-            // Yanıtı oluşturun
             Map<String, Object> response = new HashMap<>();
             response.put("message", "Paylaşım başarıyla iptal edildi!");
-
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -216,9 +168,7 @@ public class DirectoryController {
         String username = authentication.getName();
         User user = userManagementService.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-
         List<DirectoryShareDto> sharedDirectories = directoryService.getSharedDirectories(user);
-
         ModelAndView modelAndView = new ModelAndView("shared_directories");
         modelAndView.addObject("sharedDirectories", sharedDirectories);
         return modelAndView;

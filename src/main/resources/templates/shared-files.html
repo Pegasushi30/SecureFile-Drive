@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="tr">
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Paylaşılan Dosyalar</title>
+    <title>Shared Files</title>
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" integrity="sha512-Fo3rlrZj/k7ujTTX5p2eNp9B+5PS4rKZBBP1Y1+6qFXB8uM76fGgGvK3zMpnUjpu7bbFbfA4Zm+Q95Fh+Wg+w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
@@ -15,70 +15,70 @@
         <img src="/images/SFD_Icon.png" alt="Logo" class="nav-icon">
         <a th:href="@{/intro}" class="logo-text">Secure File Drive</a>
     </div>
-    <!-- Hamburger Menü -->
+    <!-- Hamburger Menu -->
     <div class="hamburger-menu" id="hamburger-menu" onclick="toggleDrawer()">
         ☰
     </div>
-    <!-- Normal Navigasyon -->
+    <!-- Normal Navigation -->
     <div class="nav-links">
-        <a th:href="@{/upload}">Dosya Yükle</a>
-        <a th:href="@{/directories}">Tüm Dizinlerim</a>
-        <a th:href="@{/home}">Kullanıcı Bilgilerim</a>
-        <a th:href="@{/shared-files}">Benimle Paylaşılanlar</a>
-        <a th:href="@{/logout}">Çıkış Yap</a>
+        <a th:href="@{/upload}">Upload File</a>
+        <a th:href="@{/directories}">All Directories</a>
+        <a th:href="@{/home}">My Profile</a>
+        <a th:href="@{/shared-files}">Shared With Me</a>
+        <a th:href="@{/logout}">Logout</a>
     </div>
 </nav>
 
-<!-- Drawer Menü -->
+<!-- Drawer Menu -->
 <div class="drawer-menu" id="drawer">
-    <a th:href="@{/upload}">Dosya Yükle</a>
-    <a th:href="@{/directories}">Tüm Dizinlerim</a>
-    <a th:href="@{/home}">Kullanıcı Bilgilerim</a>
-    <a th:href="@{/shared-files}">Benimle Paylaşılanlar</a>
-    <a th:href="@{/logout}">Çıkış Yap</a>
+    <a th:href="@{/upload}">Upload File</a>
+    <a th:href="@{/directories}">All Directories</a>
+    <a th:href="@{/home}">My Profile</a>
+    <a th:href="@{/shared-files}">Shared With Me</a>
+    <a th:href="@{/logout}">Logout</a>
 </div>
 
 <main>
-    <h1>Size Paylaşılan Dosyalar</h1>
+    <h1>Files Shared With You</h1>
 
-    <!-- İki Ayrı Arama Çubuğu -->
+    <!-- Two Separate Search Boxes -->
     <div class="file-search-container">
-        <!-- Gönderici E-postası Arama -->
+        <!-- Sender Email Search -->
         <div class="search-box">
             <i class="fas fa-user"></i>
-            <input type="text" id="emailSearch" placeholder="Gönderici e-postası ara..." oninput="filterFiles()" />
+            <input type="text" id="emailSearch" placeholder="Search by sender email..." oninput="filterFiles()" />
         </div>
 
-        <!-- Dosya Adı Arama -->
+        <!-- File Name Search -->
         <div class="search-box">
             <i class="fas fa-file-alt"></i>
-            <input type="text" id="fileSearch" placeholder="Dosya adı ara..." oninput="filterFiles()" />
+            <input type="text" id="fileSearch" placeholder="Search by file name..." oninput="filterFiles()" />
         </div>
     </div>
 
     <div class="content-wrapper" id="shared-files-container">
-        <!-- Eğer hiç paylaşım yoksa -->
-        <p th:if="${#maps.isEmpty(groupedShares)}" class="no-files-message">Paylaşılan dosyanız bulunmamaktadır.</p>
+        <!-- If no shares are found -->
+        <p th:if="${#maps.isEmpty(groupedShares)}" class="no-files-message">No files shared with you.</p>
 
-        <!-- Paylaşan kişilere göre gruplama -->
+        <!-- Group by sender -->
         <div th:each="emailGroup : ${groupedShares}" class="email-group">
             <h2 class="section-title">
-                Paylaşan: <span th:text="${emailGroup.key}"></span>
+                Shared By: <span th:text="${emailGroup.key}"></span>
             </h2>
 
-            <!-- Dizinlere göre gruplama -->
+            <!-- Group by directories -->
             <div th:each="directoryGroup : ${emailGroup.value}" class="directory-group">
                 <h3 class="directory-title">
-                    📂 Dizin: <span th:text="${directoryGroup.key}"></span>
+                    📂 Directory: <span th:text="${directoryGroup.key}"></span>
                     <i class="fas fa-plus toggle-icon"></i>
                 </h3>
                 <div class="file-grid">
                     <div th:each="fileShare : ${directoryGroup.value}" class="file-card">
                         <div class="file-details">
                             <span class="file-name" th:text="'📄 ' + ${fileShare.fileName}"></span>
-                            <span class="version" th:text="'Versiyon: ' + ${fileShare.version}"></span>
+                            <span class="version" th:text="'Version: ' + ${fileShare.version}"></span>
                         </div>
-                        <a class="download-btn" th:href="@{'/files/download-shared/' + ${fileShare.id}}">İndir</a>
+                        <a class="download-btn" th:href="@{'/files/download-shared/' + ${fileShare.id}}">Download</a>
                     </div>
                 </div>
             </div>
@@ -87,10 +87,10 @@
 </main>
 
 <footer>
-    <p>&copy; 2024 SecureFile Drive. Tüm Hakları Saklıdır.</p>
+    <p>&copy; 2024 SecureFile Drive. All Rights Reserved.</p>
 </footer>
 
-<!-- JavaScript Dosyalarını Bağlayın -->
+<!-- Attach JavaScript Files -->
 <script src="/js/navigationToggleHandler.js"></script>
 <script src="/js/filterFilesHandler.js"></script>
 <script>

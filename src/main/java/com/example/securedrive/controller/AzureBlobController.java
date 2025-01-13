@@ -21,7 +21,6 @@ import org.springframework.web.servlet.ModelAndView;
 import java.util.HashMap;
 import java.util.Map;
 
-
 @RestController
 @RequestMapping("files")
 public class AzureBlobController {
@@ -29,13 +28,13 @@ public class AzureBlobController {
     private final FileFacadeService fileFacadeService;
     private final FileManagementService fileManagementService;
 
+    private static final Logger logger = LoggerFactory.getLogger(AzureBlobController.class);
+
     @Autowired
     public AzureBlobController(FileFacadeService fileFacadeService, FileManagementService fileManagementService) {
         this.fileFacadeService = fileFacadeService;
         this.fileManagementService = fileManagementService;
     }
-
-    private static final Logger logger = LoggerFactory.getLogger(AzureBlobController.class);
 
     @PostMapping("/revoke-share")
     @ResponseBody
@@ -46,15 +45,11 @@ public class AzureBlobController {
             @RequestParam("version") String version,
             Authentication authentication) {
         try {
-            // Paylaşımı iptal et
             FileRevokeShareRequestDto dto = new FileRevokeShareRequestDto(fileId, sharedWithEmail, username, version);
             fileFacadeService.revokeShare(dto, authentication);
-            // Kalan paylaşım sayısını al
             int remainingShares = fileFacadeService.getRemainingShares(fileId);
-
-            // Yanıt
             Map<String, Object> response = new HashMap<>();
-            response.put("message", "Paylaşım başarıyla iptal edildi!");
+            response.put("message", "Share revoked successfully!");
             response.put("remainingShares", remainingShares);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
@@ -62,9 +57,6 @@ public class AzureBlobController {
                     .body(Map.of("error", e.getMessage()));
         }
     }
-
-
-
 
     @PostMapping("/share")
     @PreAuthorize("hasRole('ROLE_ADMIN') or #username == authentication.name")
@@ -74,19 +66,15 @@ public class AzureBlobController {
             @RequestParam("sharedWithEmail") String sharedWithEmail,
             @RequestParam("version") String version,
             Authentication authentication) {
-
         try {
             FileShareRequestDto dto = new FileShareRequestDto(username, fileId, sharedWithEmail, version);
             fileFacadeService.shareFile(dto, authentication);
-
-            String redirectUrl = "/directories"; // Varsayılan yönlendirme
-            return ResponseEntity.ok(Map.of("message", "Dosya başarıyla paylaşıldı.", "redirectUrl", redirectUrl));
+            String redirectUrl = "/directories";
+            return ResponseEntity.ok(Map.of("message", "File shared successfully.", "redirectUrl", redirectUrl));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
         }
     }
-
-
 
     @GetMapping("/download-shared/{fileId}")
     public ResponseEntity<?> downloadSharedFile(
@@ -97,7 +85,7 @@ public class AzureBlobController {
             FileDownloadSharedRequestDto dto = new FileDownloadSharedRequestDto(fileId, username);
             FileDownloadSharedResponseDto response = fileFacadeService.downloadSharedFile(dto);
             String fileName = response.getFileName();
-            byte[] originalData= response.getOriginalData();
+            byte[] originalData = response.getOriginalData();
             ByteArrayResource resource = response.getResource();
 
             return ResponseEntity.ok()
@@ -112,9 +100,6 @@ public class AzureBlobController {
         }
     }
 
-
-
-
     @PostMapping("/upload")
     @PreAuthorize("hasRole('ROLE_ADMIN') or #username == authentication.name")
     public ModelAndView uploadFile(
@@ -127,41 +112,35 @@ public class AzureBlobController {
         ModelAndView modelAndView;
 
         try {
-            // Yetki kontrolü
             if (!authentication.getName().equals(username) && authentication.getAuthorities().stream()
                     .noneMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"))) {
                 modelAndView = new ModelAndView("upload");
-                modelAndView.addObject("errorMessage", "Bu kullanıcı için dosya yükleme yetkiniz yok.");
+                modelAndView.addObject("errorMessage", "You do not have permission to upload files for this user.");
                 return modelAndView;
             }
 
-            // DTO oluşturma ve servis çağrısı
             FileUploadRequestDto dto = new FileUploadRequestDto(username, directoryId, file, manualVersionNumber);
             String message = fileFacadeService.uploadFile(dto);
 
-            if (message.startsWith("Bu dosya bu dizinde zaten mevcut")) {
-                modelAndView = new ModelAndView("upload"); // Aynı sayfada hata mesajı
+            if (message.startsWith("This file already exists in this directory")) {
+                modelAndView = new ModelAndView("upload");
                 modelAndView.addObject("errorMessage", message);
-            } else if (message.startsWith("Dosya başarıyla yüklendi")) {
-                modelAndView = new ModelAndView("success"); // success.html sayfasına yönlendirme
+            } else if (message.startsWith("File uploaded successfully")) {
+                modelAndView = new ModelAndView("success");
                 modelAndView.addObject("message", message);
             } else {
                 modelAndView = new ModelAndView("upload");
-                modelAndView.addObject("errorMessage", "Bilinmeyen bir hata oluştu.");
+                modelAndView.addObject("errorMessage", "An unknown error occurred.");
             }
 
         } catch (Exception e) {
             modelAndView = new ModelAndView("upload");
-            modelAndView.addObject("errorMessage", "Dosya yükleme başarısız: " + e.getMessage());
+            modelAndView.addObject("errorMessage", "File upload failed: " + e.getMessage());
         }
 
         return modelAndView;
     }
 
-
-
-
-    // Dosya İndirme
     @GetMapping("/download/{username}/{fileId}")
     @PreAuthorize("hasRole('ROLE_ADMIN') or #username == authentication.name")
     public ResponseEntity<?> downloadSpecificVersion(
@@ -177,7 +156,7 @@ public class AzureBlobController {
             FileDownloadSpecificVersionRequestDto dto = new FileDownloadSpecificVersionRequestDto(username, fileId, versionNumber);
             ByteArrayResource resource = fileFacadeService.downloadSpecificVersion(dto);
             File file = fileManagementService.findById(fileId)
-                    .orElseThrow(() -> new RuntimeException("Dosya bulunamadı: " + fileId));
+                    .orElseThrow(() -> new RuntimeException("File not found: " + fileId));
             String originalFileName = file.getFileName();
             return ResponseEntity.ok()
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + originalFileName + "\"")
@@ -190,8 +169,6 @@ public class AzureBlobController {
         }
     }
 
-
-
     @DeleteMapping("/delete/{username}/{fileId}")
     @PreAuthorize("hasRole('ROLE_ADMIN') or #username == authentication.name")
     @ResponseBody
@@ -203,8 +180,8 @@ public class AzureBlobController {
         try {
             FileDeleteSpecificVersionRequestDto dto = new FileDeleteSpecificVersionRequestDto(username, fileId, versionNumber);
             String result = fileFacadeService.deleteSpecificVersion(dto);
-            if (result.startsWith("Dosya ve versiyon başarıyla silindi")) {
-                return ResponseEntity.ok(Map.of("message", "Dosya başarıyla silindi."));
+            if (result.startsWith("File and version deleted successfully")) {
+                return ResponseEntity.ok(Map.of("message", "File deleted successfully."));
             } else {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(Map.of("error", result));
@@ -214,7 +191,4 @@ public class AzureBlobController {
                     .body(Map.of("error", e.getMessage()));
         }
     }
-
-
-
 }

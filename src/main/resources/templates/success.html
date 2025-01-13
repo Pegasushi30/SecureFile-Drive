@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="">
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>İşlem Başarılı</title>
+    <title>Operation Successful</title>
     <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
@@ -12,46 +12,46 @@
         <img src="/images/SFD_Icon.png" alt="Logo" class="nav-icon">
         <a th:href="@{/intro}" class="logo-text">Secure File Drive</a>
     </div>
-    <!-- Hamburger Menü -->
+    <!-- Hamburger Menu -->
     <div class="hamburger-menu" id="hamburger-menu" onclick="toggleDrawer()">
         ☰
     </div>
-    <!-- Normal Navigasyon -->
+    <!-- Normal Navigation -->
     <div class="nav-links">
-        <a th:href="@{/upload}">Dosya Yükle</a>
-        <a th:href="@{/directories}">Tüm Dizinlerim</a>
-        <a th:href="@{/home}">Kullanıcı Bilgilerim</a>
-        <a th:href="@{/shared-files}">Benimle Paylaşılanlar</a>
-        <a th:href="@{/logout}">Çıkış Yap</a>
+        <a th:href="@{/upload}">Upload File</a>
+        <a th:href="@{/directories}">View All Directories</a>
+        <a th:href="@{/home}">My Profile</a>
+        <a th:href="@{/shared-files}">Shared With Me</a>
+        <a th:href="@{/logout}">Logout</a>
     </div>
 </nav>
 
-<!-- Drawer Menü -->
+<!-- Drawer Menu -->
 <div class="drawer-menu" id="drawer">
-    <a th:href="@{/upload}">Dosya Yükle</a>
-    <a th:href="@{/directories}">Tüm Dizinlerim</a>
-    <a th:href="@{/home}">Kullanıcı Bilgilerim</a>
-    <a th:href="@{/shared-files}">Benimle Paylaşılanlar</a>
-    <a th:href="@{/logout}">Çıkış Yap</a>
+    <a th:href="@{/upload}">Upload File</a>
+    <a th:href="@{/directories}">View All Directories</a>
+    <a th:href="@{/home}">My Profile</a>
+    <a th:href="@{/shared-files}">Shared With Me</a>
+    <a th:href="@{/logout}">Logout</a>
 </div>
 
-<!-- Arka Plan Karartma -->
+<!-- Drawer Overlay -->
 <div class="drawer-overlay" id="drawer-overlay" onclick="toggleDrawer()"></div>
 
-<!-- Ana İçerik Kutu İçinde -->
+<!-- Main Content Inside Box -->
 <main class="main-content">
-    <h1>İşlem Başarılı!</h1>
-    <p th:text="${message}">İşlem başarıyla tamamlandı.</p>
+    <h1>Operation Successful!</h1>
+    <p th:text="${message}">The operation was completed successfully.</p>
 
     <div class="nav-links">
-        <a th:href="@{/upload}">Yeni Dosya Yükle</a>
-        <a th:href="@{/directories}">Dizinleri Görüntüle</a>
-        <a th:href="@{/home}">Anasayfaya Dön</a>
+        <a th:href="@{/upload}">Upload Another File</a>
+        <a th:href="@{/directories}">View Directories</a>
+        <a th:href="@{/home}">Go to Homepage</a>
     </div>
 </main>
 
 <footer>
-    <p>&copy; 2024 SecureFile Drive. Tüm Hakları Saklıdır.</p>
+    <p>&copy; 2024 SecureFile Drive. All Rights Reserved.</p>
 </footer>
 <script src="/js/navigationToggleHandler.js"></script>
 </body>

@@ -7,13 +7,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
         if (deleteModeActive) {
             directoryContainer.classList.add('delete-mode-active');
-            document.getElementById('toggleDeleteMode').textContent = 'Silme Modunu Kapat';
+            document.getElementById('toggleDeleteMode').textContent = 'Disable Delete Mode';
         } else {
             directoryContainer.classList.remove('delete-mode-active');
-            document.getElementById('toggleDeleteMode').textContent = 'Silme Modunu Aç';
+            document.getElementById('toggleDeleteMode').textContent = 'Enable Delete Mode';
         }
     }
 
-    // Silme Modu Butonuna Event Listener Ekle
     document.getElementById('toggleDeleteMode').addEventListener('click', toggleDeleteMode);
 });

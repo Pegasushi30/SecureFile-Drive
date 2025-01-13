@@ -9,6 +9,7 @@ import com.example.securedrive.model.File;
 import com.example.securedrive.model.User;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public interface FileManagementService {
@@ -21,10 +22,8 @@ public interface FileManagementService {
     List<File> getUserFilesInRootDirectory(User user);
     List<File> getFilesByDirectory(Directory directory);
     void shareFileWithUser(File file, User owner, User sharedWithUser, String versionNumber);
-    // DTO bazlı ek metotlar
     List<FileDto> getUserFilesInRootDirectoryAsDto(User user);
     List<FileDto> getFilesByDirectoryAsDto(Directory directory);
-    public List<FileDto> getLastUploadedFiles(String username, int limit);
     List<FileShareDto> getSharedFilesByUsername(String username);
     List<FileDto> getFilesByUsername(String username);
     long getTotalStorage(String username);
@@ -32,5 +31,8 @@ public interface FileManagementService {
     List<FileVersionDto> getLastAccessedFileVersions(String username, int limit);
     List<FileVersionDto> getLastUploadedFileVersions(String username, int limit);
     String getFileNameByVersionId(Long versionId);
+    Map<Long, String> createFileNameMap(List<FileVersionDto> versions);
+    Map<Long, String> createFileSizeMap(List<FileVersionDto> versions);
+    Map<String, Map<String, List<FileShareDto>>> groupFileSharesByOwnerAndDirectory(List<FileShareDto> sharedFiles);
 }
 

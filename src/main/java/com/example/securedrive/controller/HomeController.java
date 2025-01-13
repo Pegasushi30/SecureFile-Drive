@@ -43,41 +43,25 @@ public class HomeController {
         UserDto userDto = authentication != null ? userMapper.toUserDTO(authentication) : null;
 
         if (userDto != null) {
-            // Kullanıcı bilgileri
             modelAndView.addObject("username", userDto.getUsername());
             modelAndView.addObject("email", userDto.getEmail());
             modelAndView.addObject("displayName", userDto.getDisplayName());
             modelAndView.addObject("roles", userDto.getRoles());
 
-            // Son yüklenen dosyalar
             List<FileVersionDto> lastUploadedFiles = fileManagementService.getLastUploadedFileVersions(userDto.getUsername(), 5);
-            Map<Long, String> lastUploadedNames = lastUploadedFiles.stream()
-                    .collect(Collectors.toMap(FileVersionDto::id,
-                            f -> fileManagementService.getFileNameByVersionId(f.id())));
-
-            Map<Long, String> lastUploadedSizes = lastUploadedFiles.stream()
-                    .collect(Collectors.toMap(FileVersionDto::id,
-                            f -> FileSizeUtil.formatSize(f.size())));
-
+            Map<Long, String> lastUploadedNames = fileManagementService.createFileNameMap(lastUploadedFiles);
+            Map<Long, String> lastUploadedSizes = fileManagementService.createFileSizeMap(lastUploadedFiles);
             modelAndView.addObject("lastUploadedFiles", lastUploadedFiles);
             modelAndView.addObject("lastUploadedNames", lastUploadedNames);
             modelAndView.addObject("lastUploadedSizes", lastUploadedSizes);
 
-            // Son erişilen dosyalar
             List<FileVersionDto> lastAccessedFiles = fileManagementService.getLastAccessedFileVersions(userDto.getUsername(), 5);
-            Map<Long, String> lastAccessedNames = lastAccessedFiles.stream()
-                    .collect(Collectors.toMap(FileVersionDto::id,
-                            f -> fileManagementService.getFileNameByVersionId(f.id())));
-
-            Map<Long, String> lastAccessedSizes = lastAccessedFiles.stream()
-                    .collect(Collectors.toMap(FileVersionDto::id,
-                            f -> FileSizeUtil.formatSize(f.size())));
-
+            Map<Long, String> lastAccessedNames = fileManagementService.createFileNameMap(lastAccessedFiles);
+            Map<Long, String> lastAccessedSizes = fileManagementService.createFileSizeMap(lastAccessedFiles);
             modelAndView.addObject("lastAccessedFiles", lastAccessedFiles);
             modelAndView.addObject("lastAccessedNames", lastAccessedNames);
             modelAndView.addObject("lastAccessedSizes", lastAccessedSizes);
 
-            // Toplam ve kullanılan depolama
             long totalStorage = fileManagementService.getTotalStorage(userDto.getUsername());
             long usedStorage = fileManagementService.getUsedStorage(userDto.getUsername());
             long remainingStorage = totalStorage - usedStorage;
@@ -90,11 +74,8 @@ public class HomeController {
             modelAndView.addObject("remainingStorage", remainingStorageFormatted);
             modelAndView.addObject("remainingPercentage", remainingPercentage);
 
-            // Contacts
             Set<User> contacts = userManagementService.getContactsForUser(userDto.getUsername());
             modelAndView.addObject("contacts", contacts);
-
-            // Seninle paylaşılan dosyalar
             List<FileShareDto> sharedFiles = fileManagementService.getSharedFilesByUsername(userDto.getUsername());
             modelAndView.addObject("sharedFiles", sharedFiles);
         }
@@ -108,11 +89,13 @@ public class HomeController {
 
 
 
+
+
+
     @GetMapping("/files")
     public ModelAndView filesPage(Authentication authentication) {
         ModelAndView modelAndView = new ModelAndView("files");
         UserDto userDto = authentication != null ? userMapper.toUserDTO(authentication) : null;
-
         if (userDto != null) {
             List<FileDto> files = fileManagementService.getFilesByUsername(userDto.getUsername());
             List<DirectoryDto> directories = directoryService.getDirectoriesByUsername(userDto.getUsername());
@@ -131,7 +114,6 @@ public class HomeController {
     public ModelAndView uploadPage(Authentication authentication) {
         ModelAndView modelAndView = new ModelAndView("upload");
         UserDto userDto = authentication != null ? userMapper.toUserDTO(authentication) : null;
-
         if (userDto != null) {
             List<DirectoryDto> directories = directoryService.getDirectoriesByUsername(userDto.getUsername());
             modelAndView.addObject("directories", directories);
@@ -150,14 +132,7 @@ public class HomeController {
 
         if (userDto != null) {
             List<FileShareDto> sharedFiles = fileManagementService.getSharedFilesByUsername(userDto.getUsername());
-
-            // Paylaşan e-posta adresine ve dizin yoluna göre gruplama
-            Map<String, Map<String, List<FileShareDto>>> groupedShares = sharedFiles.stream()
-                    .collect(Collectors.groupingBy(
-                            FileShareDto::ownerEmail,
-                            Collectors.groupingBy(FileShareDto::directoryPath)
-                    ));
-
+            Map<String, Map<String, List<FileShareDto>>> groupedShares = fileManagementService.groupFileSharesByOwnerAndDirectory(sharedFiles);
             modelAndView.addObject("groupedShares", groupedShares);
             modelAndView.addObject("username", userDto.getUsername());
         } else {

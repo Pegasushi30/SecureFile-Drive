@@ -9,16 +9,14 @@ import java.io.IOException;
 
 @Controller
 public class OAuth2Controller {
-    // Azure B2C giriş akışını başlatır
     @GetMapping("/oauth2/authorization/azureb2c")
     public String redirectToAzureOAuth2() {
         return "redirect:/oauth2/authorization/azureb2c";
     }
 
-    // Azure B2C kimlik doğrulama geri dönüşünü ele alır
     @GetMapping("/login/oauth2/code/azureb2c")
     public String handleAzureOAuth2Callback() {
-        return "redirect:/home"; // Giriş başarılıysa yönlendirilecek sayfa
+        return "redirect:/home";
     }
 
     @GetMapping("/forgot-password")
@@ -27,7 +25,7 @@ public class OAuth2Controller {
                 "?p=B2C_1_passwordreset" +
                 "&client_id=6c4e0c80-e9f5-4922-a3d3-097549f658d2" +
                 "&nonce=defaultNonce" +
-                "&redirect_uri=https%3A%2F%2Flocalhost%3A8443%2Fpassword-reset-callback" + // Şifre sıfırlama dönüş URL'si
+                "&redirect_uri=https%3A%2F%2Flocalhost%3A8443%2Fpassword-reset-callback" +
                 "&scope=openid" +
                 "&response_type=code" +
                 "&prompt=login";
@@ -36,10 +34,8 @@ public class OAuth2Controller {
     @GetMapping("/password-reset-callback")
     public String handlePasswordResetCallback(@RequestParam(value = "error", required = false) String error) {
         if ("access_denied".equals(error)) {
-            // Kullanıcı "cancel" tuşuna bastıysa home sayfasına yönlendirin
             return "redirect:/home";
         }
-        // Başarılı şifre sıfırlama sonrası bir bilgi mesajı gösterebilirsiniz
         return "redirect:/home?resetSuccess=true";
     }
 
