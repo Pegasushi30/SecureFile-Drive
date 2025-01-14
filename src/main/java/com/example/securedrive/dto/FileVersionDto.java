@@ -8,5 +8,7 @@ public record FileVersionDto(
         String deltaPath,
         String hash,
         LocalDateTime timestamp,
-        Long size
+        Long size,
+        Long directoryId // <-- Yeni alan
 ) {}
+

@@ -46,7 +46,7 @@ public class SecurityConfig {
                 .oauth2Login(oauth2 -> oauth2
                         .clientRegistrationRepository(clientRegistrationRepository())
                         .userInfoEndpoint(userInfo -> userInfo.oidcUserService(customOidcUserService))
-                        .defaultSuccessUrl("/home", true)
+                        .defaultSuccessUrl("/intro", true)
                         .failureUrl("/login?error=true")
                 )
                 .logout(logout -> logout

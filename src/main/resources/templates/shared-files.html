@@ -41,15 +41,12 @@
 <main>
     <h1>Files Shared With You</h1>
 
-    <!-- Two Separate Search Boxes -->
     <div class="file-search-container">
-        <!-- Sender Email Search -->
         <div class="search-box">
             <i class="fas fa-user"></i>
             <input type="text" id="emailSearch" placeholder="Search by sender email..." oninput="filterFiles()" />
         </div>
 
-        <!-- File Name Search -->
         <div class="search-box">
             <i class="fas fa-file-alt"></i>
             <input type="text" id="fileSearch" placeholder="Search by file name..." oninput="filterFiles()" />
@@ -57,16 +54,12 @@
     </div>
 
     <div class="content-wrapper" id="shared-files-container">
-        <!-- If no shares are found -->
         <p th:if="${#maps.isEmpty(groupedShares)}" class="no-files-message">No files shared with you.</p>
-
-        <!-- Group by sender -->
         <div th:each="emailGroup : ${groupedShares}" class="email-group">
             <h2 class="section-title">
                 Shared By: <span th:text="${emailGroup.key}"></span>
             </h2>
 
-            <!-- Group by directories -->
             <div th:each="directoryGroup : ${emailGroup.value}" class="directory-group">
                 <h3 class="directory-title">
                     📂 Directory: <span th:text="${directoryGroup.key}"></span>
@@ -90,23 +83,8 @@
     <p>&copy; 2024 SecureFile Drive. All Rights Reserved.</p>
 </footer>
 
-<!-- Attach JavaScript Files -->
 <script src="/js/navigationToggleHandler.js"></script>
 <script src="/js/filterFilesHandler.js"></script>
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const directoryTitles = document.querySelectorAll('.directory-title');
-        directoryTitles.forEach(directoryTitle => {
-            const icon = directoryTitle.querySelector('.toggle-icon');
-            const fileGrid = directoryTitle.nextElementSibling;
-
-            directoryTitle.addEventListener('click', () => {
-                const isOpen = fileGrid.style.display === 'flex';
-                fileGrid.style.display = isOpen ? 'none' : 'flex';
-                icon.className = isOpen ? 'fas fa-plus toggle-icon' : 'fas fa-minus toggle-icon';
-            });
-        });
-    });
-</script>
+<script src="/js/directoryToggleManager.js"></script>
 </body>
 </html>

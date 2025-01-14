@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="">
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
 <head>
-    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
     <title>About - Secure File Drive</title>
     <link rel="stylesheet" href="/css/style.css">
     <style>
@@ -80,6 +80,13 @@
             margin-bottom: 1.5rem;
         }
 
+        .cta-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
         .cta-button {
             text-decoration: none;
             background: #00d8ff;
@@ -132,7 +139,8 @@
 <main class="intro-main">
     <h1>What is Secure File Drive?</h1>
     <p>
-        With Secure File Drive, store and share your files securely. Security, efficiency, and accessibility all in one!
+        With Secure File Drive, store and share your files securely.
+        Security, efficiency, and accessibility all in one!
     </p>
     <section class="intro-highlights">
         <div class="highlight">
@@ -155,7 +163,12 @@
     <div class="cta-section">
         <h2>📂 Get Started!</h2>
         <p>Manage, share, and store your files securely.</p>
-        <a href="/directories" class="cta-button">Start Now</a>
+        <div class="cta-buttons">
+            <!-- Dizine giden buton -->
+            <a th:href="@{/directories}" class="cta-button">Go to Directories</a>
+            <!-- Profile sayfasına giden buton -->
+            <a th:href="@{/home}" class="cta-button">Go to Profile</a>
+        </div>
     </div>
 </main>
 

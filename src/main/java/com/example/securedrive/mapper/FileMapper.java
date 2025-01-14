@@ -1,11 +1,8 @@
-// com/example/securedrive/mapper/FileMapper.java
-
 package com.example.securedrive.mapper;
 
 import com.example.securedrive.dto.FileDto;
 import com.example.securedrive.dto.FileShareDto;
 import com.example.securedrive.dto.FileVersionDto;
-import com.example.securedrive.dto.DirectoryDto;
 import com.example.securedrive.model.File;
 import com.example.securedrive.model.FileVersion;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -27,22 +24,24 @@ public class FileMapper {
         this.objectMapper = objectMapper;
     }
 
-
     public FileDto toDto(File file) {
         if (file == null) return null;
+
+        // FileVersionDto Listesi
         List<FileVersionDto> versions = (file.getVersions() != null)
                 ? file.getVersions().stream()
                 .map(this::toVersionDto)
                 .collect(Collectors.toList())
                 : List.of();
 
+        // FileShareDto Listesi
         List<FileShareDto> fileShares = (file.getFileShares() != null)
                 ? file.getFileShares().stream()
                 .map(fileShareMapper::toDto)
                 .collect(Collectors.toList())
                 : List.of();
 
-        // JSON string
+        // fileShares JSON string'i
         String fileSharesJson = "[]";
         try {
             fileSharesJson = objectMapper.writeValueAsString(fileShares);
@@ -63,13 +62,20 @@ public class FileMapper {
     }
 
     private FileVersionDto toVersionDto(FileVersion version) {
+        // directoryId parametresi eklendi:
+        Long directoryId = null;
+        if (version.getFile() != null && version.getFile().getDirectory() != null) {
+            directoryId = version.getFile().getDirectory().getId();
+        }
+
         return new FileVersionDto(
                 version.getId(),
                 version.getVersionNumber(),
                 version.getDeltaPath(),
                 version.getHash(),
                 version.getTimestamp(),
-                version.getSize()
+                version.getSize(),
+                directoryId
         );
     }
 }

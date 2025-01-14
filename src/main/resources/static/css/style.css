@@ -1,6 +1,3 @@
-/* HTML ve Body'nin tam yüksekliğe sahip olmasını sağlar */
-/* Reset */
-
 html, body {
     height: 100%;
     margin: 0;
@@ -14,34 +11,29 @@ body {
     min-height: 100vh;
     font-family: 'Roboto', Arial, sans-serif;
     line-height: 1.6;
-    color: #ffffff; /* Metin rengi beyaz */
+    color: #ffffff;
     margin: 0;
     padding: 0;
     text-align: center;
-
-    /* Ana Arka Plan Rengi */
     background-color: #1e3c72;
-
-    /* Grid Deseni */
     background-image:
             linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
             linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
-
-    background-size: 80px 80px; /* Grid kutu boyutları */
-    background-attachment: fixed; /* Scroll etkisi olmaması için */
-    position: relative; /* Flex container için relative */
+    background-size: 80px 80px;
+    background-attachment: fixed;
+    position: relative;
 }
 
 /* Matt Glass Container */
 .matt-glass {
-    position: absolute; /* Sayfa içeriğini kapsar */
+    position: absolute;
     top: 0;
     left: 0;
     width: 100%;
-    height: 100%; /* Tüm içeriği kapsar */
+    height: 100%;
     background: rgba(255, 255, 255, 0.2);
     backdrop-filter: blur(10px) brightness(0.9);
-    z-index: -1; /* Arka planda kalır */
+    z-index: -1;
 }
 
 /* İçerik */
@@ -56,43 +48,42 @@ main {
 
 /* Başlıklar */
 h1, h2, h3 {
-    color: #ffffff; /* Beyaz renk, kontrast için */
+    color: #ffffff;
     font-size: 18px;
     text-align: center;
-    font-weight: normal; /* Daha ince bir yazı tipi */
+    font-weight: normal;
 }
 
-/* Container içinde yer alan H2 başlıklar */
 .directory-container h2,
 .directory-create-container h2,
 .file-container h2,
 .user-info-container h2 {
-    color: #0056b3; /* Daha açık bir mavi tonu */
-    background: transparent; /* Arka planı korur */
-    font-weight: normal; /* Vurgu için kalın */
+    color: #0056b3;
+    background: transparent;
+    font-weight: normal;
 }
 
 /* Navigasyon */
 nav {
-    background: rgba(0, 0, 0, 0.7); /* Hafif şeffaf siyah */
-    padding: 15px 40px; /* Sol ve sağ tarafa ekstra padding */
+    background: rgba(0, 0, 0, 0.7);
+    padding: 15px 40px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     position: sticky;
     top: 0;
     z-index: 1000;
     display: flex;
-    justify-content: space-between; /* Sol ve sağ tarafı ayırır */
+    justify-content: space-between;
     align-items: center;
-    border-radius: 10px; /* Hafif yuvarlak köşeler */
+    border-radius: 10px;
     backdrop-filter: blur(5px);
-    margin: 0 20px; /* Sağ ve sol tarafa boşluk ekler */
+    margin: 0 20px;
 }
 
 /* Navigasyon Sol Kısmı */
 .nav-left {
     display: flex;
     align-items: center;
-    gap: 10px; /* Logo ile metin arasındaki boşluk */
+    gap: 10px;
 }
 
 .nav-left .nav-icon {
@@ -102,12 +93,12 @@ nav {
 }
 
 .nav-left .logo-text {
-    font-size: 16px; /* Nav linkleriyle aynı boyut */
+    font-size: 16px;
     font-weight: bold;
     color: white;
     text-decoration: none;
     transition: color 0.3s ease;
-    padding: 5px 10px; /* Link padding'ini aynı yapar */
+    padding: 5px 10px;
 }
 
 .nav-left .logo-text:hover {
@@ -124,42 +115,40 @@ nav {
 .nav-links a {
     color: white;
     text-decoration: none;
-    font-size: 16px; /* Logo yazısıyla aynı boyut */
+    font-size: 16px;
     font-weight: bold;
-    position: relative; /* Underline animasyonu için */
+    position: relative;
     padding: 5px 10px;
-    transition: color 0.3s ease; /* Sadece renk değişimini koru */
+    transition: color 0.3s ease;
 }
 
 .nav-links a:hover {
-    color: #f1f1f1; /* Hover'da sadece renk değişimi */
+    color: #f1f1f1;
 }
 
 .nav-links a::after {
     content: '';
     position: absolute;
-    width: 0; /* Başlangıçta görünmez */
+    width: 0;
     height: 2px;
     bottom: 0;
     left: 50%;
     background-color: white;
-    transition: all 0.3s ease; /* Smooth animasyon */
+    transition: all 0.3s ease;
     transform: translateX(-50%);
 }
 
 .nav-links a:hover::after {
-    width: 100%; /* Hover'da underline genişliği */
+    width: 100%;
 }
 
-/* Aktif ve Tıklama Efekti */
 .nav-links a:active {
-    box-shadow: none; /* Basma efektini kaldırır */
+    box-shadow: none;
     transform: none;
 }
 
-/* Logo Hover Efekti */
 nav .logo {
-    font-size: 16px; /* Diğer nav linkleri ile aynı boyut */
+    font-size: 16px;
     font-weight: bold;
     color: white;
     text-decoration: none;
@@ -175,70 +164,70 @@ nav .logo:hover {
 /* Mobil Moda Özel */
 @media (max-width: 768px) {
     nav {
-        padding: 15px 10px; /* Mobil modda sol ve sağ padding küçültülür */
-        margin: 0; /* Sayfa kenar boşlukları kaldırılır */
-        border-radius: 0; /* Yuvarlak köşeler kaldırılır */
+        padding: 15px 10px;
+        margin: 0;
+        border-radius: 0;
     }
 }
 
 /* Hamburger Menüsü */
 .hamburger-menu {
-    display: none; /* Varsayılan olarak gizli */
+    display: none;
     font-size: 24px;
     cursor: pointer;
     color: white;
     padding: 10px;
-    background: rgba(0, 0, 0, 0.3); /* Saydam arka plan */
+    background: rgba(0, 0, 0, 0.3);
     border-radius: 5px;
-    transition: transform 0.3s ease, background 0.3s ease; /* Döndürme ve arka plan animasyonu */
+    transition: transform 0.3s ease, background 0.3s ease;
 }
 
 .hamburger-menu.open {
-    transform: rotate(90deg); /* Tıklanınca döner */
+    transform: rotate(90deg);
 }
 
 /* Drawer Menü */
 .drawer-menu {
     display: flex;
     position: fixed;
-    top: 65px; /* Navigasyonun hemen altına yerleştirildi */
+    top: 65px;
     left: 0;
-    width: 100%; /* Tam genişlik */
-    background: rgba(0, 0, 0, 0.7); /* Hafif şeffaf siyah */
-    padding: 15px 40px; /* Sağ ve sol padding */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Hafif gölge efekti */
-    z-index: 1000; /* Yüksek katman */
+    width: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    padding: 15px 40px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
     flex-direction: column;
-    align-items: center; /* Tüm öğeleri yatayda ortalar */
-    justify-content: center; /* Tüm öğeleri dikeyde ortalar */
-    gap: 15px; /* Menü öğeleri arası boşluk */
-    transform: translateY(-100%); /* Başlangıçta yukarıda gizli */
-    opacity: 0; /* Başlangıçta görünmez */
-    pointer-events: none; /* Tıklanamaz */
-    border-radius: 0 0 10px 10px; /* Alt köşelerde yuvarlaklık */
-    backdrop-filter: blur(5px); /* Arka plan bulanıklığı */
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    transform: translateY(-100%);
+    opacity: 0;
+    pointer-events: none;
+    border-radius: 0 0 10px 10px;
+    backdrop-filter: blur(5px);
     transition: transform 0.5s ease, opacity 0.5s ease;
 }
 
 .drawer-menu.open {
-    transform: translateY(0); /* Görünür konuma gelir */
-    opacity: 1; /* Tamamen görünür */
-    pointer-events: all; /* Tıklanabilir hale gelir */
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: all;
 }
 
 .drawer-menu a {
     color: white;
     text-decoration: none;
-    font-size: 16px; /* Menü öğelerinin boyutu */
+    font-size: 16px;
     font-weight: bold;
-    text-align: center; /* Metni ortala */
+    text-align: center;
     padding: 5px 10px;
     transition: color 0.3s ease, background-color 0.3s ease;
-    border-radius: 5px; /* Hafif yuvarlatma */
+    border-radius: 5px;
 }
 
 .drawer-menu a:hover {
-    background: rgba(255, 255, 255, 0.2); /* Hover sırasında şeffaf beyaz */
+    background: rgba(255, 255, 255, 0.2);
     color: #f1f1f1;
 }
 
@@ -252,37 +241,37 @@ nav .logo:hover {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.7); /* Daha koyu bir arka plan karartması */
+    background: rgba(0, 0, 0, 0.7);
     z-index: 999;
-    transition: opacity 0.3s ease; /* Yumuşak geçiş efekti */
+    transition: opacity 0.3s ease;
     opacity: 0;
-    pointer-events: none; /* Başlangıçta tıklanamaz */
+    pointer-events: none;
 }
 
 .drawer-overlay.open {
-    opacity: 1; /* Tamamen görünür */
-    pointer-events: all; /* Tıklanabilir hale gelir */
+    opacity: 1;
+    pointer-events: all;
 }
 
 /* Mobil için Drawer */
 @media (max-width: 768px) {
     .nav-links {
-        display: none; /* Navigasyon linklerini gizle */
+        display: none;
     }
 
     .hamburger-menu {
-        display: block; /* Hamburger menü görünür */
+        display: block;
     }
 
     .drawer-menu {
-        width: 100%; /* Tüm ekran genişliği */
-        border-radius: 0; /* Mobilde düz kenarlar */
+        width: 100%;
+        border-radius: 0;
     }
 }
 
 @media (min-width: 769px) {
     .drawer-menu {
-        display: none; /* Geniş ekranlarda gizli */
+        display: none;
     }
 }
 
@@ -292,7 +281,7 @@ nav .logo:hover {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
-    align-items: stretch; /* Tüm kolonların aynı yükseklikte olması için */
+    align-items: stretch;
     margin: 40px auto;
     max-width: 1200px;
     gap: 20px;
@@ -302,9 +291,9 @@ nav .logo:hover {
 .left-column {
     flex: 1;
     max-width: 400px;
-    display: flex; /* İçerik hizalaması için flexbox */
+    display: flex;
     flex-direction: column;
-    justify-content: space-between; /* İçeriklerin üst ve alt hizalamasını sağlar */
+    justify-content: space-between;
 }
 
 
@@ -316,8 +305,8 @@ nav .logo:hover {
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
     text-align: center;
     color: #333;
-    width: 100%; /* Mobilde tam genişlik */
-    box-sizing: border-box; /* Padding dahil genişlik hesaplama */
+    width: 100%;
+    box-sizing: border-box;
 }
 
 
@@ -367,7 +356,7 @@ nav .logo:hover {
 
 .storage-fill {
     height: 100%;
-    width: 70%; /* Depolama yüzdesi */
+    width: 70%;
     background: linear-gradient(90deg, #00bcd4, #03a9f4);
     border-radius: 10px;
 }
@@ -377,8 +366,8 @@ nav .logo:hover {
     flex: 2;
     display: flex;
     flex-direction: column;
-    gap: 20px; /* Bölümler arasındaki boşluk */
-    height: 100%; /* Sol kolon ile eşit yükseklik için */
+    gap: 20px;
+    height: 100%;
 }
 
 /* Bölüm Kartları */
@@ -389,7 +378,7 @@ nav .logo:hover {
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
     color: #333;
     text-align: center;
-    margin-bottom: 0; /* Bölümlerin altındaki gereksiz boşluğu kaldır */
+    margin-bottom: 0;
 }
 
 .section h3 {
@@ -408,7 +397,7 @@ nav .logo:hover {
     padding: 8px 0;
     border-bottom: 1px solid rgba(0, 0, 0, 0.1);
     display: flex;
-    justify-content: center; /* Elemanları ortalar */
+    justify-content: center;
     align-items: center;
 }
 
@@ -419,7 +408,7 @@ nav .logo:hover {
 .section ul li span {
     font-weight: bold;
     color: #0056b3;
-    margin-left: 10px; /* Add space between file name and size */
+    margin-left: 10px;
 }
 
 /* Tablo Genel Stili */
@@ -431,8 +420,8 @@ nav .logo:hover {
     text-align: left;
     background-color: #ffffff;
     border-radius: 8px;
-    overflow: hidden; /* Köşe yuvarlamalarını tablonun içinde tutar */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Hafif gölge efekti */
+    overflow: hidden;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .file-table thead {
@@ -442,7 +431,7 @@ nav .logo:hover {
 
 .file-table thead th {
     padding: 15px;
-    font-weight: normal; /* Başlıklar normal font ağırlığında */
+    font-weight: normal;
     text-align: left;
     font-size: 16px;
     border-bottom: 2px solid #ffffff;
@@ -453,30 +442,30 @@ nav .logo:hover {
 }
 
 .file-table tbody tr:nth-child(even) {
-    background-color: #f9f9f9; /* Alternatif satır renkleri */
+    background-color: #f9f9f9;
 }
 
 .file-table tbody tr:hover {
-    background-color: #e6f7ff; /* Hover efekti */
+    background-color: #e6f7ff;
 }
 
 .file-table td {
     padding: 15px;
     border-bottom: 1px solid #e0e0e0;
     color: #333;
-    text-align: left; /* Tüm içerik sola hizalanır */
+    text-align: left;
 }
 
 .file-table tbody tr:last-child td {
-    border-bottom: none; /* Son satırda alt çizgi yok */
+    border-bottom: none;
 }
 
 .file-table tbody td:first-child {
-    font-weight: normal; /* İlk sütundaki yazılar normal ağırlıkta */
+    font-weight: normal;
 }
 
 .file-table tbody td:last-child {
-    text-align: left; /* Boyut sütunu da sola hizalanır */
+    text-align: left;
 }
 
 
@@ -528,13 +517,13 @@ nav .logo:hover {
 .contacts-container h3,
 .storage-container h3 {
     font-size: 18px;
-    color: #0056b3; /* Başlık rengini düzelt */
+    color: #0056b3;
     margin-bottom: 10px;
 }
 
 /* Storage Container Başlık Renkleri */
 .storage-container p {
-    color: #333; /* Kalan alan metni için doğru renk */
+    color: #333;
     font-size: 16px;
     margin: 0;
 }
@@ -554,7 +543,7 @@ nav .logo:hover {
     padding: 10px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     display: flex;
-    align-items: center; /* İkon ve yazıyı aynı hizaya getirir */
+    align-items: center;
     gap: 10px;
     width: 300px;
     transition: transform 0.2s, box-shadow 0.2s;
@@ -568,7 +557,7 @@ nav .logo:hover {
 .file-icon {
     font-size: 2em;
     color: #ffcc00;
-    flex-shrink: 0; /* Boyutu sabit tutar */
+    flex-shrink: 0;
 }
 
 .file-details {
@@ -602,18 +591,18 @@ nav .logo:hover {
     .main-layout {
         flex-direction: column;
         align-items: center;
-        gap: 20px; /* Daha düzenli görünüm için boşluk */
+        gap: 20px;
     }
 
     .left-column,
     .right-column {
-        max-width: 100%; /* Tam genişlik */
-        width: 100%; /* Tüm kutuların aynı genişlikte olması için */
+        max-width: 100%;
+        width: 100%;
     }
 
     .user-profile-container {
-        max-width: 100%; /* Kullanıcı bilgileri kutusunu genişlet */
-        margin-bottom: 20px; /* Diğer kutulardan ayırmak için boşluk */
+        max-width: 100%;
+        margin-bottom: 20px;
     }
 }
 
@@ -628,7 +617,7 @@ nav .logo:hover {
     border-radius: 10px;
     padding: 20px;
     margin: 20px auto;
-    max-width: 900px; /* Aynı genişlik */
+    max-width: 900px;
     background-color: #fff;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     text-align: left;
@@ -646,18 +635,18 @@ nav .logo:hover {
 /* Minimalist Navigasyon Bağlantıları */
 .navigation-links a {
     padding: 10px 20px;
-    background: #0056b3; /* Daha sade bir mavi */
+    background: #0056b3;
     color: white;
     text-decoration: none;
-    font-weight: 500; /* Daha ince bir yazı tipi */
+    font-weight: 500;
     border-radius: 6px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Hafif gölge efekti */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .navigation-links a:hover {
-    transform: translateY(-3px); /* Hover sırasında hafif yukarı kaldırma efekti */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); /* Daha belirgin gölge */
+    transform: translateY(-3px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 /* Ağaç Görünüm */
@@ -701,9 +690,9 @@ nav .logo:hover {
 
 /* Boş Dizin Mesajı İkonu */
 .directory-tree .info-message::before {
-    content: "📁"; /* İkon */
-    font-size: 16px; /* İkon boyutu */
-    color: #FFA500; /* İkon rengi */
+    content: "📁";
+    font-size: 16px;
+    color: #FFA500;
     position: absolute;
     left: 0;
     top: 0;
@@ -714,12 +703,12 @@ nav .logo:hover {
 .directory-tree li a {
     text-decoration: none;
     font-weight: normal;
-    color: #1e3c72; /* Mor bir renk */
+    color: #1e3c72;
 }
 
 .directory-tree li a:hover {
     text-decoration: underline;
-    color: #0056b3; /* Hover rengi */
+    color: #0056b3;
 }
 
 /* Dosya Listesi */
@@ -728,7 +717,7 @@ ul.files-list {
     padding: 0;
     margin: 20px auto;
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Min genişlik 200px */
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 20px;
     text-align: left;
 }
@@ -737,7 +726,7 @@ ul.files-list {
 /* Dosya Kartları */
 li.file-card {
     background: linear-gradient(135deg, #2a5298, #1e3c72);
-    padding: 15px; /* Daha küçük padding */
+    padding: 15px;
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     display: flex;
@@ -749,13 +738,13 @@ li.file-card {
 
 
 li.file-card:hover {
-    transform: translateY(-5px); /* Hover sırasında yukarı hareket */
-    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3); /* Daha yoğun gölge */
+    transform: translateY(-5px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
 }
 
 /* Kart Başlıkları */
 li.file-card span {
-    font-size: 16px; /* Daha küçük yazı boyutu */
+    font-size: 16px;
     font-weight: normal;
     color: #f1f1f1;
     margin-bottom: 10px;
@@ -763,7 +752,7 @@ li.file-card span {
 
 /* Dosya İsimleri */
 li.file-card .file-name {
-    font-size: 12px; /* Daha küçük yazı boyutu */
+    font-size: 12px;
     font-weight: normal;
     color: #dcdcdc;
     margin-bottom: 8px;
@@ -771,13 +760,13 @@ li.file-card .file-name {
 
 /* Dosya İsimleri Hover */
 li.file-card:hover .file-name {
-    color: #ffffff; /* Hover durumunda daha açık renk */
-    text-decoration: underline; /* Hover sırasında vurgu */
+    color: #ffffff;
+    text-decoration: underline;
 }
 
 /* Dosya Kartları Hover */
 li.file-card:hover span {
-    color: #ffffff; /* Hover sırasında daha parlak renk */
+    color: #ffffff;
 }
 
 /* Dosya Kartları Geçiş Efektleri */
@@ -856,7 +845,7 @@ form input, form select {
 /* Footer */
 footer {
     margin-top: auto;
-    background: rgba(0, 0, 0, 0.8); /* Hafif şeffaf siyah */
+    background: rgba(0, 0, 0, 0.8);
     color: #ffffff;
     text-align: center;
     position: relative;
@@ -883,35 +872,35 @@ footer {
 /* Dizin Öğesi Stili */
 .directory-item {
     display: flex;
-    align-items: center; /* Dizin adı ve butonu hizalar */
+    align-items: center;
     justify-content: space-between;
     margin-bottom: 5px;
 }
 
 
 .directory-header {
-    display: flex; /* Flexbox düzen */
-    align-items: center; /* Dikeyde hizalama */
-    justify-content: center; /* Elemanları yatayda ortalar */
-    position: relative; /* İçerideki elemanları yerleştirmek için konumlandırma sağlar */
-    width: 100%; /* Tüm genişliği kaplar */
-    margin-bottom: 10px; /* Alt boşluk */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    width: 100%;
+    margin-bottom: 10px;
 }
 
 .directory-header h3 {
-    margin: 0; /* Varsayılan marjları sıfırlar */
-    text-align: center; /* Yazıyı ortalar */
-    flex: none; /* Esnek davranışı kaldırır */
+    margin: 0;
+    text-align: center;
+    flex: none;
     color: #0056b3;
 }
 
 /* Slider Container */
 .small-slider {
-    position: absolute; /* Sliderın sağa sabitlenmesi */
-    right: 0; /* Sağ tarafa hizalar */
+    position: absolute;
+    right: 0;
     display: inline-block;
-    width: 50px; /* Slider genişliği */
-    height: 25px; /* Slider yüksekliği */
+    width: 50px;
+    height: 25px;
 }
 
 .small-slider input {
@@ -930,7 +919,7 @@ footer {
     bottom: 0;
     background-color: #ccc;
     transition: 0.4s;
-    border-radius: 25px; /* Yuvarlak kenarlar */
+    border-radius: 25px;
 }
 
 .small-slider .slider:before {
@@ -942,7 +931,7 @@ footer {
     bottom: 2px;
     background-color: white;
     transition: 0.4s;
-    border-radius: 50%; /* Küçük daire */
+    border-radius: 50%;
 }
 
 /* Checked state */
@@ -951,7 +940,7 @@ footer {
 }
 
 .small-slider input:checked + .slider:before {
-    transform: translateX(25px); /* Slider dairesini sağa kaydır */
+    transform: translateX(25px);
 }
 
 /* Arama Alanı */
@@ -1001,24 +990,24 @@ footer {
 .custom-file-label {
     background: linear-gradient(90deg, #007BFF, #0056b3); /* Mevcut renk gradyanı */
     color: white;
-    padding: 12px 20px; /* Boyutlar submit button ile eşitlendi */
-    border-radius: 8px; /* Aynı yuvarlak kenar */
+    padding: 12px 20px;
+    border-radius: 8px;
     cursor: pointer;
     text-align: center;
     font-size: 16px;
     font-weight: normal;
-    transition: box-shadow 0.3s ease, transform 0.2s ease; /* Mevcut efekt */
+    transition: box-shadow 0.3s ease, transform 0.2s ease;
 }
 
 .custom-file-label:hover {
-    background-color: #003d80; /* Daha koyu mavi ton */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Hafif gölge efekti */
-    transform: translateY(-2px); /* Hafif yukarı kaldırma */
+    background-color: #003d80;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    transform: translateY(-2px);
 }
 
 .custom-file-label:active {
-    transform: scale(0.98); /* Tıklama sırasında küçültme efekti */
-    box-shadow: 0 2px 10px rgba(0, 123, 255, 0.4); /* Daha hafif gölge */
+    transform: scale(0.98);
+    box-shadow: 0 2px 10px rgba(0, 123, 255, 0.4);
 }
 
 .custom-file-input {
@@ -1029,7 +1018,7 @@ footer {
     font-size: 14px;
     font-weight: 500;
     color: #ffffff;
-    background: rgba(30, 60, 114, 0.8); /* Gradient ile uyumlu yarı opak mavi */
+    background: rgba(30, 60, 114, 0.8);
     padding: 6px 12px;
     border-radius: 6px;
     border: 1px solid #0056b3;
@@ -1038,17 +1027,17 @@ footer {
     white-space: nowrap;
     text-align: left;
     display: inline-block;
-    width: calc(100% - 120px); /* Buton genişliğiyle hizalamak için */
-    margin-left: 10px; /* Buton ile araya boşluk */
-    height: 40px; /* Butonla aynı yükseklik */
-    line-height: 40px; /* Butonla aynı hizada metin */
+    width: calc(100% - 120px);
+    margin-left: 10px;
+    height: 40px;
+    line-height: 40px;
     transition: background 0.3s ease, border-color 0.3s ease;
 }
 
 #file-chosen:hover {
-    background: rgba(30, 60, 114, 1); /* Daha belirgin bir mavi */
+    background: rgba(30, 60, 114, 1);
     border-color: #007BFF;
-    cursor: default; /* Tıklanabilirlik olmadığını belirtmek için */
+    cursor: default;
 }
 
 .custom-file-container {
@@ -1061,7 +1050,7 @@ footer {
 
 /* Genel Buton Stili */
 button {
-    background: #004080; /* Genel butonlar için */
+    background: #004080;
     color: white;
     border: none;
     padding: 12px 20px;
@@ -1077,8 +1066,8 @@ button {
 
 
 button:hover {
-    background-color: #003060; /* Daha az parlak hover rengi */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); /* Daha hafif gölge */
+    background-color: #003060;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 button:active {
@@ -1088,7 +1077,7 @@ button:active {
 
 /* Gönder Butonu */
 button[type="submit"] {
-    background: linear-gradient(90deg, rgba(0, 123, 255, 0.9), rgba(0, 86, 179, 0.9)); /* Şeffaf gradient */
+    background: linear-gradient(90deg, rgba(0, 123, 255, 0.9), rgba(0, 86, 179, 0.9));
     color: white;
     border-radius: 30px;
     padding: 0.8rem 2rem;
@@ -1162,7 +1151,7 @@ button.share:active {
 
 /* Kullanıcı Yönlendirme İkonu */
 .file-upload-icon {
-    width: 100px; /* Boyut ayarı */
+    width: 100px;
     height: auto;
     margin-bottom: 20px;
 }
@@ -1173,8 +1162,8 @@ button.share:active {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    max-width: 700px; /* Kutunun genişliğini artırdık */
-    margin: 30px auto; /* Sayfanın ortasında yerleştirir */
+    max-width: 700px;
+    margin: 30px auto;
     padding: 30px;
     background: #f9f9f9;
     border-radius: 15px;
@@ -1184,7 +1173,7 @@ button.share:active {
 
 /* Dosya Yükleme İkonu */
 .file-upload-icon {
-    width: 120px; /* Daha belirgin boyut */
+    width: 120px;
     height: auto;
     margin-bottom: 20px;
 }
@@ -1203,17 +1192,17 @@ button.share:active {
 
 /* Mobil ve Masaüstü Görünürlük */
 .desktop-only {
-    display: block; /* Varsayılan olarak masaüstü görünür */
+    display: block;
 }
 
 .mobile-only {
-    display: none; /* Varsayılan olarak mobil gizli */
+    display: none;
 }
 
 /* Mobil Mod */
 @media (max-width: 768px) {
     .desktop-only {
-        display: none; /* Mobilde drag-drop gizli */
+        display: none;
     }
 
     .mobile-only {
@@ -1243,7 +1232,7 @@ button.share:active {
     }
 
     #file-mobile {
-        display: none; /* Input görünmez ancak label ile etkileşimli */
+        display: none;
     }
 }
 
@@ -1302,32 +1291,32 @@ select {
 /* Linkler için Buton Stili */
 .main-content .nav-links {
     display: flex;
-    justify-content: center; /* Ortalamak için */
-    gap: 15px; /* Butonlar arası boşluk */
+    justify-content: center;
+    gap: 15px;
     margin-top: 20px;
 }
 
 .main-content .nav-links a {
-    background: linear-gradient(90deg, #007BFF, #0056b3); /* Mavi gradient */
+    background: linear-gradient(90deg, #007BFF, #0056b3);
     color: white;
     text-decoration: none;
     padding: 12px 20px;
     font-size: 16px;
     font-weight: bold;
-    border-radius: 8px; /* Yuvarlak köşeler */
+    border-radius: 8px;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
-    position: relative; /* Ana yapıya uyum */
+    position: relative;
 }
 
 /* Hover Efekti: Alt çizgi olmadan */
 .main-content .nav-links a:hover {
-    background: #004a92; /* Hover'da koyu mavi */
-    transform: translateY(-2px); /* Hafif yukarı kaldırma efekti */
+    background: #004a92;
+    transform: translateY(-2px);
 }
 
 /* Alt çizgi animasyonunu devre dışı bırak */
 .main-content .nav-links a::after {
-    display: none; /* Alt çizgi tamamen devre dışı */
+    display: none;
 }
 
 
@@ -1348,115 +1337,142 @@ select {
     background-color: #d32f2f;
 }
 
-/* Mevcut style.css içeriği yukarıda yer almaktadır */
 
 /* ------------------------------------------------ */
-/* Yeni Eklenen CSS Kuralları - Paylaşılan Dosyalar Sayfasına Özgü */
-/* ------------------------------------------------ */
 
+/* 1) Ana İçerik Kutusu (beyaz arkaplan) */
 .shared-files-page .content-wrapper {
+    background: #f8f8f8;        /* Beyaz arka plan */
+    color: #333;            /* Yazılar koyu */
     max-width: 1000px;
     margin: 0 auto;
     padding: 20px;
-    background-color: #f9f9f9;
     border-radius: 10px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
 }
 
-/* Dizin Başlıkları */
+/* 2) “Shared By” ve “Directory” başlıkları (koyu arkaplan + beyaz yazı) */
 .shared-files-page .section-title,
 .shared-files-page .directory-title {
     font-size: 18px;
-    color: #0056b3;
+    color: #ffffff;             /* Beyaz yazı */
     display: flex;
     align-items: center;
     cursor: pointer;
     padding: 10px;
     gap: 10px;
-    border: 1px solid #ffffff;
     border-radius: 5px;
-    background-color: #ffffff;
+    background-color: #1e3c72;  /* Koyu mavi, opak */
+    border: 2px solid #0056b3;  /* İsteğe bağlı, mavi çerçeve */
     transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .shared-files-page .directory-title:hover {
-    background-color: #ffffff;
+    background-color: #2a5298; /* Hover’da biraz daha açık mavi */
 }
 
 .shared-files-page .directory-title i {
-    color: #0056b3;
-    margin-left: 10px;
+    color: #ffffff;
+    margin-left: auto;
 }
 
-/* Grid Düzeni */
-.shared-files-page .file-grid {
-    display: flex; /* Default olarak görünür */
-    flex-wrap: wrap;
-    gap: 15px;
-    margin-top: 10px;
-    padding-left: 20px;
-    justify-content: flex-start;
+/* 3) Arama Kutusu: Normalde yarı saydam, odaklanınca beyaz glow */
+.shared-files-page .file-search-container .search-box input {
+    width: 250px;
+    max-width: 400px;
+    padding: 10px 15px 10px 40px;
+    font-size: 16px;
+    border: 2px solid #0056b3;
+    border-radius: 25px;
+    outline: none;
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    transition: border-color 0.3s ease, background 0.3s ease, box-shadow 0.3s ease;
 }
 
-/* Dosya Kartı */
+.shared-files-page .file-search-container .search-box input:focus {
+    border-color: #ffffff;
+    background: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+}
+
+/* Placeholder daha belirgin olsun istersek: */
+.shared-files-page .file-search-container .search-box input::placeholder {
+    color: #ddd;
+}
+
+/* Dosya Kartları */
 .shared-files-page .file-card {
-    background-color: #ffffff;
-    border: 1px solid #ddd;
+    background-color: #2a5298;
+    border: 1px solid #0056b3;
     border-radius: 5px;
     padding: 10px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: space-between;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    width: 150px; /* Masaüstü için genişlik */
+    width: 150px;
     text-align: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    color: #fff;
 }
 
+/* Kart hover efekti */
 .shared-files-page .file-card:hover {
-    transform: scale(1.02);
-    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+    transform: scale(1.03);
+    box-shadow: 0 3px 6px rgba(0,0,0,0.2);
 }
 
-/* Dosya Detayları */
-.shared-files-page .file-card .file-details {
-    font-size: 14px;
-    margin-bottom: 8px;
+.file-card .file-meta {
+    font-size: 0.85rem;      /* Biraz küçük */
+    margin-bottom: 8px;      /* Altta boşluk */
+    color: #f0f0f0;          /* Uygun bir açık ton */
+    display: flex;
+    flex-direction: column;  /* Tarih ve boyut alt alta olsun */
+    gap: 3px;                /* Az boşluk */
+    text-align: center;      /* Ortala */
 }
 
-.shared-files-page .file-card .file-details span {
-    display: block;
-    color: #333;
-    font-weight: 400;
+.file-card .file-meta span {
+    font-weight: 400;        /* Normal ağırlık */
 }
 
-.shared-files-page .file-details span:first-child {
-    color: #1e3c72;
+/* Örneğin hover’da daha parlak isterseniz: */
+.file-card:hover .file-meta {
+    color: #ffffff;          /* Hover’da biraz daha beyaz */
+}
+
+
+
+/* Dosya ismi*/
+.shared-files-page .file-card .file-details span:first-child {
+    color: #ffffff;
     font-weight: bold;
     transition: color 0.3s ease;
 }
-
-.shared-files-page .file-details span:first-child:hover {
-    color: #0056b3;
+.shared-files-page .file-card .file-details span:first-child:hover {
+    color: #ffffff;
 }
 
-/* İndirme Butonu */
+/* Download butonu*/
 .shared-files-page .file-card .download-btn {
-    background: linear-gradient(90deg, #007BFF, #0056b3); /* Gradient renk */
-    color: white;
+    display: inline-block;
+    text-decoration: none;
+    background: linear-gradient(90deg, #007BFF, #0056b3);
+    color: #ffffff;
     border-radius: 30px;
-    padding: 0.8rem 2rem;
+    padding: 0.6rem 1.2rem;
     font-size: 0.8rem;
     font-weight: bold;
     transition: background 0.3s ease, box-shadow 0.3s ease;
 }
 
+/* Buton hover */
 .shared-files-page .file-card .download-btn:hover {
-    background: linear-gradient(90deg, #0056b3, #004a92); /* Hover için koyu ton */
+    background: linear-gradient(90deg, #0056b3, #003d80);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
 }
 
-/* Arama Çubuğu Stilleri */
+
+
+/* Arama Çubuğu */
 .shared-files-page .file-search-container {
     margin: 20px 0;
     text-align: center;
@@ -1464,8 +1480,8 @@ select {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 20px; /* Arama çubukları arasındaki boşluk */
-    flex-wrap: wrap; /* Esnek düzen için */
+    gap: 20px;
+    flex-wrap: wrap;
 }
 
 .shared-files-page .file-search-container .search-box {
@@ -1477,20 +1493,23 @@ select {
 .shared-files-page .file-search-container .search-box input {
     width: 250px;
     max-width: 400px;
-    padding: 10px 15px 10px 40px; /* Sol padding ikona yer açar */
+    padding: 10px 15px 10px 40px;
     font-size: 16px;
     border: 2px solid #0056b3;
     border-radius: 25px;
     outline: none;
-    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    transition: border-color 0.3s ease, background 0.3s ease;
 }
 
 .shared-files-page .file-search-container .search-box input::placeholder {
-    color: #999;
+    color: #ffffff;
 }
 
 .shared-files-page .file-search-container .search-box input:focus {
     border-color: #ffffff;
+    background: rgba(255, 255, 255, 0.2);
     box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
 }
 
@@ -1498,33 +1517,32 @@ select {
 .shared-files-page .file-search-container .search-box .fa-file-alt {
     position: absolute;
     left: 10px;
-    color: #0056b3;
+    color: #ffffff;
     font-size: 18px;
 }
 
 /* Responsive Düzenlemeler */
 @media (max-width: 768px) {
-    /* Dosya Grid Mobilde */
     .shared-files-page .file-grid {
-        flex-direction: column; /* Dikey hizalama */
-        align-items: stretch; /* Kartlar tam genişlik alır */
-        padding-left: 0; /* Sol boşluk kaldır */
-        gap: 15px; /* Kartlar arası boşluk */
+        flex-direction: column;
+        align-items: stretch;
+        padding-left: 0;
+        gap: 15px;
     }
 
     /* Dosya Kartları Mobilde Tam Genişlik Alır */
     .shared-files-page .file-card {
-        width: 100%; /* Kartlar tam genişlik alır */
-        max-width: 100%; /* Sınırlama kaldır */
-        box-sizing: border-box; /* Padding'i genişliğe dahil eder */
-        margin: 0 auto; /* Kartı ortalar */
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+        margin: 0 auto;
     }
 
     /* Kart İçeriği için */
     .shared-files-page .file-card .file-details {
-        font-size: 16px; /* Daha büyük font */
+        font-size: 16px;
         margin-bottom: 12px;
-        text-align: center; /* Ortaya hizalama */
+        text-align: center;
     }
 
     /* Arama Çubuğu Mobilde */
@@ -1533,40 +1551,37 @@ select {
         max-width: 300px;
     }
 }
-/* style.css */
 
-/* ... mevcut diğer CSS kodlarınız ... */
-
-/* Yeni Eklenen CSS Kuralları - Paylaşılan Dosyalar Sayfasına Özgü */
+/* ... ... */
 
 /* .delete-icon-btn ve ilgili sınıflar */
 .delete-icon-btn {
-    display: none; /* Varsayılan olarak gizli */
+    display: none;
     border: none;
-    border-radius: 50%; /* Tamamen daire */
-    width: 35px; /* Daire genişliği */
-    height: 35px; /* Daire yüksekliği */
-    font-size: 20px; /* "×" sembolü boyutu */
-    line-height: 35px; /* Dikey ortalama */
-    text-align: center; /* Yatay ortalama */
+    border-radius: 50%;
+    width: 35px;
+    height: 35px;
+    font-size: 20px;
+    line-height: 35px;
+    text-align: center;
     cursor: pointer;
     margin-left: 10px;
     padding: 0;
-    color: white; /* Yazı rengi beyaz */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Hafif gölge efekti */
+    color: white;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
 /* Aktif Silme Modu */
 .delete-mode-active .directory-item .delete-icon-btn {
-    display: inline-flex; /* Flex düzeni */
-    align-items: center; /* İçeriği dikey ortala */
-    justify-content: center; /* İçeriği yatay ortala */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 /* Odaklanma Efekti */
 .delete-icon-btn:focus {
-    outline: none; /* Dış çerçeve kaldır */
+    outline: none;
 }
 
 .directory-actions {
@@ -1575,7 +1590,7 @@ select {
     justify-content: space-between;
     gap: 20px;
     margin: 0 auto;
-    max-width: 940px; /* Better alignment */
+    max-width: 940px;
 }
 
 .directory-share-form, .directory-create-container {
@@ -1585,14 +1600,14 @@ select {
     border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     box-sizing: border-box;
-    color: #333; /* Metin rengini siyah yapmak için */
-    text-align: left; /* İçeriği sola hizalamak için */
+    color: #333;
+    text-align: left;
 }
 
 .directory-create-container h2,
 .directory-share-form h3 {
     color: #0056b3;
-    font-size: 18px; /* Consistent heading size */
+    font-size: 18px;
     margin-bottom: 10px;
 }
 
@@ -1602,28 +1617,28 @@ select {
     border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     box-sizing: border-box;
-    color: #333; /* Metin rengini siyah yapmak için */
-    text-align: left; /* İçeriği sola hizalamak için */
-    max-width: 940px; /* Consistent width */
-    margin: 20px auto; /* Center the table horizontally */
+    color: #333;
+    text-align: left;
+    max-width: 940px;
+    margin: 20px auto;
 }
 
 .shared-directories-table h3 {
-    color: #0056b3; /* Fix heading color */
-    font-size: 18px; /* Consistent heading size */
+    color: #0056b3;
+    font-size: 18px;
     margin-bottom: 10px;
     text-align: center;
 }
 
 /* Tablo Stilleri */
 .shared-directories-table table {
-    width: 100%; /* Tam genişlik kullanılır */
-    border-collapse: separate; /* Yuvarlatılmış köşeler için gerekli */
-    border-spacing: 0; /* Hücreler arasındaki boşluğu sıfırla */
-    border-radius: 10px; /* Tablo köşelerini yuvarlat */
-    overflow: hidden; /* Yuvarlatılmış köşelerin dışına taşmasını önle */
-    background-color: #ffffff; /* Arka plan rengi */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Hafif gölge */
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    border-radius: 10px;
+    overflow: hidden;
+    background-color: #ffffff;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 /* Tablonun başlık hücreleri */
@@ -1666,11 +1681,85 @@ select {
     background-color: #f2f2f2;
 }
 
+
+.no-files-message {
+    color: #5a5a5a; /* Görseldeki gri tonuna yakın */
+    font-size: 16px;
+    font-style: italic; /* İtalik yazı */
+    text-align: center;
+    margin-top: 20px;
+    padding: 10px;
+}
+
+.file-name-link {
+    font-size: 16px;
+    font-weight: bold;
+    color: #1e3c72; /* Match theme color */
+    text-decoration: none; /* Remove underline */
+    transition: color 0.3s ease, text-shadow 0.3s ease;
+}
+
+.file-name-link:hover {
+    color: #0056b3; /* Darker blue on hover */
+    text-shadow: 0 0 3px rgba(0, 86, 179, 0.3); /* Subtle glow effect */
+}
+
+.directory-create-container form,
+.directory-share-form form {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Form elemanları da ortada */
+    width: 100%;
+    margin-top: auto;  /* İsteğe bağlı, formu dikeyde esnetebilir */
+}
+
+.directory-actions {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: stretch; /* Kutular aynı yükseklik */
+    gap: 20px;
+    margin: 0 auto;
+    max-width: 940px;
+}
+
+.directory-create-container,
+.directory-share-form {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* Başlık üstte, buton altta */
+    align-items: center;           /* İçeriği yatayda ortala */
+}
+
+.directory-share-form form .form-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Her bir label+input ikilisini ortalar */
+    width: 100%;
+}
+
+.directory-share-form form {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Formun tamamını ortalar */
+    width: 100%;
+}
+
+.directory-create-container form label,
+.directory-share-form form label {
+    color: #333;
+}
+
+.file-grid {
+    display: none;
+}
+
+
 /* Responsive Düzenlemeler */
 @media (max-width: 1024px) {
     .directory-actions {
         flex-direction: column;
-        gap: 15px; /* Add gap for mobile view */
+        gap: 15px;
     }
 }
 
@@ -1678,7 +1767,7 @@ select {
     .directory-create-container,
     .directory-share-form,
     .shared-directories-table {
-        width: 100%; /* Use full width on small screens */
+        width: 100%;
     }
 
     .shared-directories-table table,

@@ -163,24 +163,45 @@
                 th:id="'file-' + ${file.id}"
                 th:attr="data-file-shares-json=${file.fileSharesJson}">
 
+                <!-- Dosya Adı -->
                 <span th:text="${file.fileName}">File</span>
 
+                <!-- Dosyanın Yüklenme Tarihi ve Boyutu -->
+                <div class="file-meta"
+                     th:if="${file.versions != null and !file.versions.isEmpty()}">
+
+                    <!-- 1) Yüklenme Tarihi -->
+                    <span th:text="'Uploaded: '
+            + ${#temporals.format(file.versions.get(0).timestamp, 'yyyy-MM-dd HH:mm')}">
+        </span>
+
+                    <!-- 2) Dosya Boyutu -->
+                    <span th:text="'Size: '
+            + ${T(com.example.securedrive.service.util.FileSizeUtil).formatSize(file.versions.get(0).size)}">
+        </span>
+                </div>
+
+                <!-- Share/Revoke/Download/Delete -->
                 <div class="file-details">
-                    <!-- File Sharing -->
-                    <form th:action="@{/files/share}" method="post" class="share-form"
+
+                    <!-- Paylaşma Formu -->
+                    <form th:action="@{/files/share}"
+                          method="post"
+                          class="share-form"
                           th:id="'share-form-' + ${file.id}">
+                        <!-- Gizli alanlar -->
                         <input type="hidden" name="username" th:value="${username}" />
                         <input type="hidden" name="fileId" th:value="${file.id}" />
 
-                        <label th:for="'sharedWithEmail_' + ${file.id}">
-                            Email to Share With:
-                        </label>
+                        <label th:for="'sharedWithEmail_' + ${file.id}">Share With Email:</label>
                         <input type="email"
                                th:id="'sharedWithEmail_' + ${file.id}"
                                name="sharedWithEmail" required />
 
                         <label th:for="'shareVersion_' + ${file.id}">Version:</label>
-                        <select name="version" th:id="'shareVersion_' + ${file.id}" required>
+                        <select name="version"
+                                th:id="'shareVersion_' + ${file.id}"
+                                required>
                             <option value="" disabled selected>Select Version...</option>
                             <option th:each="ver : ${file.versions}"
                                     th:value="${ver.versionNumber}"
@@ -190,15 +211,17 @@
                         <button type="submit" class="share-btn">Share</button>
                     </form>
 
+                    <!-- Revoke Formu -->
                     <div th:if="${file.fileShares.size() > 0}">
-                        <form th:action="@{/files/revoke-share}" method="post" th:id="'revoke-form-' + ${file.id}" class="revoke-form">
+                        <form th:action="@{/files/revoke-share}"
+                              method="post"
+                              th:id="'revoke-form-' + ${file.id}"
+                              class="revoke-form">
                             <input type="hidden" name="fileId" th:value="${file.id}" />
                             <input type="hidden" name="username" th:value="${username}" />
 
-                            <!-- Version Selection -->
                             <label th:for="'revokeVersion_' + ${file.id}">Version:</label>
-                            <select
-                                    th:id="'revokeVersion_' + ${file.id}"
+                            <select th:id="'revokeVersion_' + ${file.id}"
                                     name="version"
                                     required>
                                 <option value="" disabled selected>Select Version...</option>
@@ -208,10 +231,8 @@
                                 </option>
                             </select>
 
-                            <!-- Shared Emails -->
                             <label th:for="'sharedEmailDropdown_' + ${file.id}">Email:</label>
-                            <select
-                                    th:id="'sharedEmailDropdown_' + ${file.id}"
+                            <select th:id="'sharedEmailDropdown_' + ${file.id}"
                                     name="sharedWithEmail"
                                     required>
                                 <option value="" disabled selected>Select Email...</option>
@@ -220,17 +241,17 @@
                                         th:text="${share.sharedWithUserEmail}">
                                 </option>
                             </select>
-
                             <button type="submit" class="revoke-btn">Revoke Share</button>
                         </form>
                     </div>
 
-
-                    <!-- Download File -->
+                    <!-- Dosya İndir -->
                     <form th:action="@{'/files/download/' + ${username} + '/' + ${file.id}}"
-                          method="get" class="download-form">
+                          method="get"
+                          class="download-form">
                         <label th:for="'versionNumber_' + ${file.id}">Version:</label>
-                        <select name="versionNumber" th:id="'versionNumber_' + ${file.id}">
+                        <select name="versionNumber"
+                                th:id="'versionNumber_' + ${file.id}">
                             <option th:each="ver : ${file.versions}"
                                     th:value="${ver.versionNumber}"
                                     th:text="${ver.versionNumber}">
@@ -239,22 +260,30 @@
                         <button type="submit" class="download-btn">Download</button>
                     </form>
 
-                    <!-- Delete File -->
+                    <!-- Dosya Sil -->
                     <form th:action="@{'/files/delete/' + ${username} + '/' + ${file.id}}"
-                          method="post" class="delete-form">
+                          method="post"
+                          class="delete-form">
                         <input type="hidden" name="_method" value="delete" />
-                        <input type="hidden" name="username" th:value="${username}" /> <!-- Get username from form -->
+                        <input type="hidden" name="username" th:value="${username}" />
                         <label th:for="'deleteVersionNumber_' + ${file.id}">Version:</label>
-                        <select name="versionNumber" th:id="'deleteVersionNumber_' + ${file.id}">
+                        <select name="versionNumber"
+                                th:id="'deleteVersionNumber_' + ${file.id}">
                             <option th:each="ver : ${file.versions}"
                                     th:value="${ver.versionNumber}"
                                     th:text="${ver.versionNumber}">
                             </option>
                         </select>
-                        <button type="submit" class="delete-btn" data-file-id="${file.id}">Delete</button>
+                        <button type="submit" class="delete-btn"
+                                th:attr="data-file-id=${file.id}">
+                            Delete
+                        </button>
                     </form>
-                </div>
+
+                </div><!-- /file-details -->
             </li>
+
+
         </ul>
     </div>
 

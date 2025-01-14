@@ -135,7 +135,13 @@
                         </thead>
                         <tbody>
                         <tr th:each="file : ${lastUploadedFiles}">
-                            <td th:text="${lastUploadedNames[file.id]}">File Name</td>
+                            <td>
+                                <!-- directoryId'yi linkte kullanıyoruz -->
+                                <a class="file-name-link"
+                                   th:href="@{/directories/{dirId}(dirId=${file.directoryId})}"
+                                   th:text="${lastUploadedNames[file.id]}">
+                                </a>
+                            </td>
                             <td th:text="${file.versionNumber}">Version</td>
                             <td th:text="${lastUploadedSizes[file.id]}">Size</td>
                         </tr>
@@ -143,6 +149,7 @@
                     </table>
                     <p th:if="${lastUploadedFiles.size() == 0}" class="empty-message">No recently uploaded files.</p>
                 </div>
+
 
                 <!-- Recently Accessed Files -->
                 <div class="section" style="flex: 1; min-width: 300px;">
@@ -157,7 +164,11 @@
                         </thead>
                         <tbody>
                         <tr th:each="file : ${lastAccessedFiles}">
-                            <td th:text="${lastAccessedNames[file.id]}">File Name</td>
+                            <td>
+                                <a th:href="@{/directories/{dirId}(dirId=${file.directoryId})}" class="file-name-link">
+                                    <span th:text="${lastAccessedNames[file.id]}"></span>
+                                </a>
+                            </td>
                             <td th:text="${file.versionNumber}">Version</td>
                             <td th:text="${lastAccessedSizes[file.id]}">Size</td>
                         </tr>
@@ -165,6 +176,7 @@
                     </table>
                     <p th:if="${lastAccessedFiles.size() == 0}" class="empty-message">No recently accessed files.</p>
                 </div>
+
             </div>
 
             <!-- Files Shared With You -->

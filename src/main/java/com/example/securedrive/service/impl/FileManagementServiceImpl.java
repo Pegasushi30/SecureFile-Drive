@@ -184,7 +184,8 @@ public class FileManagementServiceImpl implements FileManagementService {
     @Override
     public List<FileVersionDto> getLastUploadedFileVersions(String username, int limit) {
         Pageable pageable = PageRequest.of(0, limit);
-        List<FileVersion> versions = fileVersionRepository.findByFile_Directory_User_UsernameOrderByTimestampDesc(username, pageable);
+        List<FileVersion> versions = fileVersionRepository
+                .findByFile_Directory_User_UsernameOrderByTimestampDesc(username, pageable);
 
         return versions.stream()
                 .map(version -> new FileVersionDto(
@@ -193,15 +194,21 @@ public class FileManagementServiceImpl implements FileManagementService {
                         version.getDeltaPath(),
                         version.getHash(),
                         version.getTimestamp(),
-                        version.getSize()
+                        version.getSize(),
+                        // directoryId'yi set ediyoruz:
+                        version.getFile().getDirectory() != null
+                                ? version.getFile().getDirectory().getId()
+                                : null
                 ))
                 .collect(Collectors.toList());
     }
+
 
     @Override
     public List<FileVersionDto> getLastAccessedFileVersions(String username, int limit) {
         Pageable pageable = PageRequest.of(0, limit);
-        List<FileVersion> versions = fileVersionRepository.findByFile_Directory_User_UsernameOrderByLastAccessedDesc(username, pageable);
+        List<FileVersion> versions = fileVersionRepository
+                .findByFile_Directory_User_UsernameOrderByLastAccessedDesc(username, pageable);
 
         return versions.stream()
                 .map(version -> new FileVersionDto(
@@ -210,10 +217,14 @@ public class FileManagementServiceImpl implements FileManagementService {
                         version.getDeltaPath(),
                         version.getHash(),
                         version.getTimestamp(),
-                        version.getSize()
+                        version.getSize(),
+                        version.getFile().getDirectory() != null
+                                ? version.getFile().getDirectory().getId()
+                                : null
                 ))
                 .collect(Collectors.toList());
     }
+
 
     @Override
     public String getFileNameByVersionId(Long versionId) {
