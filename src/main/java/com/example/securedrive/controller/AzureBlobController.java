@@ -1,12 +1,9 @@
 // com/example/securedrive/controller/AzureBlobController.java
 package com.example.securedrive.controller;
 
-import com.azure.storage.blob.models.BlobStorageException;
-import com.example.securedrive.dto.*;
-import com.example.securedrive.model.File;
-import com.example.securedrive.service.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpHeaders;
@@ -14,12 +11,28 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 
-import java.util.HashMap;
-import java.util.Map;
+import com.azure.storage.blob.models.BlobStorageException;
+import com.example.securedrive.dto.FileDeleteSpecificVersionRequestDto;
+import com.example.securedrive.dto.FileDownloadSharedRequestDto;
+import com.example.securedrive.dto.FileDownloadSharedResponseDto;
+import com.example.securedrive.dto.FileDownloadSpecificVersionRequestDto;
+import com.example.securedrive.dto.FileRevokeShareRequestDto;
+import com.example.securedrive.dto.FileShareRequestDto;
+import com.example.securedrive.dto.FileUploadRequestDto;
+import com.example.securedrive.model.File;
+import com.example.securedrive.service.FileFacadeService;
+import com.example.securedrive.service.FileManagementService;
 
 @RestController
 @RequestMapping("files")
@@ -27,8 +40,6 @@ public class AzureBlobController {
 
     private final FileFacadeService fileFacadeService;
     private final FileManagementService fileManagementService;
-
-    private static final Logger logger = LoggerFactory.getLogger(AzureBlobController.class);
 
     @Autowired
     public AzureBlobController(FileFacadeService fileFacadeService, FileManagementService fileManagementService) {

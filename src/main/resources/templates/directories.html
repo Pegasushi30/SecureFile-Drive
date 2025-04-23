@@ -163,33 +163,23 @@
                 th:id="'file-' + ${file.id}"
                 th:attr="data-file-shares-json=${file.fileSharesJson}">
 
-                <!-- Dosya Adı -->
                 <span th:text="${file.fileName}">File</span>
 
-                <!-- Dosyanın Yüklenme Tarihi ve Boyutu -->
                 <div class="file-meta"
                      th:if="${file.versions != null and !file.versions.isEmpty()}">
-
-                    <!-- 1) Yüklenme Tarihi -->
                     <span th:text="'Uploaded: '
             + ${#temporals.format(file.versions.get(0).timestamp, 'yyyy-MM-dd HH:mm')}">
         </span>
-
-                    <!-- 2) Dosya Boyutu -->
                     <span th:text="'Size: '
             + ${T(com.example.securedrive.service.util.FileSizeUtil).formatSize(file.versions.get(0).size)}">
         </span>
                 </div>
 
-                <!-- Share/Revoke/Download/Delete -->
                 <div class="file-details">
-
-                    <!-- Paylaşma Formu -->
                     <form th:action="@{/files/share}"
                           method="post"
                           class="share-form"
                           th:id="'share-form-' + ${file.id}">
-                        <!-- Gizli alanlar -->
                         <input type="hidden" name="username" th:value="${username}" />
                         <input type="hidden" name="fileId" th:value="${file.id}" />
 
@@ -211,7 +201,6 @@
                         <button type="submit" class="share-btn">Share</button>
                     </form>
 
-                    <!-- Revoke Formu -->
                     <div th:if="${file.fileShares.size() > 0}">
                         <form th:action="@{/files/revoke-share}"
                               method="post"
@@ -245,7 +234,6 @@
                         </form>
                     </div>
 
-                    <!-- Dosya İndir -->
                     <form th:action="@{'/files/download/' + ${username} + '/' + ${file.id}}"
                           method="get"
                           class="download-form">
@@ -260,7 +248,6 @@
                         <button type="submit" class="download-btn">Download</button>
                     </form>
 
-                    <!-- Dosya Sil -->
                     <form th:action="@{'/files/delete/' + ${username} + '/' + ${file.id}}"
                           method="post"
                           class="delete-form">
@@ -280,7 +267,7 @@
                         </button>
                     </form>
 
-                </div><!-- /file-details -->
+                </div>
             </li>
 
 

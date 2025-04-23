@@ -1355,20 +1355,20 @@ select {
 .shared-files-page .section-title,
 .shared-files-page .directory-title {
     font-size: 18px;
-    color: #ffffff;             /* Beyaz yazı */
+    color: #ffffff;
     display: flex;
     align-items: center;
     cursor: pointer;
     padding: 10px;
     gap: 10px;
     border-radius: 5px;
-    background-color: #1e3c72;  /* Koyu mavi, opak */
-    border: 2px solid #0056b3;  /* İsteğe bağlı, mavi çerçeve */
+    background-color: #1e3c72;
+    border: 2px solid #0056b3;
     transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .shared-files-page .directory-title:hover {
-    background-color: #2a5298; /* Hover’da biraz daha açık mavi */
+    background-color: #2a5298;
 }
 
 .shared-files-page .directory-title i {
@@ -1414,29 +1414,29 @@ select {
     color: #fff;
 }
 
-/* Kart hover efekti */
+
 .shared-files-page .file-card:hover {
     transform: scale(1.03);
     box-shadow: 0 3px 6px rgba(0,0,0,0.2);
 }
 
 .file-card .file-meta {
-    font-size: 0.85rem;      /* Biraz küçük */
-    margin-bottom: 8px;      /* Altta boşluk */
-    color: #f0f0f0;          /* Uygun bir açık ton */
+    font-size: 0.85rem;
+    margin-bottom: 8px;
+    color: #f0f0f0;
     display: flex;
-    flex-direction: column;  /* Tarih ve boyut alt alta olsun */
-    gap: 3px;                /* Az boşluk */
-    text-align: center;      /* Ortala */
+    flex-direction: column;
+    gap: 3px;
+    text-align: center;
 }
 
 .file-card .file-meta span {
-    font-weight: 400;        /* Normal ağırlık */
+    font-weight: 400;
 }
 
-/* Örneğin hover’da daha parlak isterseniz: */
+
 .file-card:hover .file-meta {
-    color: #ffffff;          /* Hover’da biraz daha beyaz */
+    color: #ffffff;
 }
 
 
@@ -1521,7 +1521,6 @@ select {
     font-size: 18px;
 }
 
-/* Responsive Düzenlemeler */
 @media (max-width: 768px) {
     .shared-files-page .file-grid {
         flex-direction: column;
@@ -1530,7 +1529,6 @@ select {
         gap: 15px;
     }
 
-    /* Dosya Kartları Mobilde Tam Genişlik Alır */
     .shared-files-page .file-card {
         width: 100%;
         max-width: 100%;
@@ -1538,14 +1536,12 @@ select {
         margin: 0 auto;
     }
 
-    /* Kart İçeriği için */
     .shared-files-page .file-card .file-details {
         font-size: 16px;
         margin-bottom: 12px;
         text-align: center;
     }
 
-    /* Arama Çubuğu Mobilde */
     .shared-files-page .file-search-container .search-box input {
         width: 80%;
         max-width: 300px;
@@ -1554,7 +1550,6 @@ select {
 
 /* ... ... */
 
-/* .delete-icon-btn ve ilgili sınıflar */
 .delete-icon-btn {
     display: none;
     border: none;
@@ -1572,14 +1567,14 @@ select {
     transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
-/* Aktif Silme Modu */
+
 .delete-mode-active .directory-item .delete-icon-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
 }
 
-/* Odaklanma Efekti */
+
 .delete-icon-btn:focus {
     outline: none;
 }
@@ -1630,7 +1625,7 @@ select {
     text-align: center;
 }
 
-/* Tablo Stilleri */
+
 .shared-directories-table table {
     width: 100%;
     border-collapse: separate;
@@ -1641,7 +1636,7 @@ select {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-/* Tablonun başlık hücreleri */
+
 .shared-directories-table th {
     background-color: #0056b3;
     color: #ffffff;
@@ -1650,7 +1645,7 @@ select {
     text-align: left;
 }
 
-/* İlk satırın üst köşelerini yuvarla */
+
 .shared-directories-table th:first-child {
     border-top-left-radius: 10px;
 }
@@ -1659,7 +1654,6 @@ select {
     border-top-right-radius: 10px;
 }
 
-/* Tablo gövdesi hücreleri */
 .shared-directories-table td {
     padding: 12px;
     border: 1px solid #ddd;
@@ -1667,7 +1661,7 @@ select {
     font-weight: normal;
 }
 
-/* Son satırın alt köşelerini yuvarla */
+
 .shared-directories-table tr:last-child td:first-child {
     border-bottom-left-radius: 10px;
 }
@@ -1676,16 +1670,16 @@ select {
     border-bottom-right-radius: 10px;
 }
 
-/* Alternatif satır renkleri */
+
 .shared-directories-table tr:nth-child(even) {
     background-color: #f2f2f2;
 }
 
 
 .no-files-message {
-    color: #5a5a5a; /* Görseldeki gri tonuna yakın */
+    color: #5a5a5a;
     font-size: 16px;
-    font-style: italic; /* İtalik yazı */
+    font-style: italic;
     text-align: center;
     margin-top: 20px;
     padding: 10px;
@@ -1694,30 +1688,30 @@ select {
 .file-name-link {
     font-size: 16px;
     font-weight: bold;
-    color: #1e3c72; /* Match theme color */
-    text-decoration: none; /* Remove underline */
+    color: #1e3c72;
+    text-decoration: none;
     transition: color 0.3s ease, text-shadow 0.3s ease;
 }
 
 .file-name-link:hover {
-    color: #0056b3; /* Darker blue on hover */
-    text-shadow: 0 0 3px rgba(0, 86, 179, 0.3); /* Subtle glow effect */
+    color: #0056b3;
+    text-shadow: 0 0 3px rgba(0, 86, 179, 0.3);
 }
 
 .directory-create-container form,
 .directory-share-form form {
     display: flex;
     flex-direction: column;
-    align-items: center; /* Form elemanları da ortada */
+    align-items: center;
     width: 100%;
-    margin-top: auto;  /* İsteğe bağlı, formu dikeyde esnetebilir */
+    margin-top: auto;
 }
 
 .directory-actions {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
-    align-items: stretch; /* Kutular aynı yükseklik */
+    align-items: stretch;
     gap: 20px;
     margin: 0 auto;
     max-width: 940px;
@@ -1727,21 +1721,21 @@ select {
 .directory-share-form {
     display: flex;
     flex-direction: column;
-    justify-content: space-between; /* Başlık üstte, buton altta */
-    align-items: center;           /* İçeriği yatayda ortala */
+    justify-content: space-between;
+    align-items: center;
 }
 
 .directory-share-form form .form-group {
     display: flex;
     flex-direction: column;
-    align-items: center; /* Her bir label+input ikilisini ortalar */
+    align-items: center;
     width: 100%;
 }
 
 .directory-share-form form {
     display: flex;
     flex-direction: column;
-    align-items: center; /* Formun tamamını ortalar */
+    align-items: center;
     width: 100%;
 }
 
@@ -1755,7 +1749,6 @@ select {
 }
 
 
-/* Responsive Düzenlemeler */
 @media (max-width: 1024px) {
     .directory-actions {
         flex-direction: column;
